@@ -21,6 +21,7 @@ import { useSettingsSecurity } from '../../../hooks/useSettingsSecurity';
 import { biometricAuthService } from '../../../services/BiometricAuthService';
 import { secureStorageService } from '../../../services/SecureStorageService';
 import { connectionManager } from '../../../services/ConnectionManager';
+import { serviceDetectionService } from '../../../services/ServiceDetectionService';
 
 interface ConnectionNetworkSectionProps {
   colors: {
@@ -198,6 +199,8 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
   const [pinSetupValue, setPinSetupValue] = useState('');
   const [pinError, setPinError] = useState('');
   const pinResolveRef = React.useRef<((ok: boolean) => void) | null>(null);
+  const [whoisAutoDetectDoubleNick, setWhoisAutoDetectDoubleNick] = useState(true);
+  const [whoisUseDoubleNick, setWhoisUseDoubleNick] = useState(false);
   
   // Submenu state for ConnectionNetworkSection items
   const [showSubmenu, setShowSubmenu] = useState<string | null>(null);
@@ -208,6 +211,16 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
   const [dccExtModalMode, setDccExtModalMode] = useState<'accept' | 'reject' | 'dont_send'>('accept');
   const [newDccExt, setNewDccExt] = useState('');
   const [showQuickConnectModal, setShowQuickConnectModal] = useState(false);
+
+  // Refresh favorites
+  const refreshFavorites = useCallback(() => {
+    const favoritesMap = channelFavoritesService.getAllFavorites();
+    const flattened = Array.from(favoritesMap.entries()).flatMap(([networkId, favs]) =>
+      favs.map(fav => ({ ...fav, network: networkId }))
+    );
+    setAllFavorites(flattened);
+    setFavoritesCount(flattened.length);
+  }, []);
 
   // Load initial state
   useEffect(() => {
@@ -280,6 +293,12 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
       
       // Load network-specific settings
       if (currentNetwork) {
+        const currentNetworkConfig = networks.find(n => n.id === currentNetwork);
+        const autoDetectWhois = currentNetworkConfig?.whoisAutoDetectDoubleNick !== false;
+        const manualWhoisDoubleNick = currentNetworkConfig?.whoisUseDoubleNick === true;
+        setWhoisAutoDetectDoubleNick(autoDetectWhois);
+        setWhoisUseDoubleNick(manualWhoisDoubleNick);
+
         const reconnectEnabled = autoReconnectService.isEnabled(currentNetwork);
         const reconnectConfig = autoReconnectService.getConfig(currentNetwork);
         if (reconnectConfig) {
@@ -298,7 +317,7 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
       identityProfilesService.list().then(setIdentityProfiles).catch(() => {});
     };
     loadSettings();
-  }, [currentNetwork, refreshFavorites]);
+  }, [currentNetwork, networks, refreshFavorites]);
 
   // Track app state for biometric re-initialization
   const appStateRef = useRef(AppState.currentState);
@@ -343,16 +362,6 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
       subscription.remove();
     };
   }, [passwordsUnlocked]);
-
-  // Refresh favorites
-  const refreshFavorites = useCallback(() => {
-    const favoritesMap = channelFavoritesService.getAllFavorites();
-    const flattened = Array.from(favoritesMap.entries()).flatMap(([networkId, favs]) =>
-      favs.map(fav => ({ ...fav, network: networkId }))
-    );
-    setAllFavorites(flattened);
-    setFavoritesCount(flattened.length);
-  }, []);
 
   const networkLabel = useCallback(
     (networkId: string) => networks.find(n => n.id === networkId)?.name || networkId,
@@ -1584,6 +1593,61 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
         ],
       },
       {
+        id: 'connection-whois-auto-detect',
+        title: t('Auto-detect WHOIS idle format', { _tags: tags }),
+        description: whoisAutoDetectDoubleNick
+          ? t('Automatically use "/WHOIS nick nick" on networks like Undernet', { _tags: tags })
+          : t('Use manual WHOIS format setting', { _tags: tags }),
+        type: 'switch',
+        value: whoisAutoDetectDoubleNick,
+        disabled: !currentNetwork,
+        searchKeywords: ['whois', 'idle', 'undernet', 'double', 'nick', 'auto', 'detect'],
+        onValueChange: async (value: string | boolean) => {
+          const boolValue = value as boolean;
+          if (!currentNetwork) return;
+          setWhoisAutoDetectDoubleNick(boolValue);
+          const network = networks.find(n => n.id === currentNetwork);
+          if (!network) return;
+          await settingsService.updateNetwork(currentNetwork, {
+            ...network,
+            whoisAutoDetectDoubleNick: boolValue,
+          });
+          const conn = connectionManager.getConnection(currentNetwork);
+          if (!conn) return;
+          if (!boolValue) {
+            conn.ircService.setWhoisUseDoubleNick(whoisUseDoubleNick);
+          } else {
+            const detection = serviceDetectionService.getDetectionResult(currentNetwork);
+            const undernetDetected = detection?.serviceType === 'undernet';
+            conn.ircService.setWhoisUseDoubleNick(undernetDetected || whoisUseDoubleNick);
+          }
+        },
+      },
+      {
+        id: 'connection-whois-double-nick',
+        title: t('Use /WHOIS nick nick format', { _tags: tags }),
+        description: whoisUseDoubleNick
+          ? t('Enabled for this network (better idle results on Undernet-like servers)', { _tags: tags })
+          : t('Disabled (uses standard /WHOIS nick)', { _tags: tags }),
+        type: 'switch',
+        value: whoisUseDoubleNick,
+        disabled: !currentNetwork || whoisAutoDetectDoubleNick,
+        searchKeywords: ['whois', 'idle', 'undernet', 'double', 'nick', 'manual', 'format'],
+        onValueChange: async (value: string | boolean) => {
+          const boolValue = value as boolean;
+          if (!currentNetwork) return;
+          setWhoisUseDoubleNick(boolValue);
+          const network = networks.find(n => n.id === currentNetwork);
+          if (!network) return;
+          await settingsService.updateNetwork(currentNetwork, {
+            ...network,
+            whoisUseDoubleNick: boolValue,
+          });
+          const conn = connectionManager.getConnection(currentNetwork);
+          conn?.ircService.setWhoisUseDoubleNick(boolValue);
+        },
+      },
+      {
         id: 'connection-biometric-lock',
         title: t('Biometric Lock for Passwords', { _tags: tags }),
         description: biometricAvailable
@@ -1824,6 +1888,8 @@ export const ConnectionNetworkSection: React.FC<ConnectionNetworkSectionProps> =
     biometricLockEnabled,
     biometricAvailable,
     pinLockEnabled,
+    whoisAutoDetectDoubleNick,
+    whoisUseDoubleNick,
     passwordsUnlocked,
     passwordLockActive,
     passwordUnlockDescription,

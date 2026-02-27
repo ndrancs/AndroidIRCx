@@ -144,13 +144,18 @@ class ConnectionManager {
 
     const ircService = new IRCService();
     ircService.setNetworkId(finalId);  // Set networkId FIRST so all messages have correct network!
+    const manualWhoisDoubleNick = networkConfig.whoisUseDoubleNick === true;
+    const autoDetectWhoisDoubleNick = networkConfig.whoisAutoDetectDoubleNick !== false;
+    ircService.setWhoisUseDoubleNick(manualWhoisDoubleNick);
     ircService.addRawMessage(t('*** Creating new connection for {networkId}', { networkId: finalId }), 'connection');
     const channelManagementService = new ChannelManagementService(ircService);
     const userManagementService = new UserManagementService();
     userManagementService.setIRCService(ircService);
+    userManagementService.setNetwork(finalId);
     ircService.setUserManagementService(userManagementService);
     const notifyService = new NotifyService();
     notifyService.setIRCService(ircService);
+    notifyService.setNetwork(finalId);
     ircService.setNotifyService(notifyService);
     const channelListService = new ChannelListService(ircService);
     const autoRejoinService = new AutoRejoinService(ircService);
@@ -213,7 +218,34 @@ class ConnectionManager {
 
           const commands = (profile.onConnectCommands || []).filter(cmd => !!cmd && cmd.trim().length > 0);
           if (commands.length > 0) {
-            commands.forEach(cmd => ircService.sendRaw(cmd));
+            const commandTarget =
+              ircService.getCurrentNick?.() ||
+              profile.nick ||
+              networkConfig.nick ||
+              finalId;
+            commands.forEach(cmd => {
+              const trimmed = cmd.trim();
+              if (!trimmed) return;
+
+              // Explicit raw commands keep raw semantics.
+              if (/^\/(?:quote|raw)\s+/i.test(trimmed)) {
+                const normalizedRaw = trimmed.replace(/^\/(?:quote|raw)\s+/i, '').trim();
+                if (normalizedRaw) {
+                  ircService.sendRaw(normalizedRaw);
+                }
+                return;
+              }
+
+              // Slash commands should be parsed by IRCService command handlers.
+              // This prevents sending "/whois" literally to the server.
+              if (trimmed.startsWith('/')) {
+                ircService.sendMessage(commandTarget, trimmed);
+                return;
+              }
+
+              // Keep backward compatibility for plain raw lines.
+              ircService.sendRaw(trimmed);
+            });
             ircService.addRawMessage(
               t('*** Executed {count} on-connect command(s) from identity profile', { count: commands.length }),
               'connection'
@@ -264,7 +296,7 @@ class ConnectionManager {
     // Initialize services
     console.log(`ConnectionManager: Initializing services for ${finalId}`);
     ircService.addRawMessage(t('*** Initializing services for {networkId}', { networkId: finalId }), 'connection');
-    userManagementService.initialize();
+    await userManagementService.initialize();
     notifyService.initialize?.();
     channelManagementService.initialize();
     autoRejoinService.initialize();
@@ -281,6 +313,11 @@ class ConnectionManager {
     // Subscribe to service detection events
     const detectionCleanup = serviceDetectionService.onDetection((networkId, result) => {
       if (networkId === finalId) {
+        if (autoDetectWhoisDoubleNick && !manualWhoisDoubleNick) {
+          const undernetDetected = result.serviceType === 'undernet';
+          ircService.setWhoisUseDoubleNick(undernetDetected);
+        }
+
         console.log(`ConnectionManager: Service detected for ${finalId}:`, result);
         ircService.addRawMessage(
           t('*** Detected services: {serviceType} (confidence: {confidence}%)', {

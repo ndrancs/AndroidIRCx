@@ -25,7 +25,7 @@ jest.mock('../../src/services/SoundService', () => ({
 
 jest.mock('../../src/services/NotificationService', () => ({
   notificationService: {
-    showLocalNotification: jest.fn(),
+    showNotification: jest.fn(),
   },
 }));
 
@@ -135,6 +135,11 @@ describe('NotifyService', () => {
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({
         nick: 'Friend',
         host: 'user@host.com',
+      }));
+      expect(mockIRCService.addMessage).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'notice',
+        from: 'Friend',
+        text: 'is now online',
       }));
     });
 
@@ -325,7 +330,7 @@ describe('NotifyService', () => {
 
   describe('getStatus', () => {
     it('should return status for a nick', () => {
-      service['notifyStatus'].set('Friend', { online: true, lastSeen: Date.now() });
+      service['notifyStatus'].set('friend', { online: true, lastSeen: Date.now() });
 
       const status = service.getStatus('Friend');
 
@@ -341,13 +346,13 @@ describe('NotifyService', () => {
 
   describe('getAllStatuses', () => {
     it('should return all statuses', () => {
-      service['notifyStatus'].set('Friend1', { online: true });
-      service['notifyStatus'].set('Friend2', { online: false });
+      service['notifyStatus'].set('friend1', { online: true });
+      service['notifyStatus'].set('friend2', { online: false });
 
       const statuses = service.getAllStatuses();
 
       expect(statuses.size).toBe(2);
-      expect(statuses.get('Friend1')).toEqual(expect.objectContaining({ online: true }));
+      expect(statuses.get('friend1')).toEqual(expect.objectContaining({ online: true }));
     });
   });
 
