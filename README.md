@@ -3,7 +3,7 @@
 [![Build](https://github.com/androidircx/androidircx/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/androidircx/androidircx/actions/workflows/test.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/androidircx/androidircx)](https://github.com/androidircx/androidircx/releases)
 [![Downloads](https://img.shields.io/github/downloads/androidircx/androidircx/total)](https://github.com/androidircx/androidircx/releases)
-[![GitHub License](https://img.shields.io/github/license/androidircx/androidircx)](https://github.com/androidircx/androidircx/blob/master/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/androidircx/androidircx)](https://github.com/androidircx/androidircx/blob/master/LICENSE.md)
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11929/badge)](https://www.bestpractices.dev/projects/11929)
 [![CodeQL](https://img.shields.io/badge/CodeQL-enabled-blue)](https://github.com/AndroidIRCx/AndroidIRCx/security/code-scanning)
@@ -635,4 +635,5 @@ Those who recognize the work will understand. Time will explain the rest.
 ---
 
 *mIRC and IRCap set the standard. AndroidIRCX is the open-source platform that carries it forward.*
+
 
