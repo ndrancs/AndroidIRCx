@@ -20,6 +20,19 @@ describe('MediaSettingsService', () => {
     expect(settings.enabled).toBe(true);
     expect(settings.showEncryptionIndicator).toBe(true);
     expect(settings.autoDownload).toBe(true);
+    expect(settings.callVideoQuality).toBe('480p');
+    expect(settings.callStunServers).toEqual([
+      'stun:turn.dbase.in.rs:3478',
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302',
+    ]);
+    expect(settings.callTurnEnabled).toBe(false);
+    expect(settings.callTurnServers).toEqual([]);
+    expect(settings.callTurnUsername).toBe('');
+    expect(settings.callTurnCredential).toBe('');
+    expect(settings.callForceRelayOnly).toBe(false);
+    expect(settings.callNicklistCallActionsEnabled).toBe(false);
+    expect(settings.callNicklistCallActionsAutoEnabledFromRelay).toBe(false);
   });
 
   it('loads and merges stored settings', async () => {
@@ -104,6 +117,15 @@ describe('MediaSettingsService', () => {
           cacheSize: 321,
           mediaQuality: 'low',
           videoQuality: '720p',
+          callVideoQuality: '720p',
+          callStunServers: ['stun:test.example.org:3478'],
+          callTurnEnabled: true,
+          callTurnServers: ['turn:turn.example.org:3478?transport=udp'],
+          callTurnUsername: 'u',
+          callTurnCredential: 'p',
+          callForceRelayOnly: true,
+          callNicklistCallActionsEnabled: true,
+          callNicklistCallActionsAutoEnabledFromRelay: true,
           voiceMaxDuration: 15,
         };
         (mediaSettingsService as any).loaded = true;
@@ -132,12 +154,35 @@ describe('MediaSettingsService', () => {
     expect(await mediaSettingsService.getVideoQuality()).toBe('720p');
 
     (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.getCallVideoQuality()).toBe('720p');
+
+    (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.getCallStunServers()).toEqual(['stun:test.example.org:3478']);
+
+    (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.getCallTurnServerConfig()).toEqual({
+      enabled: true,
+      urls: ['turn:turn.example.org:3478?transport=udp'],
+      username: 'u',
+      credential: 'p',
+    });
+
+    (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.getCallForceRelayOnly()).toBe(true);
+
+    (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.getCallNicklistCallActionsEnabled()).toBe(true);
+
+    (mediaSettingsService as any).loaded = false;
+    expect(await mediaSettingsService.hasAutoEnabledNicklistCallActionsFromRelay()).toBe(true);
+
+    (mediaSettingsService as any).loaded = false;
     expect(await mediaSettingsService.getVoiceMaxDuration()).toBe(15);
 
     (mediaSettingsService as any).loaded = false;
     expect(await mediaSettingsService.exportSettings()).toContain('"cacheSize": 321');
 
-    expect(loadSettingsSpy).toHaveBeenCalledTimes(9);
+    expect(loadSettingsSpy).toHaveBeenCalledTimes(15);
     loadSettingsSpy.mockRestore();
   });
 
@@ -152,6 +197,15 @@ describe('MediaSettingsService', () => {
       cacheSize: 42,
       mediaQuality: 'low',
       videoQuality: '720p',
+      callVideoQuality: '720p',
+      callStunServers: ['stun:test.example.org:3478'],
+      callTurnEnabled: false,
+      callTurnServers: [],
+      callTurnUsername: '',
+      callTurnCredential: '',
+      callForceRelayOnly: false,
+      callNicklistCallActionsEnabled: false,
+      callNicklistCallActionsAutoEnabledFromRelay: false,
       voiceMaxDuration: 30,
     };
 
@@ -175,12 +229,22 @@ describe('MediaSettingsService', () => {
         cacheSize: 12345,
         mediaQuality: 'high',
         videoQuality: '720p',
+        callVideoQuality: '1080p',
+        callStunServers: ['stun:test.example.org:3478'],
+        callTurnEnabled: true,
+        callTurnServers: ['turn:turn.example.org:3478?transport=udp'],
+        callTurnUsername: 'u',
+        callTurnCredential: 'p',
+        callForceRelayOnly: true,
+        callNicklistCallActionsEnabled: true,
+        callNicklistCallActionsAutoEnabledFromRelay: true,
         voiceMaxDuration: 60,
       })
     );
 
     expect(result.success).toBe(true);
     expect(await mediaSettingsService.getVideoQuality()).toBe('720p');
+    expect(await mediaSettingsService.getCallVideoQuality()).toBe('1080p');
   });
 
   it('rejects invalid import payload', async () => {
@@ -193,10 +257,17 @@ describe('MediaSettingsService', () => {
   });
 
   it('handles malformed import json', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const result = await mediaSettingsService.importSettings('{broken');
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[MediaSettingsService] Import error:',
+      expect.any(Error)
+    );
+
+    errorSpy.mockRestore();
   });
 
   it('returns success from import even if saveSettings swallows storage failure', async () => {
@@ -212,6 +283,15 @@ describe('MediaSettingsService', () => {
         cacheSize: 999,
         mediaQuality: 'medium',
         videoQuality: '480p',
+        callVideoQuality: '480p',
+        callStunServers: ['stun:test.example.org:3478'],
+        callTurnEnabled: false,
+        callTurnServers: [],
+        callTurnUsername: '',
+        callTurnCredential: '',
+        callForceRelayOnly: false,
+        callNicklistCallActionsEnabled: false,
+        callNicklistCallActionsAutoEnabledFromRelay: false,
         voiceMaxDuration: 12,
       })
     );
@@ -306,6 +386,17 @@ describe('MediaSettingsService', () => {
     await mediaSettingsService.setMaxCacheSize(1024);
     await mediaSettingsService.setMediaQuality('medium');
     await mediaSettingsService.setVideoQuality('480p');
+    await mediaSettingsService.setCallVideoQuality('1080p');
+    await mediaSettingsService.setCallStunServers(['stun:stun.example.org:3478', '']);
+    await mediaSettingsService.setCallTurnServerConfig({
+      enabled: true,
+      urls: ['turn:turn.example.org:3478?transport=udp', ''],
+      username: '  relay-user  ',
+      credential: 'relay-pass',
+    });
+    await mediaSettingsService.setCallForceRelayOnly(true);
+    await mediaSettingsService.setCallNicklistCallActionsEnabled(true);
+    await mediaSettingsService.markNicklistCallActionsAutoEnabledFromRelay();
     await mediaSettingsService.setVoiceMaxDuration(45);
 
     expect(await mediaSettingsService.isMediaEnabled()).toBe(false);
@@ -315,6 +406,17 @@ describe('MediaSettingsService', () => {
     expect(await mediaSettingsService.getMaxCacheSize()).toBe(1024);
     expect(await mediaSettingsService.getMediaQuality()).toBe('medium');
     expect(await mediaSettingsService.getVideoQuality()).toBe('480p');
+    expect(await mediaSettingsService.getCallVideoQuality()).toBe('1080p');
+    expect(await mediaSettingsService.getCallStunServers()).toEqual(['stun:stun.example.org:3478']);
+    expect(await mediaSettingsService.getCallTurnServerConfig()).toEqual({
+      enabled: true,
+      urls: ['turn:turn.example.org:3478?transport=udp'],
+      username: 'relay-user',
+      credential: 'relay-pass',
+    });
+    expect(await mediaSettingsService.getCallForceRelayOnly()).toBe(true);
+    expect(await mediaSettingsService.getCallNicklistCallActionsEnabled()).toBe(true);
+    expect(await mediaSettingsService.hasAutoEnabledNicklistCallActionsFromRelay()).toBe(true);
     expect(await mediaSettingsService.getVoiceMaxDuration()).toBe(45);
 
     const exported = await mediaSettingsService.exportSettings();
@@ -332,6 +434,15 @@ describe('MediaSettingsService', () => {
       cacheSize: 2048,
       mediaQuality: 'high',
       videoQuality: '4k',
+      callVideoQuality: '720p',
+      callStunServers: ['stun:test.example.org:3478'],
+      callTurnEnabled: false,
+      callTurnServers: [],
+      callTurnUsername: '',
+      callTurnCredential: '',
+      callForceRelayOnly: false,
+      callNicklistCallActionsEnabled: false,
+      callNicklistCallActionsAutoEnabledFromRelay: false,
       voiceMaxDuration: 90,
     };
 
