@@ -1,19 +1,19 @@
 # AndroidIRCX
 
-[![Build](https://github.com/androidircx/androidircx/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/androidircx/androidircx/actions/workflows/test.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/androidircx/androidircx)](https://github.com/androidircx/androidircx/releases)
-[![Downloads](https://img.shields.io/github/downloads/androidircx/androidircx/total)](https://github.com/androidircx/androidircx/releases)
-[![GitHub License](https://img.shields.io/github/license/androidircx/androidircx)](https://github.com/androidircx/androidircx/blob/master/LICENSE.md)
+[![Build](https://github.com/AndroidIRCx/AndroidIRCx/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/AndroidIRCx/AndroidIRCx/actions/workflows/test.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/AndroidIRCx/AndroidIRCx)](https://github.com/AndroidIRCx/AndroidIRCx/releases)
+[![Downloads](https://img.shields.io/github/downloads/AndroidIRCx/AndroidIRCx/total)](https://github.com/AndroidIRCx/AndroidIRCx/releases)
+[![GitHub License](https://img.shields.io/github/license/AndroidIRCx/AndroidIRCx)](https://github.com/AndroidIRCx/AndroidIRCx/blob/master/LICENSE)
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11929/badge)](https://www.bestpractices.dev/projects/11929)
 [![CodeQL](https://img.shields.io/badge/CodeQL-enabled-blue)](https://github.com/AndroidIRCx/AndroidIRCx/security/code-scanning)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen)](https://github.com/androidircx/androidircx/security/dependabot)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen)](https://github.com/AndroidIRCx/AndroidIRCx/security/dependabot)
 [![Coverage](https://codecov.io/gh/AndroidIRCx/AndroidIRCx/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AndroidIRCx/AndroidIRCx/)
 
-[![GitHub Stars](https://img.shields.io/github/stars/androidircx/androidircx?style=flat)](https://github.com/androidircx/androidircx/stargazers)
-[![Contributors](https://img.shields.io/github/contributors/androidircx/androidircx)](https://github.com/androidircx/androidircx/graphs/contributors)
-[![GitHub Issues](https://img.shields.io/github/issues/androidircx/androidircx)](https://github.com/androidircx/androidircx/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/androidircx/androidircx)](https://github.com/androidircx/androidircx/commits/master)
+[![GitHub Stars](https://img.shields.io/github/stars/AndroidIRCx/AndroidIRCx?style=flat)](https://github.com/AndroidIRCx/AndroidIRCx/stargazers)
+[![Contributors](https://img.shields.io/github/contributors/AndroidIRCx/AndroidIRCx)](https://github.com/AndroidIRCx/AndroidIRCx/graphs/contributors)
+[![GitHub Issues](https://img.shields.io/github/issues/AndroidIRCx/AndroidIRCx)](https://github.com/AndroidIRCx/AndroidIRCx/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/AndroidIRCx/AndroidIRCx)](https://github.com/AndroidIRCx/AndroidIRCx/commits/master)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-green)](https://play.google.com/store/apps/details?id=com.androidircx)
 
@@ -329,7 +329,7 @@ AndroidIRCX/
 
 ```bash
 # Clone the repo
-git clone https://github.com/androidircx/androidircx.git
+git clone https://github.com/AndroidIRCx/AndroidIRCx.git
 cd androidircx
 
 # Install dependencies
@@ -635,5 +635,4 @@ Those who recognize the work will understand. Time will explain the rest.
 ---
 
 *mIRC and IRCap set the standard. AndroidIRCX is the open-source platform that carries it forward.*
-
 
