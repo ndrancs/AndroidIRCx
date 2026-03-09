@@ -6,358 +6,358 @@
     "string": ""
   },
   "App lock disabled": {
-    "string": "Bloqueio de aplicação desativado"
+    "string": "Kunci aplikasi dinonaktifkan"
   },
   "Enable app lock first.": {
-    "string": "Primeiro, ative o bloqueio de aplicações."
+    "string": "Aktifkan kunci aplikasi terlebih dahulu"
   },
   "Cancel": {
-    "string": "Cancelar"
+    "string": "Batal"
   },
   "Error": {
-    "string": "Erro"
+    "string": "Kesalahan"
   },
   "Channel Favorites": {
-    "string": "Favoritos do canal"
+    "string": "Channel Favorit"
   },
   "Message History": {
-    "string": "Histórico de mensagens"
+    "string": "Riwayat Pesan"
   },
   "Backup Ready": {
-    "string": "Backup Pronto"
+    "string": "Cadangan siap"
   },
   "Success": {
-    "string": "Sucesso "
+    "string": "Berhasil"
   },
   "Backup data copied to clipboard": {
-    "string": "Os dados de cópia de segurança foram copiados para a área de transferência."
+    "string": "Data cadangan disalin ke clipboard"
   },
   "Failed to copy to clipboard": {
-    "string": "Falha ao copiar para a área de transferência"
+    "string": "Gagal menyalin ke clipboard"
   },
   "Backup saved to:\n{path}": {
-    "string": "Backup guardado em:\n{path}"
+    "string": "Cadangan disimpan ke:"
   },
   "OK": {
     "string": "OK"
   },
   "Failed to save backup file": {
-    "string": "Falha ao guardar o ficheiro de backup"
+    "string": "Gagal menyimpan file cadangan"
   },
   "Restore": {
-    "string": "Restaurar"
+    "string": "Pulihkan"
   },
   "Backup restored. Restart app to ensure all data reloads.": {
-    "string": "Backup restaurado. Reinicie a aplicação para garantir que todos os dados são recarregados."
+    "string": "Cadangan dipulihkan. Mulai ulang aplikasi untuk memastikan semua data dimuat kembali."
   },
   "Invalid backup data": {
-    "string": "Dados de cópia de segurança inválidos"
+    "string": "Data cadangan tidak valid"
   },
   "Backup & Restore": {
-    "string": "Backup e restauro"
+    "string": "Cadangkan & Pulihkan"
   },
   "Close": {
-    "string": "Fechar"
+    "string": "Tutup"
   },
   "Copy to Clipboard": {
-    "string": "Copiar para a Área de Transferência"
+    "string": "Salin ke clipboard"
   },
   "Save to File": {
-    "string": "Salvar em arquivo"
+    "string": "Simpan ke file"
   },
   "Export Complete": {
-    "string": "Exportação concluída"
+    "string": "Ekspor selesai"
   },
   "Exported {count} characters in {format} format.\n\n(In production, this would be saved to a file)": {
-    "string": "Exportado {count} caracteres em {format}formato.\n\n(Em produção, isto seria guardado num arquivo)"
+    "string": "Berhasil mengekspor 1 Karakter dalam 2 format"
   },
   "Export Error": {
-    "string": "Erro de exportação"
+    "string": "Kesalahan ekspor"
   },
   "Failed to export history": {
-    "string": "Erro ao exportar o histórico"
+    "string": "Gagal mengekspor riwayat"
   },
   "Clear Message History": {
-    "string": "Limpar histórico de mensagens"
+    "string": "Hapus riwayat pesan"
   },
   "Are you sure you want to clear all message history? This cannot be undone.": {
-    "string": "Tem a certeza de que pretende apagar todo o histórico de mensagens? Esta ação é irreversível."
+    "string": "Apakah kamu yakin menghapus semua riwayat pesan?"
   },
   "Clear": {
-    "string": "Limpiar"
+    "string": "Hapus"
   },
   "Message history cleared": {
-    "string": "O histórico de mensagens foi apagado."
+    "string": "Riwayat pesan dihapus"
   },
   "Settings backup generated (excludes logs and message history).": {
-    "string": "Cópia de segurança da configuração gerada (exclui registos e histórico de mensagens)."
+    "string": "Cadangan pengaturan dibuat (tidak termasuk log dan riwayat pesan)."
   },
   "Full backup generated (includes all data).": {
-    "string": "Cópia de segurança completa gerada (inclui todos os dados)."
+    "string": "Cadangan lengkap dibuat (termasuk semua data)."
   },
   "Backup Error": {
-    "string": "Erro de backup"
+    "string": "Kesalahan cadangan"
   },
   "Failed to create backup": {
-    "string": "Falha ao criar o backup"
+    "string": "Gagal membuat cadangan"
   },
   "Restore Complete": {
-    "string": "Restauração completa"
+    "string": "Pemulihan selesai"
   },
   "Restore Error": {
-    "string": "Erro de restauração"
+    "string": "Kesalahan pemulihan"
   },
   "Use fingerprint/biometric to unlock": {
-    "string": "Utilize a impressão digital/biometria para desbloquear"
+    "string": "Gunakan sidik jari/biometrik untuk membuka kunci"
   },
   "Enter PIN to unlock": {
-    "string": "Introduza o PIN para desbloquear"
+    "string": "Masukan PIN untuk membuka kunci"
   },
   "PIN must be at least 4 digits.": {
-    "string": "O PIN deve ter pelo menos 4 dígitos."
+    "string": "PIN harus minimal 4 digit"
   },
   "PINs do not match.": {
-    "string": "Os PIN não coincidem."
+    "string": "PIN tidak cocok"
   },
   "Biometrics unavailable": {
-    "string": "Biometria indisponível"
+    "string": "Biometrik tidak tersedia"
   },
   "Enable a fingerprint/biometric on your device first.": {
-    "string": "Primeiro, ative a impressão digital/biometria no seu dispositivo."
+    "string": "Aktifkan sidik jari/biometrik di perangkat anda terlebih dahulu"
   },
   "Unlock passwords": {
-    "string": "Desbloquear palavras-passe"
+    "string": "Buka kunci kata sandi"
   },
   "Authentication failed": {
-    "string": "A autenticação falhou."
+    "string": "Autentikasi gagal"
   },
   "Unable to unlock passwords.": {
-    "string": "Não foi possível desbloquear as passwords."
+    "string": "Tidak dapat membuka kunci katasandi"
   },
   "Biometric setup failed": {
-    "string": "Falha na configuração biométrica"
+    "string": "Pengaturan biometrik gagal"
   },
   "Unable to enable biometric lock for passwords.": {
-    "string": "Não foi possível ativar o bloqueio biométrico para as palavras-passe."
+    "string": "Tidak dapat mengaktifkan kunci biometrik untuk katasandi"
   },
   "Enable a method": {
-    "string": "Ativar um método"
+    "string": "Aktifkan metode"
   },
   "Turn on biometric or PIN for App Lock first.": {
-    "string": "Primeiro, ative a biometria ou o PIN para o bloqueio de aplicações."
+    "string": "Aktifkan biometrik atau PIN untuk Kunci Aplikasi terlebih dahulu"
   },
   "Unable to enable biometric app lock.": {
-    "string": "Não foi possível ativar o bloqueio biométrico da aplicação."
+    "string": "Tidak dapat mengaktifkan kunci aplikasi biometrik"
   },
   "Appearance": {
-    "string": "Aspeto"
+    "string": "Tampilan"
   },
   "Theme": {
     "string": "Tema"
   },
   "Custom theme": {
-    "string": "Tema personalizado"
+    "string": "Tema kustom"
   },
   "Dark mode (default)": {
-    "string": "Modo escuro (padrão)"
+    "string": "Mode gelap (default)"
   },
   "Light mode": {
-    "string": "Modo claro"
+    "string": "Mode terang"
   },
   "+ Create New Theme": {
-    "string": "+ Criar novo tema"
+    "string": " + Buat Tema Baru"
   },
   "Edit {name}": {
-    "string": "Editar {name} "
+    "string": "Edit {name}"
   },
   "Delete {name}": {
-    "string": "Eliminar {name}"
+    "string": "Hapus {name}"
   },
   "Delete Theme": {
-    "string": "Eliminar tema"
+    "string": "Hapus Tema"
   },
   "Are you sure you want to delete \"{name}\"?": {
-    "string": "Tem a certeza de que pretende eliminar \" {name}\"?"
+    "string": "Apakah Anda yakin ingin menghapus \"{name}\"?"
   },
   "Delete": {
-    "string": "Eliminar"
+    "string": "Hapus"
   },
   "Tab Position": {
-    "string": "Posição da Janela"
+    "string": "Posisi Tab"
   },
   "Tabs at {position}": {
-    "string": "Janelas em {position}"
+    "string": "Tab di {position}"
   },
   "Select tab position:": {
-    "string": "Selecione a posição da janela:"
+    "string": "Pilih posisi tab:"
   },
   "Top": {
-    "string": "Topo"
+    "string": "Atas"
   },
   "Bottom": {
-    "string": "Fundo"
+    "string": "Bawah"
   },
   "Left": {
-    "string": "Esquerda"
+    "string": "Kiri"
   },
   "Right": {
-    "string": "Direita"
+    "string": "Kanan"
   },
   "User List Position": {
-    "string": "Posição na lista de utilizadores"
+    "string": "Posisi Daftar Pengguna"
   },
   "User list at {position}": {
-    "string": "Lista de utilizadores em {position}"
+    "string": "Daftar pengguna di {position}"
   },
   "Select user list position:": {
-    "string": "Selecione a posição na lista de utilizadores:"
+    "string": "Pilih posisi daftar pengguna:"
   },
   "View Mode": {
-    "string": "Modo de visualização"
+    "string": "Mode Tampilan"
   },
   "Current: {mode}": {
-    "string": "Atual: {mode}"
+    "string": "Saat ini: {mode}"
   },
   "Select view mode:": {
-    "string": "Selecione o modo de visualização:"
+    "string": "Pilih mode tampilan:"
   },
   "Compact": {
-    "string": "Compacto"
+    "string": "Kompak"
   },
   "Comfortable": {
-    "string": "Confortável"
+    "string": ""
   },
   "Spacious": {
-    "string": "Espaçoso"
+    "string": ""
   },
   "Font Size": {
-    "string": "Tamanho da fonte"
+    "string": ""
   },
   "Current: {size}": {
-    "string": "Atual: {size}"
+    "string": ""
   },
   "Select font size:": {
-    "string": "Selecione o tamanho da letra:"
+    "string": ""
   },
   "Small": {
-    "string": "Pequena"
+    "string": ""
   },
   "Medium": {
-    "string": "Médio"
+    "string": ""
   },
   "Large": {
-    "string": "Grande"
+    "string": ""
   },
   "Extra Large": {
-    "string": "Extra Grande"
+    "string": ""
   },
   "Raw Categories": {
-    "string": "Categorias Raw"
+    "string": ""
   },
   "Choose which raw messages are shown": {
-    "string": "Escolha quais as mensagens raw que serão exibidas."
+    "string": ""
   },
   "Notice Routing": {
-    "string": "Encaminhamento de notificações "
+    "string": ""
   },
   "Show notices in the active tab": {
-    "string": "Exibir notificações na janela ativa"
+    "string": ""
   },
   "Show notices in a Notices tab": {
-    "string": "Visualizar os notificações  na janela de notificações ."
+    "string": ""
   },
   "Show notices in a private/query tab": {
-    "string": "Exibir notificações num separador privado/de consulta."
+    "string": ""
   },
   "Show notices in the server tab": {
-    "string": "Exibir notificações no separador do servidor"
+    "string": ""
   },
   "Active window": {
-    "string": "Janela ativa"
+    "string": ""
   },
   "Server tab": {
-    "string": "Guia Servidor"
+    "string": ""
   },
   "Notices tab": {
-    "string": "Guia notificações"
+    "string": ""
   },
   "Private/query tab": {
-    "string": "Separador Privada/de consulta"
+    "string": ""
   },
   "Show Timestamps": {
-    "string": "Mostrar carimbos de data/hora"
+    "string": ""
   },
   "Display message timestamps": {
-    "string": "Exibir carimbos de data/hora das mensagens"
+    "string": ""
   },
   "Info": {
-    "string": "Informações"
+    "string": ""
   },
   "Timestamp display setting coming soon": {
-    "string": "Configuração de exibição de data e hora em breve"
+    "string": ""
   },
   "Timestamp Display": {
-    "string": "Exibição de carimbo de data/hora"
+    "string": ""
   },
   "Show timestamps: {mode}": {
-    "string": "Visualizar registos de data e hora: {mode}"
+    "string": ""
   },
   "Select when to show timestamps:": {
-    "string": "Selecione quando visualizar os registos de data e hora:"
+    "string": ""
   },
   "Always": {
-    "string": "Sempre"
+    "string": ""
   },
   "Only for first message in a group": {
-    "string": "Apenas para a primeira mensagem num grupo"
+    "string": ""
   },
   "Never": {
-    "string": "Nunca"
+    "string": ""
   },
   "Timestamp Format": {
-    "string": "Formato de carimbo de data/hora"
+    "string": ""
   },
   "Format: {format}": {
-    "string": "Formatar: {format}"
+    "string": ""
   },
   "Select format:": {
-    "string": "Selecione o formato:"
+    "string": ""
   },
   "12-hour (AM/PM)": {
-    "string": "12 horas (AM/PM)"
+    "string": ""
   },
   "24-hour": {
-    "string": "24 horas"
+    "string": ""
   },
   "Show Encryption Indicators": {
-    "string": "Mostrar indicadores de encriptação"
+    "string": ""
   },
   "Lock icons visible on tabs/messages": {
-    "string": "Ícones de cadeado visíveis em separadores/mensagens"
+    "string": ""
   },
   "Hide lock icons": {
-    "string": "Ocultar ícones de bloqueio"
+    "string": ""
   },
   "Messages": {
-    "string": "Mensagens"
+    "string": ""
   },
   "Part Message": {
-    "string": "Mensagem de Partida"
+    "string": ""
   },
   "Message to send when leaving a channel.": {
-    "string": "Mensagem a enviar ao sair de um canal."
+    "string": ""
   },
   "Quit Message": {
-    "string": "Mensagem de Saída"
+    "string": ""
   },
   "Message to send when disconnecting.": {
-    "string": "Mensagem a enviar após a desconexão"
+    "string": ""
   },
   "Send Message on Query Close": {
-    "string": "Enviar mensagem ao fechar uma privada"
+    "string": ""
   },
   "Send a message when you close a private message window.": {
-    "string": "Enviar uma mensagem ao fechar uma janela de mensagem privada."
+    "string": ""
   },
   "Query Close Message": {
     "string": ""

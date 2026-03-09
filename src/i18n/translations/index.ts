@@ -12,6 +12,7 @@ const ro = require('./ro.json') as Record<string, string>;
 const ru = require('./ru.json') as Record<string, string>;
 const sr = require('./sr.json') as Record<string, string>;
 const es = require('./es.json') as Record<string, string>;
+const id = require('./id.json') as Record<string, string>;
 
 export const bundledTranslations: Record<string, Record<string, string>> = {
   en,
@@ -23,4 +24,5 @@ export const bundledTranslations: Record<string, Record<string, string>> = {
   ru,
   sr,
   es,
+  id,
 };
