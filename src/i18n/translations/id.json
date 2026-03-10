@@ -2337,7 +2337,7 @@
     "string": "Masukin hostname"
   },
   "Please enter a valid port number (1-65535)": {
-    "string": "Masukan port valid (1–65535)  "
+    "string": "Masukan port valid (1-65535)  "
   },
   "Server Settings": {
     "string": "Setting server  "
