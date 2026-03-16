@@ -76,7 +76,11 @@ describe('IrcDatabaseImportService', () => {
       expect.objectContaining({
         name: 'Rizon',
         id: expect.stringContaining('ircdb-rizon'),
-        defaultServerId: expect.any(String),
+      })
+    );
+    expect(settingsService.addNetwork).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        defaultServerId: expect.anything(),
       })
     );
   });
@@ -189,6 +193,51 @@ describe('IrcDatabaseImportService', () => {
     );
   });
 
+  it('does not auto-assign a default server when importing or merging API networks', async () => {
+    (settingsService.loadNetworks as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 'libera-custom',
+        name: 'Libera',
+        nick: 'me',
+        realname: 'me',
+        servers: [{ id: 'libera-1', hostname: 'irc.libera.chat', port: 6697, ssl: true }],
+      },
+    ]);
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            network_name: 'Libera',
+            server_list: [
+              { hostname: 'irc.libera.chat', port: 6697, use_ssl: true },
+              { hostname: 'irc.eu.libera.chat', port: 6697, use_ssl: true },
+            ],
+          },
+          {
+            network_name: 'Rizon',
+            server_list: [{ hostname: 'irc.rizon.net', port: 6697, use_ssl: true }],
+          },
+        ],
+      }),
+    });
+
+    await ircDatabaseImportService.importFromIrcDatabase(fetchMock as any);
+
+    expect(settingsService.updateNetwork).toHaveBeenCalledWith(
+      'libera-custom',
+      expect.objectContaining({
+        defaultServerId: undefined,
+      })
+    );
+    expect(settingsService.addNetwork).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        defaultServerId: expect.anything(),
+      })
+    );
+  });
+
   it('loads paginated API results across pages', async () => {
     const fetchMock = jest
       .fn()
@@ -260,5 +309,47 @@ describe('IrcDatabaseImportService', () => {
     const summary = await ircDatabaseImportService.importFromIrcDatabase(fetchMock as any);
     expect(summary.importedNetworks).toBe(1);
     expect(settingsService.addNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads catalog preview metadata including average users and last scanned time', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        meta: {
+          description: 'Approved and active IRC networks with predefined server entries for clients.',
+          sorted_by: 'average_users_desc',
+          generated_at: '2026-03-12T23:42:01+01:00',
+          pagination: { has_more_pages: false, next_page_url: null, total: 1 },
+        },
+        data: [
+          {
+            network_name: 'Libera',
+            average_users: 32805,
+            server_list: [
+              {
+                hostname: 'irc.libera.chat',
+                port: 6697,
+                use_ssl: true,
+                last_scanned_at: '2026-03-12T00:34:32+01:00',
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const catalog = await ircDatabaseImportService.loadCatalog(fetchMock as any);
+
+    expect(catalog.meta.description).toContain('Approved and active IRC networks');
+    expect(catalog.meta.sortedBy).toBe('average_users_desc');
+    expect(catalog.meta.generatedAt).toBe('2026-03-12T23:42:01+01:00');
+    expect(catalog.networks).toEqual([
+      expect.objectContaining({
+        name: 'Libera',
+        averageUsers: 32805,
+        serverCount: 1,
+        lastScannedAt: '2026-03-12T00:34:32+01:00',
+      }),
+    ]);
   });
 });

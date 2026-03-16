@@ -276,15 +276,6 @@ class SettingsService {
 
   private buildDefaultNetwork(identityProfileId?: string): IRCNetworkConfig {
     const defaultServer = this.buildDefaultServer();
-    const androidircxServer: IRCServerConfig = {
-      id: 'androidircx-default',
-      hostname: 'irc.androidircx.com',
-      port: 6697,
-      ssl: true,
-      rejectUnauthorized: true,
-      name: 'irc.androidircx.com',
-      favorite: true,
-    };
     return {
       id: 'DBase',
       name: 'DBase',
@@ -292,7 +283,7 @@ class SettingsService {
       altNick: DEFAULT_IDENTITY.altNick,
       realname: DEFAULT_IDENTITY.realname,
       ident: DEFAULT_IDENTITY.ident,
-      servers: [defaultServer, androidircxServer],
+      servers: [defaultServer],
       defaultServerId: defaultServer.id,
       identityProfileId,
       autoJoinChannels: ['#AndroidIRCX', '#DBase'],
@@ -314,34 +305,36 @@ class SettingsService {
 
       // For DBase network, ensure default servers exist; for user networks, keep their servers as-is
       let servers = net.servers || [];
+      const hadNoServers = servers.length === 0;
 
       if (isDBaseNetwork) {
-        // For DBase network, ensure both default servers are present
+        // For DBase network, ensure only the built-in DBase server is present by default
         if (servers.length === 0) {
           servers = [this.buildDefaultServer()];
+          updated = true;
         }
 
         const hasDbServer = servers.some(s => s.hostname === 'irc.dbase.in.rs');
-        const hasAndroidircxServer = servers.some(s => s.hostname === 'irc.androidircx.com');
+        const hadAndroidircxServer = servers.some(s => s.hostname === 'irc.androidircx.com');
 
         if (!hasDbServer) {
           servers = [...servers, this.buildDefaultServer()];
           updated = true;
         }
-        if (!hasAndroidircxServer) {
-          const androidircxServer: IRCServerConfig = {
-            id: 'androidircx-default',
-            hostname: 'irc.androidircx.com',
-            port: 6697,
-            ssl: true,
-            rejectUnauthorized: true,
-            name: 'irc.androidircx.com',
-            favorite: true,
-          };
-          servers = [...servers, androidircxServer];
+
+        if (hadAndroidircxServer) {
+          servers = servers.filter(s => s.hostname !== 'irc.androidircx.com');
           updated = true;
         }
       }
+
+      const hasValidDefaultServerId =
+        typeof net.defaultServerId === 'string' && servers.some(s => s.id === net.defaultServerId);
+      const defaultServerId = hasValidDefaultServerId
+        ? net.defaultServerId
+        : typeof net.defaultServerId === 'string' || hadNoServers
+          ? servers[0]?.id
+          : undefined;
 
       const patched: IRCNetworkConfig = {
         ...net,
@@ -350,7 +343,7 @@ class SettingsService {
           // Default to rejecting unauthorized certs unless user explicitly disabled
           rejectUnauthorized: s.rejectUnauthorized !== false,
         })),
-        defaultServerId: net.defaultServerId,
+        defaultServerId,
         identityProfileId: net.identityProfileId,
         nick: net.nick || DEFAULT_IDENTITY.nick,
         altNick: net.altNick || DEFAULT_IDENTITY.altNick,
