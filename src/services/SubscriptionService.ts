@@ -22,7 +22,6 @@ import {
   ZncRegisterRequest,
   ZncRegisterResponse,
   ZncRestoreResponse,
-  ZncListResponse,
   ZncServerConfig,
   ZncProvisioningStatus,
   ZNC_STORAGE_KEYS,
@@ -77,7 +76,7 @@ class SubscriptionService {
               await secureStorageService.setSecret(passwordKey, account.zncPassword);
               next.zncPassword = null;
             } catch (passwordError) {
-              logger.error('znc', `Failed to save password for account ${account.id}: ${passwordError}`);
+              logger.error('znc', `Failed to save password for account ${account.id}`);
               // Continue without clearing password - it will be stored in plain text
             }
           }
@@ -86,7 +85,7 @@ class SubscriptionService {
               await secureStorageService.setSecret(tokenKey, account.purchaseToken);
               next.purchaseToken = '';
             } catch (tokenError) {
-              logger.error('znc', `Failed to save token for account ${account.id}: ${tokenError}`);
+              logger.error('znc', `Failed to save token for account ${account.id}`);
               // Continue without clearing token - it will be stored in plain text
             }
           }
@@ -95,14 +94,14 @@ class SubscriptionService {
             await secureStorageService.removeSecret(passwordKey);
             await secureStorageService.removeSecret(tokenKey);
           } catch (removeError) {
-            logger.warn('znc', `Failed to remove secrets for account ${account.id}: ${removeError}`);
+            logger.warn('znc', `Failed to remove secrets for account ${account.id}`);
             // Continue - not critical if removal fails
           }
         }
 
         persisted.push(next);
       } catch (accountError) {
-        logger.error('znc', `Failed to prepare account ${account.id} for storage: ${accountError}`);
+        logger.error('znc', `Failed to prepare account ${account.id} for storage`);
         // Add account without sensitive data to prevent data loss
         persisted.push({
           ...account,
@@ -378,9 +377,7 @@ class SubscriptionService {
       throw new Error(response.error);
     }
 
-    // Debug logging for ZNC password handling
     logger.info('znc', `Registration response - id: ${response.id}, username: ${response.znc_username}, status: ${response.status}, znc_status: ${response.znc_status}`);
-    logger.info('znc', `Password field - type: ${typeof response.znc_password}, hasValue: ${response.znc_password !== null && response.znc_password !== undefined}, isEmpty: ${response.znc_password === ''}, length: ${response.znc_password?.length ?? 'N/A'}`);
 
     // Check if account already exists (update it)
     const existingIndex = this.accounts.findIndex(a => a.id === response.id);
@@ -751,7 +748,7 @@ class SubscriptionService {
    */
   async clearAllData(): Promise<void> {
     this.accounts = [];
-    await AsyncStorage.multiRemove([ZNC_STORAGE_KEYS.ACCOUNTS, ZNC_STORAGE_KEYS.TOKENS]);
+    await AsyncStorage.removeMany([ZNC_STORAGE_KEYS.ACCOUNTS, ZNC_STORAGE_KEYS.TOKENS]);
     this.notifyListeners();
     logger.info('znc', 'All ZNC data cleared');
   }
@@ -790,7 +787,7 @@ class SubscriptionService {
           // Try to parse as JSON to get structured error
           const errorJson = JSON.parse(errorText);
           errorMessage = typeof errorJson?.error === 'string' ? errorJson.error : errorText;
-        } catch (parseError) {
+        } catch {
           // If not JSON, use the raw text
           logger.warn('znc', `Non-JSON error response: ${errorText}`);
         }

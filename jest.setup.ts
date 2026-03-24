@@ -5,6 +5,11 @@
 
 // Global Jest setup for React Native project to mock native modules used in tests.
 
+console.log = jest.fn();
+console.info = jest.fn();
+console.debug = jest.fn();
+console.warn = jest.fn();
+
 const originalConsoleError = console.error;
 console.error = (...args: any[]) => {
   const combined = args.map(arg => (typeof arg === 'string' ? arg : '')).join(' ');
@@ -39,6 +44,9 @@ jest.mock('@react-native-async-storage/async-storage', () => {
     multiRemove: jest.fn(async (keys: string[]) => {
       keys.forEach(key => asyncStore.delete(key));
     }),
+    removeMany: jest.fn(async (keys: string[]) => {
+      keys.forEach(key => asyncStore.delete(key));
+    }),
     getAllKeys: jest.fn(async () => Array.from(asyncStore.keys())),
     __STORE: asyncStore,
     __reset: () => {
@@ -50,6 +58,7 @@ jest.mock('@react-native-async-storage/async-storage', () => {
       mock.multiGet.mockClear();
       mock.multiSet.mockClear();
       mock.multiRemove.mockClear();
+      mock.removeMany.mockClear();
       mock.getAllKeys.mockClear();
     },
   };
@@ -287,14 +296,14 @@ jest.mock('react-native-sound', () => {
     setVolume: jest.fn(),
     setNumberOfLoops: jest.fn(),
   };
-  
+
   const MockSound = jest.fn().mockImplementation(() => mockInstance);
   (MockSound as any).setCategory = jest.fn();
   (MockSound as any).MAIN_BUNDLE = '';
   (MockSound as any).DOCUMENT = '';
   (MockSound as any).LIBRARY = '';
   (MockSound as any).CACHES = '';
-  
+
   return {
     __esModule: true,
     default: MockSound,
