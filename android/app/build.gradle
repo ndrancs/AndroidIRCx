@@ -130,6 +130,22 @@ tasks.matching { task ->
     dependsOn("ensureAutolinkingCodegenStubs")
 }
 
+tasks.matching { task ->
+    task.name.startsWith("configureCMake")
+}.configureEach { task ->
+    def reanimatedProject = project.findProject(":react-native-reanimated")
+    if (reanimatedProject == null) {
+        return
+    }
+
+    if (task.name.contains("Debug")) {
+        task.dependsOn(":react-native-reanimated:prefabDebugPackage")
+    } else {
+        // RelWithDebInfo and Release variants consume release prefab artifacts.
+        task.dependsOn(":react-native-reanimated:prefabReleasePackage")
+    }
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
