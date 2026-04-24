@@ -223,14 +223,15 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
       lines.push(`Connecting from: ${whoisInfo.connectingFrom}`);
     }
     if (whoisInfo.server) lines.push(`Server: ${whoisInfo.server}`);
-    if (whoisInfo.serverInfo) lines.push(`Server info: ${whoisInfo.serverInfo}`);
+    if (whoisInfo.serverInfo)
+      lines.push(`Server info: ${whoisInfo.serverInfo}`);
     if (whoisInfo.away) {
-      lines.push(
-        `Away: ${whoisInfo.awayMessage || 'User is away'}`,
-      );
+      lines.push(`Away: ${whoisInfo.awayMessage || 'User is away'}`);
     }
     if (whoisInfo.secure || whoisInfo.secureMessage) {
-      lines.push(`Connection: ${whoisInfo.secureMessage || 'Secure (SSL/TLS)'}`);
+      lines.push(
+        `Connection: ${whoisInfo.secureMessage || 'Secure (SSL/TLS)'}`,
+      );
     }
     if (whoisInfo.idle !== undefined) {
       lines.push(`Idle: ${Math.floor(whoisInfo.idle / 60)} minutes`);
@@ -648,7 +649,11 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   })}
                 </Text>
                 {activity.text ? (
-                  <Text style={styles.listItemText} numberOfLines={2} selectable>
+                  <Text
+                    style={styles.listItemText}
+                    numberOfLines={2}
+                    selectable
+                  >
                     {t('Context: ')}
                     {formatIRCTextAsComponent(
                       activity.text,
@@ -718,7 +723,10 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
           {/* Actions */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('Actions')}</Text>
-            <TouchableOpacity style={styles.button} onPress={handleCopyWhoisDetails}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleCopyWhoisDetails}
+            >
               <Text style={styles.buttonText}>{t('Copy WHOIS Details')}</Text>
             </TouchableOpacity>
             {isIgnored ? (

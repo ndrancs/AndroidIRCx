@@ -455,7 +455,10 @@ export const SecuritySection: React.FC<SecuritySectionProps> = ({
         onValueChange: async (value: string | boolean) => {
           const boolValue = value as boolean;
           setAllowScreenshots(boolValue);
-          await settingsService.setSetting('securityAllowScreenshots', boolValue);
+          await settingsService.setSetting(
+            'securityAllowScreenshots',
+            boolValue,
+          );
           await screenshotProtectionService.setAllowScreenshots(boolValue);
         },
       },

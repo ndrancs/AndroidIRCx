@@ -106,10 +106,11 @@
     "node": ">=20"
   },
   "resolutions": {
-    "@xmldom/xmldom": "0.8.12",
-    "fast-xml-parser": "5.5.7",
+    "@xmldom/xmldom": "0.8.13",
+    "fast-xml-parser": "5.7.0",
     "flatted": "3.4.2",
     "yaml": "2.8.3",
-    "picomatch": "4.0.4"
+    "picomatch": "4.0.4",
+    "uuid": "14.0.0"
   }
 }

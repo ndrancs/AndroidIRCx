@@ -515,7 +515,12 @@ export function useAppLock() {
         clearTimeout(lockScreenFreezeTimeoutRef.current);
       }
     };
-  }, [appLockEnabled, appLockOnBackground, appLockOnLaunch, attemptBiometricUnlock]);
+  }, [
+    appLockEnabled,
+    appLockOnBackground,
+    appLockOnLaunch,
+    attemptBiometricUnlock,
+  ]);
 
   // Effect: Clean up state when unlocked and optionally auto-trigger biometric prompt
   useEffect(() => {

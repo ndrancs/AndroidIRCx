@@ -10,7 +10,7 @@ interface ScreenshotProtectionNativeModule {
 }
 
 const ScreenshotProtectionModule: ScreenshotProtectionNativeModule | undefined =
-  NativeModules.ScreenshotProtectionModule;
+  NativeModules?.ScreenshotProtectionModule;
 
 class ScreenshotProtectionService {
   private readonly isAvailable: boolean;
@@ -39,4 +39,3 @@ class ScreenshotProtectionService {
 }
 
 export const screenshotProtectionService = new ScreenshotProtectionService();
-
