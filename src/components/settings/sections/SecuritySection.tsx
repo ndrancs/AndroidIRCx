@@ -29,6 +29,7 @@ import {
 import { settingsService } from '../../../services/SettingsService';
 import { biometricAuthService } from '../../../services/BiometricAuthService';
 import { secureStorageService } from '../../../services/SecureStorageService';
+import { screenshotProtectionService } from '../../../services/ScreenshotProtectionService';
 
 interface SecuritySectionProps {
   colors: {
@@ -80,6 +81,7 @@ export const SecuritySection: React.FC<SecuritySectionProps> = ({
   const [allowQrVerification, setAllowQrVerification] = useState(true);
   const [allowFileExchange, setAllowFileExchange] = useState(true);
   const [allowNfcExchange, setAllowNfcExchange] = useState(true);
+  const [allowScreenshots, setAllowScreenshots] = useState(false);
   const [appLockEnabled, setAppLockEnabled] = useState(false);
   const [appLockUseBiometric, setAppLockUseBiometric] = useState(false);
   const [appLockAutoBiometricPrompt, setAppLockAutoBiometricPrompt] =
@@ -117,6 +119,12 @@ export const SecuritySection: React.FC<SecuritySectionProps> = ({
         true,
       );
       setAllowNfcExchange(nfc);
+
+      const screenshots = await settingsService.getSetting(
+        'securityAllowScreenshots',
+        false,
+      );
+      setAllowScreenshots(screenshots);
 
       let appLock = await settingsService.getSetting('appLockEnabled', false);
 
@@ -428,6 +436,30 @@ export const SecuritySection: React.FC<SecuritySectionProps> = ({
         },
       },
       {
+        id: 'security-screenshots',
+        title: t('Allow Screenshots', { _tags: tags }),
+        description: allowScreenshots
+          ? 'Screenshots and recents previews are allowed'
+          : 'Screenshots and recents previews are blocked',
+        type: 'switch',
+        value: allowScreenshots,
+        searchKeywords: [
+          'screenshot',
+          'screen',
+          'capture',
+          'secure',
+          'privacy',
+          'recording',
+          'recents',
+        ],
+        onValueChange: async (value: string | boolean) => {
+          const boolValue = value as boolean;
+          setAllowScreenshots(boolValue);
+          await settingsService.setSetting('securityAllowScreenshots', boolValue);
+          await screenshotProtectionService.setAllowScreenshots(boolValue);
+        },
+      },
+      {
         id: 'security-app-lock',
         title: t('App Lock', { _tags: tags }),
         description: appLockEnabled ? 'App lock enabled' : 'App lock disabled',
@@ -583,6 +615,7 @@ export const SecuritySection: React.FC<SecuritySectionProps> = ({
     allowQrVerification,
     allowFileExchange,
     allowNfcExchange,
+    allowScreenshots,
     appLockEnabled,
     appLockUseBiometric,
     appLockAutoBiometricPrompt,

@@ -492,6 +492,19 @@ export function useAppLock() {
           currentStore.setAppLocked(true);
           currentStore.setAppUnlockModalVisible(true);
         }
+
+        // If lock state is already true (e.g. app was locked while backgrounded),
+        // no appLocked state change happens on foreground, so trigger auto biometric here.
+        if (
+          currentStore.appLocked &&
+          currentStore.appLockUseBiometric &&
+          currentStore.appLockAutoBiometricPrompt &&
+          !biometricAttemptInProgressRef.current
+        ) {
+          attemptBiometricUnlock(false).catch(() => {
+            // Auto-prompt failures are already handled by the unlock flow.
+          });
+        }
       }
     });
 
@@ -502,7 +515,7 @@ export function useAppLock() {
         clearTimeout(lockScreenFreezeTimeoutRef.current);
       }
     };
-  }, [appLockEnabled, appLockOnBackground, appLockOnLaunch]);
+  }, [appLockEnabled, appLockOnBackground, appLockOnLaunch, attemptBiometricUnlock]);
 
   // Effect: Clean up state when unlocked and optionally auto-trigger biometric prompt
   useEffect(() => {

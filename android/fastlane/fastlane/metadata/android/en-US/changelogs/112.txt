@@ -1,0 +1,8 @@
+What's new in 1.9.9:
+- Added Security option to allow or block screenshots and recents previews
+- Improved App Lock biometric flow when returning from background:
+  - With Auto-show Biometric Prompt enabled, unlock prompt appears immediately
+  - With Auto-show Biometric Prompt disabled, unlock modal works as before
+- Made WHOIS details selectable and copyable
+- Updated react-native-nitro-modules to 0.35.5
+- Bug fixes and performance improvements

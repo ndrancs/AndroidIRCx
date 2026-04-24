@@ -77,6 +77,22 @@ describe('useAppLock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    (settingsService.getSetting as jest.Mock).mockImplementation(
+      (_key, defaultValue) => Promise.resolve(defaultValue),
+    );
+    (settingsService.setSetting as jest.Mock).mockResolvedValue(undefined);
+    (settingsService.onSettingChange as jest.Mock).mockReturnValue(jest.fn());
+    (biometricAuthService.isAvailable as jest.Mock).mockReturnValue(true);
+    (biometricAuthService.hasEnrolledBiometrics as jest.Mock).mockResolvedValue(
+      true,
+    );
+    (biometricAuthService.authenticate as jest.Mock).mockResolvedValue({
+      success: true,
+    });
+    (biometricAuthService.enableLock as jest.Mock).mockResolvedValue(true);
+    (biometricAuthService.disableLock as jest.Mock).mockResolvedValue(true);
+    (secureStorageService.getSecret as jest.Mock).mockResolvedValue(null);
+    (secureStorageService.setSecret as jest.Mock).mockResolvedValue(undefined);
     // Reset mock store state
     Object.keys(mockStore).forEach(key => {
       if (typeof mockStore[key] === 'boolean') {
@@ -397,6 +413,63 @@ describe('useAppLock', () => {
 
       expect(mockStore.setAppLocked).toHaveBeenCalledWith(true);
       expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(true);
+    });
+
+    it('should auto-prompt biometrics on foreground when already locked from background', async () => {
+      mockStore.appLockEnabled = true;
+      mockStore.appLockOnBackground = true;
+      mockStore.appLockOnLaunch = false;
+      mockStore.appLockUseBiometric = true;
+      mockStore.appLockAutoBiometricPrompt = true;
+
+      const originalCurrentState = (AppState as any).currentState;
+      Object.defineProperty(AppState, 'currentState', {
+        configurable: true,
+        value: 'active',
+      });
+      try {
+        let appStateCallback: ((state: string) => void) | undefined;
+        jest
+          .spyOn(AppState, 'addEventListener')
+          .mockImplementation((event: any, callback: any) => {
+            appStateCallback = callback;
+            return { remove: jest.fn() };
+          });
+
+        renderHook(() => useAppLock());
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        // App goes to background and becomes locked there.
+        await act(async () => {
+          appStateCallback?.('background');
+          await Promise.resolve();
+        });
+        expect(mockStore.setAppLocked).toHaveBeenCalledWith(true);
+        mockStore.appLocked = true;
+
+        (biometricAuthService.authenticate as jest.Mock).mockClear();
+
+        // Foreground transition should trigger automatic biometric prompt.
+        await act(async () => {
+          appStateCallback?.('active');
+          await Promise.resolve();
+          await Promise.resolve();
+        });
+
+        expect(biometricAuthService.authenticate).toHaveBeenCalledWith(
+          'Unlock AndroidIRCX',
+          'Authenticate to unlock the app',
+          'app',
+        );
+      } finally {
+        Object.defineProperty(AppState, 'currentState', {
+          configurable: true,
+          value: originalCurrentState,
+        });
+      }
     });
 
     it('should unsubscribe on unmount', async () => {

@@ -71,6 +71,7 @@ import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useLazyMessageHistory } from './src/hooks/useLazyMessageHistory';
 import { useDeepLinkHandler } from './src/hooks/useDeepLinkHandler';
 import { killSwitchService } from './src/services/KillSwitchService';
+import { screenshotProtectionService } from './src/services/ScreenshotProtectionService';
 import { getActiveTabSafe } from './src/utils/activeTabUtils';
 
 // Suppress noisy pooled synthetic event warnings that can appear in dev logging
@@ -220,6 +221,33 @@ function AppContent() {
     return () => {
       unsubscribe();
       unsubscribe2();
+    };
+  }, []);
+
+  useEffect(() => {
+    const applyScreenshotPreference = async (allowScreenshots: boolean) => {
+      await screenshotProtectionService.setAllowScreenshots(allowScreenshots);
+    };
+
+    const loadScreenshotSettings = async () => {
+      const allowScreenshots = await settingsService.getSetting(
+        'securityAllowScreenshots',
+        false,
+      );
+      await applyScreenshotPreference(allowScreenshots);
+    };
+
+    loadScreenshotSettings().catch(() => {});
+
+    const unsubscribe = settingsService.onSettingChange<boolean>(
+      'securityAllowScreenshots',
+      value => {
+        applyScreenshotPreference(Boolean(value)).catch(() => {});
+      },
+    );
+
+    return () => {
+      unsubscribe();
     };
   }, []);
 

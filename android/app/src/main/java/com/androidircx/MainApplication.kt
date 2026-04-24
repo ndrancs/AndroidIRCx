@@ -109,6 +109,15 @@ class MainApplication : Application(), ReactApplication {
               // Don't fail completely if custom package fails
           }
 
+          // Add our custom package for runtime screenshot protection toggle
+          try {
+              packages.add(ScreenshotProtectionPackage())
+              Log.d(TAG, "Added ScreenshotProtectionPackage")
+          } catch (e: Exception) {
+              Log.e(TAG, "Failed to add ScreenshotProtectionPackage: ${e.message}", e)
+              // Don't fail completely if custom package fails
+          }
+
           Log.d(TAG, "Creating ReactHost with ${packages.size} packages...")
           val host = getDefaultReactHost(
               context = applicationContext,

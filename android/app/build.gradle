@@ -146,6 +146,24 @@ tasks.matching { task ->
     }
 }
 
+// reanimated 4.3+ uses find_package(react-native-worklets REQUIRED) at cmake configure time.
+// Without an explicit Gradle dependency, parallel builds can run reanimated's cmake before
+// worklets' prefab is ready, causing a race condition failure. This block ensures ordering.
+rootProject.afterEvaluate {
+    def workletsProject = rootProject.allprojects.find { it.name == "react-native-worklets" }
+    def reanimatedProject = rootProject.allprojects.find { it.name == "react-native-reanimated" }
+
+    if (workletsProject != null && reanimatedProject != null) {
+        reanimatedProject.tasks.matching { it.name.startsWith("configureCMake") }.configureEach { t ->
+            def prefabTaskName = t.name.contains("Debug") ? "prefabDebugConfigurePackage" : "prefabReleaseConfigurePackage"
+            def wt = workletsProject.tasks.findByName(prefabTaskName)
+            if (wt != null) {
+                t.dependsOn(wt)
+            }
+        }
+    }
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -226,8 +244,8 @@ android {
         applicationId = "com.androidircx"
         minSdkVersion = rootProject.ext.minSdkVersion
         targetSdkVersion = rootProject.ext.targetSdkVersion
-        versionCode = 111
-        versionName = "1.9.8"
+        versionCode = 112
+        versionName = "1.9.9"
 
         buildConfigField "long", "PLAY_INTEGRITY_PROJECT_NUMBER", "1060587657852L"
 

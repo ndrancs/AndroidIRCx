@@ -14,6 +14,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {
   userManagementService as singletonUserManagementService,
   WHOISInfo,
@@ -206,6 +207,56 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
   const isSelfWhois =
     !!currentNick && nick.toLowerCase() === currentNick.toLowerCase();
 
+  const buildWhoisDetailsText = () => {
+    if (!whoisInfo) return '';
+
+    const lines: string[] = [];
+    lines.push(`WHOIS: ${nick}`);
+
+    if (whoisInfo.realname) lines.push(`Real Name: ${whoisInfo.realname}`);
+    if (whoisInfo.username && whoisInfo.hostname) {
+      lines.push(`Host: ${whoisInfo.username}@${whoisInfo.hostname}`);
+    }
+    if (whoisInfo.account) lines.push(`Account: ${whoisInfo.account}`);
+    if (whoisInfo.modes) lines.push(`Modes: ${whoisInfo.modes}`);
+    if (whoisInfo.connectingFrom) {
+      lines.push(`Connecting from: ${whoisInfo.connectingFrom}`);
+    }
+    if (whoisInfo.server) lines.push(`Server: ${whoisInfo.server}`);
+    if (whoisInfo.serverInfo) lines.push(`Server info: ${whoisInfo.serverInfo}`);
+    if (whoisInfo.away) {
+      lines.push(
+        `Away: ${whoisInfo.awayMessage || 'User is away'}`,
+      );
+    }
+    if (whoisInfo.secure || whoisInfo.secureMessage) {
+      lines.push(`Connection: ${whoisInfo.secureMessage || 'Secure (SSL/TLS)'}`);
+    }
+    if (whoisInfo.idle !== undefined) {
+      lines.push(`Idle: ${Math.floor(whoisInfo.idle / 60)} minutes`);
+    }
+    if (whoisInfo.signon) {
+      lines.push(`Signed on: ${new Date(whoisInfo.signon).toLocaleString()}`);
+    }
+    if (whoisInfo.channels?.length) {
+      lines.push(`Channels: ${whoisInfo.channels.join(', ')}`);
+    }
+
+    return lines.join('\n');
+  };
+
+  const handleCopyWhoisDetails = () => {
+    const details = buildWhoisDetailsText();
+    if (!details) return;
+
+    try {
+      Clipboard.setString(details);
+      Alert.alert(t('Copied'));
+    } catch {
+      Alert.alert(t('Error'), t('Failed to copy to clipboard'));
+    }
+  };
+
   if (!visible) return null;
 
   return (
@@ -252,7 +303,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                 {whoisInfo.realname && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Real Name:')}</Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {formatIRCTextAsComponent(
                         whoisInfo.realname,
                         styles.infoValue,
@@ -263,7 +314,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                 {whoisInfo.username && whoisInfo.hostname && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Host:')}</Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {whoisInfo.username}@{whoisInfo.hostname}
                     </Text>
                   </View>
@@ -271,13 +322,17 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                 {whoisInfo.account && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Account:')}</Text>
-                    <Text style={styles.infoValue}>{whoisInfo.account}</Text>
+                    <Text style={styles.infoValue} selectable>
+                      {whoisInfo.account}
+                    </Text>
                   </View>
                 )}
                 {whoisInfo.modes && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Modes:')}</Text>
-                    <Text style={styles.infoValue}>{whoisInfo.modes}</Text>
+                    <Text style={styles.infoValue} selectable>
+                      {whoisInfo.modes}
+                    </Text>
                   </View>
                 )}
                 {whoisInfo.connectingFrom && (
@@ -285,7 +340,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                     <Text style={styles.infoLabel}>
                       {t('Connecting from:')}
                     </Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {whoisInfo.connectingFrom}
                     </Text>
                   </View>
@@ -370,7 +425,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   {whoisInfo.specialStatus && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>{t('Special:')}</Text>
-                      <Text style={styles.infoValue}>
+                      <Text style={styles.infoValue} selectable>
                         {whoisInfo.specialStatus}
                       </Text>
                     </View>
@@ -383,10 +438,12 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   <Text style={styles.sectionTitle}>{t('Server')}</Text>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Server:')}</Text>
-                    <Text style={styles.infoValue}>{whoisInfo.server}</Text>
+                    <Text style={styles.infoValue} selectable>
+                      {whoisInfo.server}
+                    </Text>
                   </View>
                   {whoisInfo.serverInfo && (
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {formatIRCTextAsComponent(
                         whoisInfo.serverInfo,
                         styles.infoValue,
@@ -401,7 +458,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   <Text style={styles.sectionTitle}>{t('Status')}</Text>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Away:')}</Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {whoisInfo.awayMessage
                         ? formatIRCTextAsComponent(
                             whoisInfo.awayMessage,
@@ -418,7 +475,10 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   <Text style={styles.sectionTitle}>{t('Security')}</Text>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Connection:')}</Text>
-                    <Text style={[styles.infoValue, { color: colors.success }]}>
+                    <Text
+                      style={[styles.infoValue, { color: colors.success }]}
+                      selectable
+                    >
                       {whoisInfo.secureMessage || t('Secure (SSL/TLS)')}
                     </Text>
                   </View>
@@ -432,7 +492,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   </Text>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>{t('Idle:')}</Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.infoValue} selectable>
                       {t('{minutes} minutes', {
                         minutes: Math.floor(whoisInfo.idle / 60),
                       })}
@@ -441,7 +501,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                   {whoisInfo.signon && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>{t('Signed on:')}</Text>
-                      <Text style={styles.infoValue}>
+                      <Text style={styles.infoValue} selectable>
                         {new Date(whoisInfo.signon).toLocaleString()}
                       </Text>
                     </View>
@@ -480,7 +540,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                               onPress={() => onChannelPress(cleanChannel)}
                               activeOpacity={0.7}
                             >
-                              <Text style={styles.channelText}>
+                              <Text style={styles.channelText} selectable>
                                 {prefix && (
                                   <Text style={styles.channelPrefix}>
                                     {prefix}
@@ -490,7 +550,7 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
                               </Text>
                             </TouchableOpacity>
                           ) : (
-                            <Text style={styles.channelText}>
+                            <Text style={styles.channelText} selectable>
                               {prefix && (
                                 <Text style={styles.channelPrefix}>
                                   {prefix}
@@ -525,7 +585,9 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
             {!showNoteInput ? (
               <>
                 {noteText ? (
-                  <Text style={styles.noteText}>{noteText}</Text>
+                  <Text style={styles.noteText} selectable>
+                    {noteText}
+                  </Text>
                 ) : (
                   <Text style={styles.emptyText}>{t('No note')}</Text>
                 )}
@@ -574,19 +636,19 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
             <Text style={styles.sectionTitle}>{t('User Activity')}</Text>
             {activity ? (
               <>
-                <Text style={styles.listItemText}>
+                <Text style={styles.listItemText} selectable>
                   {t('Last action: {action}{channel}', {
                     action: activity.lastAction,
                     channel: activity.channel ? ` (${activity.channel})` : '',
                   })}
                 </Text>
-                <Text style={styles.listItemText}>
+                <Text style={styles.listItemText} selectable>
                   {t('Last seen: {time}', {
                     time: new Date(activity.lastSeenAt).toLocaleString(),
                   })}
                 </Text>
                 {activity.text ? (
-                  <Text style={styles.listItemText} numberOfLines={2}>
+                  <Text style={styles.listItemText} numberOfLines={2} selectable>
                     {t('Context: ')}
                     {formatIRCTextAsComponent(
                       activity.text,
@@ -608,7 +670,9 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
             {!showAliasInput ? (
               <>
                 {aliasText ? (
-                  <Text style={styles.aliasText}>{aliasText}</Text>
+                  <Text style={styles.aliasText} selectable>
+                    {aliasText}
+                  </Text>
                 ) : (
                   <Text style={styles.emptyText}>{t('No alias')}</Text>
                 )}
@@ -654,6 +718,9 @@ export const WHOISDisplay: React.FC<WHOISDisplayProps> = ({
           {/* Actions */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('Actions')}</Text>
+            <TouchableOpacity style={styles.button} onPress={handleCopyWhoisDetails}>
+              <Text style={styles.buttonText}>{t('Copy WHOIS Details')}</Text>
+            </TouchableOpacity>
             {isIgnored ? (
               <TouchableOpacity style={styles.button} onPress={handleUnignore}>
                 <Text style={styles.buttonText}>{t('Unignore User')}</Text>
