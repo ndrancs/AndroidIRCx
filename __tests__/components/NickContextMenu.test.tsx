@@ -239,6 +239,16 @@ describe('NickContextMenu', () => {
       expect(onAction).toHaveBeenCalledWith('whois');
     });
 
+    it('handles WHOWAS action', () => {
+      const onAction = jest.fn();
+      const { getByText } = render(
+        <NickContextMenu {...baseProps} onAction={onAction} />,
+      );
+
+      fireEvent.press(getByText('WHOWAS'));
+      expect(onAction).toHaveBeenCalledWith('whowas');
+    });
+
     it('handles Open Query action', () => {
       const onAction = jest.fn();
       const { getByText } = render(
@@ -257,6 +267,28 @@ describe('NickContextMenu', () => {
 
       fireEvent.press(getByText('Copy nickname'));
       expect(onAction).toHaveBeenCalledWith('copy');
+    });
+
+    it('uses initial user@host info for display and copy actions', async () => {
+      const onAction = jest.fn();
+      const { getByText } = render(
+        <NickContextMenu
+          {...baseProps}
+          onAction={onAction}
+          initialUserHostInfo={{ user: '~test', host: 'host.test' }}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(getByText('~test@host.test')).toBeTruthy();
+      });
+      expect(mockSendSilentWho).not.toHaveBeenCalled();
+
+      fireEvent.press(getByText('Copy user@host'));
+      fireEvent.press(getByText('Copy hostmask'));
+
+      expect(onAction).toHaveBeenCalledWith('copy_userhost');
+      expect(onAction).toHaveBeenCalledWith('copy_hostmask');
     });
   });
 

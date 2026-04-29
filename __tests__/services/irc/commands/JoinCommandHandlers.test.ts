@@ -152,6 +152,8 @@ describe('JoinCommandHandlers', () => {
         'SimpleUser',
         expect.objectContaining({
           account: undefined,
+          ident: '~user',
+          host: 'host.com',
         }),
       );
     });
@@ -184,6 +186,8 @@ describe('JoinCommandHandlers', () => {
         expect.objectContaining({
           nick: 'RegisteredUser',
           account: 'registered_account',
+          ident: '~user',
+          host: 'host.com',
         }),
       );
     });
@@ -217,6 +221,8 @@ describe('JoinCommandHandlers', () => {
         nick: 'ExistingUser',
         modes: [],
         account: undefined,
+        ident: undefined as string | undefined,
+        host: undefined as string | undefined,
       };
       ctx.getCurrentNick = jest.fn().mockReturnValue('TestUser');
       ctx.extractNick = jest.fn().mockReturnValue('ExistingUser');
@@ -231,6 +237,8 @@ describe('JoinCommandHandlers', () => {
       );
 
       expect(existingUser.account).toBe('new_account');
+      expect(existingUser.ident).toBe('~user');
+      expect(existingUser.host).toBe('host.com');
       expect(ctx.setUser).not.toHaveBeenCalled();
     });
 
@@ -250,6 +258,14 @@ describe('JoinCommandHandlers', () => {
         expect.objectContaining({
           username: '~username',
           hostname: 'hostname.com',
+        }),
+      );
+      expect(ctx.setUser).toHaveBeenCalledWith(
+        '#general',
+        'JoiningUser',
+        expect.objectContaining({
+          ident: '~username',
+          host: 'hostname.com',
         }),
       );
     });

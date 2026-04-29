@@ -443,6 +443,7 @@ describe('MessageArea', () => {
         isServerOper: jest.fn(() => false),
         sendRaw: jest.fn(),
         sendCommand: jest.fn(),
+        sendMessage: jest.fn(),
         sendCTCPRequest: jest.fn(),
         addMessage: jest.fn(),
         isMonitoring: jest.fn(() => false),
@@ -1345,6 +1346,110 @@ describe('MessageArea', () => {
     expect(irc.sendCommand).toHaveBeenCalledWith('KICK #general Alice');
     expect(irc.sendCommand).toHaveBeenCalledWith('KICK #general Alice :Kicked');
     expect(irc.sendCommand).toHaveBeenCalledWith('MODE #general +b Alice!*@*');
+  });
+
+  it('opens nick context menu from clickable join userhost metadata', async () => {
+    const messages = [
+      makeMsg({
+        type: 'join',
+        text: 'Alice (alice-account) joined #general',
+        from: 'Alice',
+        username: '~alice',
+        hostname: 'host.test',
+        command: 'JOIN',
+      }),
+    ];
+    const { getByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} />,
+    );
+
+    expect(
+      getByText(/Alice \(~alice@host\.test\) joined #general/),
+    ).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(getByText('~alice@host.test'));
+    });
+
+    expect(mockNickContextMenuProps).toBeTruthy();
+    expect(mockNickContextMenuProps.nick).toBe('Alice');
+    expect(mockNickContextMenuProps.initialUserHostInfo).toEqual({
+      user: '~alice',
+      host: 'host.test',
+    });
+    expect(mockNickContextMenuProps.sourceMessageType).toBe('join');
+
+    await act(async () => {
+      await mockNickContextMenuProps.onAction('whowas');
+    });
+
+    const connection = mockGetConnection.mock.results[0]?.value;
+    const irc = connection?.ircService;
+    expect(irc.sendMessage).toHaveBeenCalledWith('#general', '/whowas Alice');
+  });
+
+  it('uses clicked quit userhost metadata for ban masks', async () => {
+    const { banService } = require('../../src/services/BanService');
+    banService.generateBanMask.mockReturnValueOnce('*!*@host.test');
+    const messages = [
+      makeMsg({
+        type: 'quit',
+        text: 'Alice quit: Bye',
+        from: 'Alice',
+        username: '~alice',
+        hostname: 'host.test',
+        command: 'QUIT',
+      }),
+    ];
+    const { getByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} />,
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText('~alice@host.test'));
+    });
+    await act(async () => {
+      await mockNickContextMenuProps.onAction('ban');
+    });
+
+    const connection = mockGetConnection.mock.results[0]?.value;
+    const irc = connection?.ircService;
+    expect(banService.generateBanMask).toHaveBeenCalledWith(
+      'Alice',
+      '~alice',
+      'host.test',
+      2,
+    );
+    expect(irc.sendCommand).toHaveBeenCalledWith(
+      'MODE #general +b *!*@host.test',
+    );
+  });
+
+  it('renders part and quit userhost metadata next to the nick', async () => {
+    const messages = [
+      makeMsg({
+        id: 'part-host',
+        type: 'part',
+        text: 'Alice left #general: Bye',
+        from: 'Alice',
+        username: '~alice',
+        hostname: 'host.test',
+      }),
+      makeMsg({
+        id: 'quit-host',
+        type: 'quit',
+        text: 'Bob quit: Lost connection',
+        from: 'Bob',
+        username: '~bob',
+        hostname: 'quit.host',
+      }),
+    ];
+    const { getByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} />,
+    );
+
+    expect(getByText(/Alice \(~alice@host\.test\) left #general/)).toBeTruthy();
+    expect(getByText(/Bob \(~bob@quit\.host\) quit/)).toBeTruthy();
   });
 
   it('executes whois modal branch, query tab creation, ignore toggle, monitor toggle and dcc send', async () => {

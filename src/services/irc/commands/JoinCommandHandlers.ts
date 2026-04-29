@@ -39,8 +39,16 @@ export const handleJOIN: CommandHandler = (ctx, prefix, params, timestamp) => {
     const existingUser = ctx.getUser(channel, nick);
     if (existingUser) {
       if (account) existingUser.account = account;
+      if (joinUsername) existingUser.ident = joinUsername;
+      if (joinHostname) existingUser.host = joinHostname;
     } else {
-      ctx.setUser(channel, nick, { nick, modes: [], account });
+      ctx.setUser(channel, nick, {
+        nick,
+        modes: [],
+        account,
+        ident: joinUsername,
+        host: joinHostname,
+      });
       ctx.updateChannelUserList(channel);
     }
   }

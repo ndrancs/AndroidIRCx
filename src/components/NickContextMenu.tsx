@@ -16,7 +16,11 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useT } from '../i18n/transifex';
-import { ircService, ChannelUser } from '../services/IRCService';
+import {
+  ircService,
+  ChannelUser,
+  type IRCMessage,
+} from '../services/IRCService';
 import { userManagementService } from '../services/UserManagementService';
 import { banService } from '../services/BanService';
 import { serviceCommandProvider } from '../services/ServiceCommandProvider';
@@ -28,6 +32,11 @@ import {
 import { mediaSettingsService } from '../services/MediaSettingsService';
 import { useUIStore } from '../stores/uiStore';
 import KickBanModal from './KickBanModal';
+
+type UserHostInfo = {
+  user: string;
+  host: string;
+};
 
 interface NickContextMenuProps {
   visible: boolean;
@@ -52,6 +61,8 @@ interface NickContextMenuProps {
   allowNfcExchange?: boolean;
   isServerOper?: boolean;
   ignoreActionId?: string;
+  initialUserHostInfo?: UserHostInfo | null;
+  sourceMessageType?: IRCMessage['type'];
 }
 
 export const NickContextMenu: React.FC<NickContextMenuProps> = ({
@@ -70,6 +81,8 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   allowNfcExchange = true,
   isServerOper = false,
   ignoreActionId = 'ignore_toggle',
+  initialUserHostInfo,
+  sourceMessageType,
 }) => {
   const t = useT();
   const activeIrc: any = connection?.ircService || ircService;
@@ -123,6 +136,19 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
       setShowServiceGroup(false);
     }
   }, [visible, nick]);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+    setUserHostInfo(initialUserHostInfo || null);
+  }, [
+    initialUserHostInfo,
+    initialUserHostInfo?.host,
+    initialUserHostInfo?.user,
+    nick,
+    visible,
+  ]);
 
   // Load service commands when menu opens
   useEffect(() => {
@@ -180,13 +206,13 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   useEffect(() => {
     if (visible && nick && activeIrc?.sendSilentWho) {
       // Only fetch if we don't already have info for this nick
-      if (!userHostInfo) {
+      if (!userHostInfo && !initialUserHostInfo) {
         activeIrc.sendSilentWho(nick, (user: string, host: string) => {
           setUserHostInfo({ user, host });
         });
       }
     }
-  }, [visible, nick, activeIrc, userHostInfo]);
+  }, [visible, nick, activeIrc, userHostInfo, initialUserHostInfo]);
 
   const channelUsers = useMemo(() => {
     if (!channel || typeof activeIrc.getChannelUsers !== 'function') return [];
@@ -206,7 +232,10 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
     false;
   const isCurrentUserOp =
     currentUser?.modes.some(mode => ['o', 'a', 'q'].includes(mode)) || false;
-  const canKickBan = isCurrentUserHalfOp || isCurrentUserOp;
+  const isHistoricalPresence =
+    sourceMessageType === 'part' || sourceMessageType === 'quit';
+  const canApplyChannelBan = isCurrentUserHalfOp || isCurrentUserOp;
+  const canKickBan = canApplyChannelBan && !isHistoricalPresence;
 
   // Execute kick/ban directly without modal
   const executeKickBanDirect = (
@@ -215,7 +244,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   ) => {
     if (!channel || !nick) return;
 
-    const user = userHostInfo?.user || targetUser?.nick || '';
+    const user = userHostInfo?.user || targetUser?.ident || '';
     const host = userHostInfo?.host || targetUser?.host || '';
     const banMask =
       user && host
@@ -463,6 +492,20 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.contextItem}
+              onPress={() => onAction('whowas')}
+            >
+              <View style={styles.contextItemWithIcon}>
+                <Icon
+                  name="history"
+                  size={14}
+                  color={colors.text}
+                  style={styles.contextIcon}
+                />
+                <Text style={styles.contextText}>{t('WHOWAS')}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.contextItem}
               onPress={() => onAction('query')}
             >
               <View style={styles.contextItemWithIcon}>
@@ -475,6 +518,40 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                 <Text style={styles.contextText}>{t('Open Query')}</Text>
               </View>
             </TouchableOpacity>
+            {userHostInfo && (
+              <>
+                <TouchableOpacity
+                  style={styles.contextItem}
+                  onPress={() => onAction('copy_userhost')}
+                >
+                  <View style={styles.contextItemWithIcon}>
+                    <Icon
+                      name="at"
+                      size={14}
+                      color={colors.text}
+                      style={styles.contextIcon}
+                    />
+                    <Text style={styles.contextText}>
+                      {t('Copy user@host')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.contextItem}
+                  onPress={() => onAction('copy_hostmask')}
+                >
+                  <View style={styles.contextItemWithIcon}>
+                    <Icon
+                      name="id-card"
+                      size={14}
+                      color={colors.text}
+                      style={styles.contextIcon}
+                    />
+                    <Text style={styles.contextText}>{t('Copy hostmask')}</Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
             {showCallActionsInNickMenu && (
               <>
                 <TouchableOpacity
@@ -1004,46 +1081,48 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                 </TouchableOpacity>
                 {showOpsGroup && (
                   <View style={styles.contextSubGroup}>
-                    {isCurrentUserHalfOp && (
-                      <>
-                        {targetUser?.modes.includes('v') ? (
-                          <TouchableOpacity
-                            style={styles.contextItem}
-                            onPress={() => onAction('take_voice')}
-                          >
-                            <View style={styles.contextItemWithIcon}>
-                              <Icon
-                                name="microphone-slash"
-                                size={14}
-                                color={colors.text}
-                                style={styles.contextIcon}
-                              />
-                              <Text style={styles.contextText}>
-                                {t('Take Voice')}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        ) : (
-                          <TouchableOpacity
-                            style={styles.contextItem}
-                            onPress={() => onAction('give_voice')}
-                          >
-                            <View style={styles.contextItemWithIcon}>
-                              <Icon
-                                name="microphone"
-                                size={14}
-                                color={colors.text}
-                                style={styles.contextIcon}
-                              />
-                              <Text style={styles.contextText}>
-                                {t('Give Voice')}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        )}
-                      </>
-                    )}
-                    {isCurrentUserOp && (
+                    {isCurrentUserHalfOp &&
+                      !isHistoricalPresence &&
+                      targetUser && (
+                        <>
+                          {targetUser?.modes.includes('v') ? (
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() => onAction('take_voice')}
+                            >
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="microphone-slash"
+                                  size={14}
+                                  color={colors.text}
+                                  style={styles.contextIcon}
+                                />
+                                <Text style={styles.contextText}>
+                                  {t('Take Voice')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() => onAction('give_voice')}
+                            >
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="microphone"
+                                  size={14}
+                                  color={colors.text}
+                                  style={styles.contextIcon}
+                                />
+                                <Text style={styles.contextText}>
+                                  {t('Give Voice')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          )}
+                        </>
+                      )}
+                    {isCurrentUserOp && !isHistoricalPresence && targetUser && (
                       <>
                         {targetUser?.modes.includes('h') ? (
                           <TouchableOpacity
@@ -1117,50 +1196,54 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                         )}
                       </>
                     )}
-                    {canKickBan && (
+                    {canApplyChannelBan && (
                       <>
-                        <TouchableOpacity
-                          style={styles.contextItem}
-                          onPress={() => handleKickBanPress('kick', false)}
-                        >
-                          <View style={styles.contextItemWithIcon}>
-                            <Icon
-                              name="sign-out-alt"
-                              size={14}
-                              color="#FB8C00"
-                              style={styles.contextIcon}
-                            />
-                            <Text
-                              style={[
-                                styles.contextText,
-                                styles.contextWarning,
-                              ]}
+                        {canKickBan && (
+                          <>
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() => handleKickBanPress('kick', false)}
                             >
-                              {t('Kick')}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.contextItem}
-                          onPress={() => handleKickBanPress('kick', true)}
-                        >
-                          <View style={styles.contextItemWithIcon}>
-                            <Icon
-                              name="sign-out-alt"
-                              size={14}
-                              color="#FB8C00"
-                              style={styles.contextIcon}
-                            />
-                            <Text
-                              style={[
-                                styles.contextText,
-                                styles.contextWarning,
-                              ]}
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="sign-out-alt"
+                                  size={14}
+                                  color="#FB8C00"
+                                  style={styles.contextIcon}
+                                />
+                                <Text
+                                  style={[
+                                    styles.contextText,
+                                    styles.contextWarning,
+                                  ]}
+                                >
+                                  {t('Kick')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() => handleKickBanPress('kick', true)}
                             >
-                              {t('Kick (with message)')}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="sign-out-alt"
+                                  size={14}
+                                  color="#FB8C00"
+                                  style={styles.contextIcon}
+                                />
+                                <Text
+                                  style={[
+                                    styles.contextText,
+                                    styles.contextWarning,
+                                  ]}
+                                >
+                                  {t('Kick (with message)')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          </>
+                        )}
                         <TouchableOpacity
                           style={styles.contextItem}
                           onPress={() => handleKickBanPress('ban', false)}
@@ -1179,42 +1262,56 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                             </Text>
                           </View>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.contextItem}
-                          onPress={() => handleKickBanPress('kickban', false)}
-                        >
-                          <View style={styles.contextItemWithIcon}>
-                            <Icon
-                              name="times-circle"
-                              size={14}
-                              color="#EF5350"
-                              style={styles.contextIcon}
-                            />
-                            <Text
-                              style={[styles.contextText, styles.contextDanger]}
+                        {canKickBan && (
+                          <>
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() =>
+                                handleKickBanPress('kickban', false)
+                              }
                             >
-                              {t('Kick + Ban')}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.contextItem}
-                          onPress={() => handleKickBanPress('kickban', true)}
-                        >
-                          <View style={styles.contextItemWithIcon}>
-                            <Icon
-                              name="times-circle"
-                              size={14}
-                              color="#EF5350"
-                              style={styles.contextIcon}
-                            />
-                            <Text
-                              style={[styles.contextText, styles.contextDanger]}
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="times-circle"
+                                  size={14}
+                                  color="#EF5350"
+                                  style={styles.contextIcon}
+                                />
+                                <Text
+                                  style={[
+                                    styles.contextText,
+                                    styles.contextDanger,
+                                  ]}
+                                >
+                                  {t('Kick + Ban')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.contextItem}
+                              onPress={() =>
+                                handleKickBanPress('kickban', true)
+                              }
                             >
-                              {t('Kick + Ban (with message)')}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
+                              <View style={styles.contextItemWithIcon}>
+                                <Icon
+                                  name="times-circle"
+                                  size={14}
+                                  color="#EF5350"
+                                  style={styles.contextIcon}
+                                />
+                                <Text
+                                  style={[
+                                    styles.contextText,
+                                    styles.contextDanger,
+                                  ]}
+                                >
+                                  {t('Kick + Ban (with message)')}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          </>
+                        )}
                       </>
                     )}
                   </View>
@@ -1414,7 +1511,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
             return;
           }
 
-          const user = userHostInfo?.user || targetUser?.nick || '';
+          const user = userHostInfo?.user || targetUser?.ident || '';
           const host = userHostInfo?.host || targetUser?.host || '';
           const banMask =
             user && host
@@ -1454,7 +1551,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
           userHostInfo
             ? `${userHostInfo.user}@${userHostInfo.host}`
             : targetUser?.host
-              ? `${targetUser.nick}@${targetUser.host}`
+              ? `${targetUser.ident || '*'}@${targetUser.host}`
               : undefined
         }
         mode={kickBanMode}

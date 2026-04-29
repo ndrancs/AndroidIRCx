@@ -1,0 +1,5 @@
+What's new in 1.9.10:
+- Updated dependencies
+- Made JOIN, PART, and QUIT user@host details clickable
+- Added quick WHOWAS and hostmask copy actions from user context menus
+- Improved ban/blacklist actions to use known user@host data when available

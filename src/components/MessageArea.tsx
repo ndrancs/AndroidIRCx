@@ -121,6 +121,18 @@ type BlacklistTemplatesSetting = {
   global?: BlacklistTemplateMap;
 } & Record<string, BlacklistTemplateMap | undefined>;
 
+type UserHostInfo = {
+  user: string;
+  host: string;
+};
+
+type NickContextSource = {
+  user?: string;
+  host?: string;
+  sourceMessageType?: IRCMessage['type'];
+  command?: string;
+};
+
 interface MessageItemProps {
   message: IRCMessage;
   channelUsers?: ChannelUser[];
@@ -130,7 +142,7 @@ interface MessageItemProps {
   styles: any;
   currentNick: string;
   isGrouped: boolean;
-  onNickLongPress?: (nick: string) => void;
+  onNickLongPress?: (nick: string, source?: NickContextSource) => void;
   onNickPress?: (nick: string) => void;
   onChannelPress?: (channel: string) => void;
   onPressMessage?: (message: IRCMessage) => void;
@@ -404,6 +416,30 @@ const MessageItem = React.memo<MessageItemProps>(
       timestampDisplay === 'always' ||
       (timestampDisplay === 'grouped' && !isGrouped);
 
+    const messageNickContext = useMemo<NickContextSource | undefined>(() => {
+      if (!message.from) {
+        return undefined;
+      }
+      return {
+        user: message.username,
+        host: message.hostname,
+        sourceMessageType: message.type,
+        command: message.command,
+      };
+    }, [
+      message.command,
+      message.from,
+      message.hostname,
+      message.type,
+      message.username,
+    ]);
+
+    const openMessageNickContext = useCallback(() => {
+      if (onNickLongPress && message.from) {
+        onNickLongPress(message.from, messageNickContext);
+      }
+    }, [message.from, messageNickContext, onNickLongPress]);
+
     const normalizedMessageFormats = useMemo(
       () =>
         messageFormats
@@ -624,6 +660,41 @@ const MessageItem = React.memo<MessageItemProps>(
                 );
               }
 
+              const userHost =
+                message.username && message.hostname
+                  ? `${message.username}@${message.hostname}`
+                  : '';
+              const fullHostmask =
+                message.from && userHost ? `${message.from}!${userHost}` : '';
+              const identityValues = [fullHostmask, userHost].filter(Boolean);
+              const identityValue = identityValues.find(value =>
+                token.includes(value),
+              );
+              if (identityValue && onNickLongPress && message.from) {
+                const valueIndex = token.indexOf(identityValue);
+                const leadingIdentity = token.slice(0, valueIndex);
+                const trailingIdentity = token.slice(
+                  valueIndex + identityValue.length,
+                );
+
+                return (
+                  <Text
+                    key={`${keyPrefix}-identity-${index}`}
+                    style={baseStyle}
+                  >
+                    {leadingIdentity}
+                    <Text
+                      style={styles.linkText}
+                      onPress={openMessageNickContext}
+                      onLongPress={openMessageNickContext}
+                    >
+                      {identityValue}
+                    </Text>
+                    {trailingIdentity}
+                  </Text>
+                );
+              }
+
               // Extract a potential nick while preserving surrounding punctuation.
               const match = token.match(
                 new RegExp(
@@ -678,6 +749,10 @@ const MessageItem = React.memo<MessageItemProps>(
         onNickLongPress,
         onChannelPress,
         handleLinkPress,
+        message.from,
+        message.hostname,
+        message.username,
+        openMessageNickContext,
         styles.nick,
         styles.linkText,
         colors.primary,
@@ -748,16 +823,29 @@ const MessageItem = React.memo<MessageItemProps>(
               <Text
                 key={`part-${index}`}
                 style={applyMessageFormatStyle(inlineBaseStyle, part.style)}
-                onPress={() =>
-                  onNickLongPress &&
-                  message.from &&
-                  onNickLongPress(message.from)
-                }
-                onLongPress={() =>
-                  onNickLongPress &&
-                  message.from &&
-                  onNickLongPress(message.from)
-                }
+                onPress={openMessageNickContext}
+                onLongPress={openMessageNickContext}
+              >
+                {tokenValue}
+              </Text>
+            );
+          }
+
+          if (
+            ['username', 'hostname', 'hostmask'].includes(part.value) &&
+            message.from &&
+            message.username &&
+            message.hostname
+          ) {
+            return (
+              <Text
+                key={`part-${index}`}
+                style={[
+                  applyMessageFormatStyle(inlineBaseStyle, part.style),
+                  styles.linkText,
+                ]}
+                onPress={openMessageNickContext}
+                onLongPress={openMessageNickContext}
               >
                 {tokenValue}
               </Text>
@@ -797,10 +885,44 @@ const MessageItem = React.memo<MessageItemProps>(
         message.topic,
         message.username,
         network,
-        onNickLongPress,
+        openMessageNickContext,
         shouldShowTimestamp,
+        styles.linkText,
       ],
     );
+
+    const systemDisplayText = useMemo(() => {
+      if (
+        message.type === 'join' ||
+        message.type === 'part' ||
+        message.type === 'quit'
+      ) {
+        if (!message.from || !message.username || !message.hostname) {
+          return `*** ${message.text}`;
+        }
+
+        const userHost = `${message.username}@${message.hostname}`;
+        const nickWithHost = `${message.from} (${userHost})`;
+        const text = message.text;
+        if (text.startsWith(`${message.from} (`)) {
+          const closingParenIndex = text.indexOf(')', message.from.length + 2);
+          if (closingParenIndex !== -1) {
+            return `*** ${nickWithHost}${text.slice(closingParenIndex + 1)}`;
+          }
+        }
+        if (text.startsWith(message.from)) {
+          return `*** ${nickWithHost}${text.slice(message.from.length)}`;
+        }
+        return `*** ${text}`;
+      }
+      return message.text;
+    }, [
+      message.from,
+      message.hostname,
+      message.text,
+      message.type,
+      message.username,
+    ]);
 
     return (
       <TouchableOpacity
@@ -1014,16 +1136,8 @@ const MessageItem = React.memo<MessageItemProps>(
                       {!isGrouped && (
                         <Text
                           style={styles.nick}
-                          onPress={() =>
-                            onNickLongPress &&
-                            message.from &&
-                            onNickLongPress(message.from)
-                          }
-                          onLongPress={() =>
-                            onNickLongPress &&
-                            message.from &&
-                            onNickLongPress(message.from)
-                          }
+                          onPress={openMessageNickContext}
+                          onLongPress={openMessageNickContext}
                         >
                           * {message.from}{' '}
                         </Text>
@@ -1135,16 +1249,8 @@ const MessageItem = React.memo<MessageItemProps>(
                       {!isGrouped && (
                         <Text
                           style={styles.nick}
-                          onPress={() =>
-                            onNickLongPress &&
-                            message.from &&
-                            onNickLongPress(message.from)
-                          }
-                          onLongPress={() =>
-                            onNickLongPress &&
-                            message.from &&
-                            onNickLongPress(message.from)
-                          }
+                          onPress={openMessageNickContext}
+                          onLongPress={openMessageNickContext}
                         >
                           {message.from}{' '}
                         </Text>
@@ -1259,16 +1365,8 @@ const MessageItem = React.memo<MessageItemProps>(
                           styles.nick,
                           { color: getMessageColor(message.type) },
                         ]}
-                        onPress={() =>
-                          onNickLongPress &&
-                          message.from &&
-                          onNickLongPress(message.from)
-                        }
-                        onLongPress={() =>
-                          onNickLongPress &&
-                          message.from &&
-                          onNickLongPress(message.from)
-                        }
+                        onPress={openMessageNickContext}
+                        onLongPress={openMessageNickContext}
                       >
                         {message.from}{' '}
                       </Text>
@@ -1297,11 +1395,7 @@ const MessageItem = React.memo<MessageItemProps>(
                 )
               ) : (
                 renderTextWithNickActions(
-                  message.type === 'join' ||
-                    message.type === 'part' ||
-                    message.type === 'quit'
-                    ? `*** ${message.text}`
-                    : message.text,
+                  systemDisplayText,
                   StyleSheet.flatten([
                     styles.messageText,
                     { color: getMessageColor(message.type) },
@@ -1319,8 +1413,13 @@ const MessageItem = React.memo<MessageItemProps>(
     // Custom comparison for memo
     return (
       prevProps.message.id === nextProps.message.id &&
+      prevProps.message.type === nextProps.message.type &&
+      prevProps.message.from === nextProps.message.from &&
       prevProps.message.text === nextProps.message.text &&
       prevProps.message.status === nextProps.message.status &&
+      prevProps.message.username === nextProps.message.username &&
+      prevProps.message.hostname === nextProps.message.hostname &&
+      prevProps.message.command === nextProps.message.command &&
       prevProps.isGrouped === nextProps.isGrouped &&
       prevProps.timestampDisplay === nextProps.timestampDisplay &&
       prevProps.timestampFormat === nextProps.timestampFormat &&
@@ -1362,6 +1461,12 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const flatListRef = useRef<FlatList>(null);
   const [contextNick, setContextNick] = useState<string | null>(null);
   const [contextUser, setContextUser] = useState<ChannelUser | null>(null);
+  const [contextHostInfo, setContextHostInfo] = useState<UserHostInfo | null>(
+    null,
+  );
+  const [contextSourceMessageType, setContextSourceMessageType] = useState<
+    IRCMessage['type'] | undefined
+  >(undefined);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showKickBanModal, setShowKickBanModal] = useState(false);
   const [kickBanTarget, setKickBanTarget] = useState<{
@@ -1632,12 +1737,26 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     [t],
   );
 
+  const getHostInfoForUser = useCallback(
+    (user: ChannelUser | null): UserHostInfo | null => {
+      if (contextHostInfo?.user && contextHostInfo.host) {
+        return contextHostInfo;
+      }
+      if (user?.ident && user.host) {
+        return { user: user.ident, host: user.host };
+      }
+      return null;
+    },
+    [contextHostInfo],
+  );
+
   const getBlacklistBanMaskOptions = useCallback(
     (user: ChannelUser | null, nick: string | null) => {
       const safeNick = nick || '';
       // Use ident from user object (from userhost-in-names) or fallback to '*'
-      const ident = user?.ident || '*';
-      const host = user?.host || '*';
+      const hostInfo = getHostInfoForUser(user);
+      const ident = hostInfo?.user || '*';
+      const host = hostInfo?.host || '*';
       return banService.getBanMaskTypes().map(type => ({
         id: type.id,
         label: `(${type.id}) ${type.pattern}`,
@@ -1645,7 +1764,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         description: type.description,
       }));
     },
-    [],
+    [getHostInfoForUser],
   );
 
   const getBlacklistTemplate = useCallback(
@@ -1696,6 +1815,22 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const getNetworkForStorage = useCallback((): string => {
     return network || activeIrc.getNetworkName() || 'default';
   }, [network, activeIrc]);
+
+  const getBanMaskForContext = useCallback(
+    (nick: string, user: ChannelUser | null, banType: number = 2): string => {
+      const hostInfo = getHostInfoForUser(user);
+      if (hostInfo) {
+        return banService.generateBanMask(
+          nick,
+          hostInfo.user,
+          hostInfo.host,
+          banType,
+        );
+      }
+      return `${nick}!*@*`;
+    },
+    [getHostInfoForUser],
+  );
 
   const handleExternalPayload = useCallback(
     async (raw: string) => {
@@ -1846,6 +1981,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     async (action: string) => {
       if (!contextNick) return;
       const selectedUser = resolveContextUser(contextNick);
+      const selectedHostInfo = getHostInfoForUser(selectedUser);
       const currentNetwork =
         network || currentTabNetworkId || activeIrc.getNetworkName();
       switch (action) {
@@ -1857,6 +1993,17 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
             useUIStore.getState().setShowWHOIS(true);
           } else {
             activeIrc.sendCommand(`WHOIS ${contextNick}`);
+          }
+          break;
+        }
+        case 'whowas': {
+          if (typeof activeIrc.sendMessage === 'function') {
+            activeIrc.sendMessage(
+              channel || contextNick,
+              `/whowas ${contextNick}`,
+            );
+          } else {
+            activeIrc.sendCommand(`WHOWAS ${contextNick}`);
           }
           break;
         }
@@ -1895,6 +2042,20 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         }
         case 'copy':
           Clipboard.setString(contextNick);
+          break;
+        case 'copy_userhost':
+          if (selectedHostInfo) {
+            Clipboard.setString(
+              `${selectedHostInfo.user}@${selectedHostInfo.host}`,
+            );
+          }
+          break;
+        case 'copy_hostmask':
+          if (selectedHostInfo) {
+            Clipboard.setString(
+              `${contextNick}!${selectedHostInfo.user}@${selectedHostInfo.host}`,
+            );
+          }
           break;
         case 'enc_share':
           try {
@@ -2257,7 +2418,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           setBlacklistAction('ban');
           setBlacklistReason('');
           setBlacklistCustomCommand('');
-          setBlacklistMaskChoice(selectedUser?.host ? 'host' : 'nick');
+          setBlacklistMaskChoice(selectedHostInfo ? 'host' : 'nick');
           setSelectedBanMaskTypeId(2);
           setShowBlacklistModal(true);
           break;
@@ -2318,26 +2479,20 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           break;
         case 'ban': {
           if (!channel) break;
-          const mask = selectedUser?.host
-            ? `*!*@${selectedUser.host}`
-            : `${contextNick}!*@*`;
+          const mask = getBanMaskForContext(contextNick, selectedUser);
           activeIrc.sendCommand(`MODE ${channel} +b ${mask}`);
           break;
         }
         case 'kick_ban': {
           if (!channel) break;
-          const mask = selectedUser?.host
-            ? `*!*@${selectedUser.host}`
-            : `${contextNick}!*@*`;
+          const mask = getBanMaskForContext(contextNick, selectedUser);
           activeIrc.sendCommand(`MODE ${channel} +b ${mask}`);
           activeIrc.sendCommand(`KICK ${channel} ${contextNick}`);
           break;
         }
         case 'kick_ban_message': {
           if (!channel) break;
-          const mask = selectedUser?.host
-            ? `*!*@${selectedUser.host}`
-            : `${contextNick}!*@*`;
+          const mask = getBanMaskForContext(contextNick, selectedUser);
           activeIrc.sendCommand(`MODE ${channel} +b ${mask}`);
           activeIrc.sendCommand(`KICK ${channel} ${contextNick} :Kicked`);
           break;
@@ -2349,8 +2504,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           if (channel && contextNick) {
             setKickBanTarget({
               nick: contextNick,
-              user: selectedUser?.ident,
-              host: selectedUser?.host,
+              user: selectedHostInfo?.user,
+              host: selectedHostInfo?.host,
             });
             setKickBanMode(
               action === 'kick_with_options'
@@ -2373,6 +2528,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       channel,
       contextNick,
       currentTabNetworkId,
+      getBanMaskForContext,
+      getHostInfoForUser,
       getNetworkForStorage,
       handleExternalPayload,
       hasCameraPermission,
@@ -2754,6 +2911,32 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     setTimeout(() => setCopyStatus(''), 1500);
   }, [selectedMessageIds, displayMessages, layoutState.timestampFormat, t]);
 
+  const openNickContextMenu = useCallback(
+    (nick: string, source?: NickContextSource) => {
+      setContextNick(nick);
+      setContextUser(resolveContextUser(nick));
+      setContextHostInfo(
+        source?.user && source.host
+          ? { user: source.user, host: source.host }
+          : null,
+      );
+      setContextSourceMessageType(source?.sourceMessageType);
+      const selfNick = activeIrc.getCurrentNick?.();
+      if (selfNick) {
+        activeIrc.sendCommand?.(`MODE ${selfNick}`);
+        setTimeout(() => {
+          const oper =
+            typeof activeIrc?.isServerOper === 'function'
+              ? activeIrc.isServerOper()
+              : false;
+          setIsServerOper(oper);
+        }, 300);
+      }
+      setShowContextMenu(true);
+    },
+    [activeIrc, resolveContextUser],
+  );
+
   // Render message item
   const renderItem = useCallback(
     ({ item: messageItem }: { item: IRCMessage }) => {
@@ -2767,22 +2950,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           styles={styles}
           currentNick={currentNick}
           isGrouped={messageItem.isGrouped || false}
-          onNickLongPress={nick => {
-            setContextNick(nick);
-            setContextUser(resolveContextUser(nick));
-            const selfNick = activeIrc.getCurrentNick?.();
-            if (selfNick) {
-              activeIrc.sendCommand?.(`MODE ${selfNick}`);
-              setTimeout(() => {
-                const oper =
-                  typeof activeIrc?.isServerOper === 'function'
-                    ? activeIrc.isServerOper()
-                    : false;
-                setIsServerOper(oper);
-              }, 300);
-            }
-            setShowContextMenu(true);
-          }}
+          onNickLongPress={openNickContextMenu}
           onChannelPress={channelName => {
             activeIrc.sendRaw?.(`JOIN ${channelName}`);
           }}
@@ -2833,7 +3001,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       colors,
       styles,
       currentNick,
-      resolveContextUser,
+      openNickContextMenu,
       handleMessageLongPress,
       handleMessagePress,
       selectedMessageIds,
@@ -3387,6 +3555,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           allowNfcExchange={allowNfcExchange}
           isServerOper={isServerOper}
           ignoreActionId="ignore_toggle"
+          initialUserHostInfo={contextHostInfo}
+          sourceMessageType={contextSourceMessageType}
         />
         {blacklistModals}
         {selectionMode && (
@@ -3490,6 +3660,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         allowNfcExchange={allowNfcExchange}
         isServerOper={isServerOper}
         ignoreActionId="ignore_toggle"
+        initialUserHostInfo={contextHostInfo}
+        sourceMessageType={contextSourceMessageType}
       />
       <KickBanModal
         visible={showKickBanModal}

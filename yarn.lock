@@ -2548,11 +2548,6 @@
     prompts "^2.4.2"
     semver "^7.5.2"
 
-"@react-native-community/slider@^5.0.1":
-  version "5.1.2"
-  resolved "https://registry.npmjs.org/@react-native-community/slider/-/slider-5.1.2.tgz"
-  integrity sha512-UV/MjCyCtSjS5BQDrrGIMmCXm309xEG6XbR0Dj65kzTraJSVDxSjQS2uBUXgX+5SZUOCzCxzv3OufOZBdtQY4w==
-
 "@react-native-community/slider@^5.2.0":
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-5.2.0.tgz#c154ac4ec10537160462d7a9f3e2e43098257302"
@@ -7986,17 +7981,17 @@ react-native-nfc-manager@^3.17.2:
   resolved "https://registry.npmjs.org/react-native-nfc-manager/-/react-native-nfc-manager-3.17.2.tgz"
   integrity sha512-0NryP/Iw2hzw4MVH5KCngoRerNUrnRok6VfLrlFcFZRKyTQ7KTgpsdDxCB6cR33qYNyEDrWGBayfAI+ym5gt8Q==
 
-react-native-nitro-modules@0.35.5:
-  version "0.35.5"
-  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.35.5.tgz#19fe8f289b118b26b9e8522f62bb6e7b40e44c50"
-  integrity sha512-aa03UzC5dLg5qFfyBkVK+JGSwHTjmK7jUZzyRz11r1Yk9C/nJTFe59EeHPxxNNTagkiwQTM6p3sySgD/TDRC7Q==
+react-native-nitro-modules@0.35.6:
+  version "0.35.6"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.35.6.tgz#717a890fa033083f91765a586d433dd60492ac8b"
+  integrity sha512-3Cb7s+O5tpZ6RdIiPOB/wi3IMfBxD6tl6VDF8gJ5zvM/BEGTWxwMMLjzmWmsYPKekdbYBznF6qp2d2SxixPy8g==
 
-react-native-nitro-sound@^0.2.13:
-  version "0.2.13"
-  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.13.tgz#de540ba84222c3011bede7a97b28302957425f87"
-  integrity sha512-YrMqRBD1ZRGh70pz7im/ZwjhHQG2otPovg25OMlOyAYHDfx4XEH+sX8WYZH/VfUnV1DjCvw2qT8wRxfUMt+4DQ==
+react-native-nitro-sound@^0.2.14:
+  version "0.2.14"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.14.tgz#cf992628297a20054a7d39bdbd20a619f6ba4ffe"
+  integrity sha512-1yToz4Ug0lj+9zwFO+cRBI1ygQCJyDgR5kK68/7n7ZUgiLqwELZcNU/yxt8bH30fwkYKKD0lfkrrB8Xaq3qnSg==
   dependencies:
-    "@react-native-community/slider" "^5.0.1"
+    "@react-native-community/slider" "^5.2.0"
 
 react-native-qrcode-svg@^6.3.21:
   version "6.3.21"
@@ -8055,10 +8050,10 @@ react-native-vector-icons@^10.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-react-native-video@^6.19.1:
-  version "6.19.1"
-  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.19.1.tgz"
-  integrity sha512-Tbiyt0JMirVHc4XzGIANjs3SaNjFXQO2qe+buvY7xMJjlyCekkDjJqD9YtlaEloJD2PGWhoPytEXB6gVT7T6lw==
+react-native-video@^6.19.2:
+  version "6.19.2"
+  resolved "https://registry.yarnpkg.com/react-native-video/-/react-native-video-6.19.2.tgz#91065e087f90bc653b312ff2347903345c4f2411"
+  integrity sha512-gh5dBMGSHywKr8+p4azRXrFQgT+QTmS1tI4sz6kVRjSENORfsrGGLQzmyo/7S9m+ZOTLWQJ3h8ONaXxR4F2Fcw==
 
 react-native-vision-camera@^4.7.3:
   version "4.7.3"
