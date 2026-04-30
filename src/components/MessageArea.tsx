@@ -126,6 +126,10 @@ type UserHostInfo = {
   host: string;
 };
 
+type NickActionContext = {
+  userHostInfo?: UserHostInfo | null;
+};
+
 type NickContextSource = {
   user?: string;
   host?: string;
@@ -1685,7 +1689,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
 
   const connection = network ? connectionManager.getConnection(network) : null;
   const activeIrc = connection?.ircService || ircService;
-  const currentNick = connection?.ircService.getCurrentNick() || '';
+  const currentNick = activeIrc.getCurrentNick?.() || '';
   const setTabs = useTabStore(state => state.setTabs);
   const setActiveTabId = useTabStore(state => state.setActiveTabId);
   const getTabById = useTabStore(state => state.getTabById);
@@ -1978,10 +1982,14 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     [activeIrc, contextNick, getNetworkForStorage, t],
   );
   const handleNickAction = useCallback(
-    async (action: string) => {
+    async (action: string, actionContext?: NickActionContext) => {
       if (!contextNick) return;
       const selectedUser = resolveContextUser(contextNick);
-      const selectedHostInfo = getHostInfoForUser(selectedUser);
+      const actionHostInfo = actionContext?.userHostInfo;
+      const selectedHostInfo =
+        actionHostInfo?.user && actionHostInfo.host
+          ? actionHostInfo
+          : getHostInfoForUser(selectedUser);
       const currentNetwork =
         network || currentTabNetworkId || activeIrc.getNetworkName();
       switch (action) {
@@ -3544,11 +3552,14 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           visible={showContextMenu}
           nick={contextNick}
           onClose={() => setShowContextMenu(false)}
-          onAction={action => handleNickAction(action)}
+          onAction={(action, actionContext) =>
+            handleNickAction(action, actionContext)
+          }
           colors={colors}
           network={network}
           channel={channel}
           activeNick={currentNick}
+          channelUsers={channelUsers}
           connection={connection}
           allowQrVerification={allowQrVerification}
           allowFileExchange={allowFileExchange}
@@ -3649,11 +3660,14 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         visible={showContextMenu}
         nick={contextNick}
         onClose={() => setShowContextMenu(false)}
-        onAction={action => handleNickAction(action)}
+        onAction={(action, actionContext) =>
+          handleNickAction(action, actionContext)
+        }
         colors={colors}
         network={network}
         channel={channel}
         activeNick={currentNick}
+        channelUsers={channelUsers}
         connection={connection}
         allowQrVerification={allowQrVerification}
         allowFileExchange={allowFileExchange}

@@ -38,11 +38,15 @@ type UserHostInfo = {
   host: string;
 };
 
+type NickContextActionPayload = {
+  userHostInfo?: UserHostInfo | null;
+};
+
 interface NickContextMenuProps {
   visible: boolean;
   nick?: string | null;
   onClose: () => void;
-  onAction: (action: string) => void;
+  onAction: (action: string, payload?: NickContextActionPayload) => void;
   actionMessage?: string;
   colors: {
     text: string;
@@ -56,6 +60,7 @@ interface NickContextMenuProps {
   network?: string;
   channel?: string;
   activeNick?: string;
+  channelUsers?: ChannelUser[];
   allowQrVerification?: boolean;
   allowFileExchange?: boolean;
   allowNfcExchange?: boolean;
@@ -76,6 +81,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   network,
   channel,
   activeNick,
+  channelUsers: providedChannelUsers,
   allowQrVerification = true,
   allowFileExchange = true,
   allowNfcExchange = true,
@@ -86,6 +92,11 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
 }) => {
   const t = useT();
   const activeIrc: any = connection?.ircService || ircService;
+  const effectiveIsServerOper =
+    isServerOper ||
+    Boolean(
+      typeof activeIrc?.isServerOper === 'function' && activeIrc.isServerOper(),
+    );
   const isMonitoring =
     nick && typeof activeIrc?.isMonitoring === 'function'
       ? activeIrc.isMonitoring(nick)
@@ -105,6 +116,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
     Array<{ command: ServiceCommand; serviceNick: string }>
   >([]);
   const [showOpsGroup, setShowOpsGroup] = useState(false);
+  const [showIrcopGroup, setShowIrcopGroup] = useState(false);
   const [showUserListGroup, setShowUserListGroup] = useState(false);
   const [showKickBanModal, setShowKickBanModal] = useState(false);
   const [kickBanMode, setKickBanMode] = useState<'kick' | 'ban' | 'kickban'>(
@@ -128,6 +140,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
       setShowE2EGroup(false);
       setShowCTCPGroup(false);
       setShowOpsGroup(false);
+      setShowIrcopGroup(false);
       setShowUserListGroup(false);
       setShowKickBanModal(false);
       setShowKillReasonModal(false);
@@ -202,22 +215,13 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
     }
   }, [visible]);
 
-  // Send silent WHO when menu opens to get user@host info
-  useEffect(() => {
-    if (visible && nick && activeIrc?.sendSilentWho) {
-      // Only fetch if we don't already have info for this nick
-      if (!userHostInfo && !initialUserHostInfo) {
-        activeIrc.sendSilentWho(nick, (user: string, host: string) => {
-          setUserHostInfo({ user, host });
-        });
-      }
-    }
-  }, [visible, nick, activeIrc, userHostInfo, initialUserHostInfo]);
-
   const channelUsers = useMemo(() => {
+    if (providedChannelUsers && providedChannelUsers.length > 0) {
+      return providedChannelUsers;
+    }
     if (!channel || typeof activeIrc.getChannelUsers !== 'function') return [];
     return activeIrc.getChannelUsers(channel) as ChannelUser[];
-  }, [activeIrc, channel]);
+  }, [activeIrc, channel, providedChannelUsers]);
 
   const normalizedNick = nick ? nick.toLowerCase() : '';
   const normalizedActive = activeNick ? activeNick.toLowerCase() : '';
@@ -227,6 +231,32 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   const currentUser = normalizedActive
     ? channelUsers.find(user => user.nick.toLowerCase() === normalizedActive)
     : undefined;
+  const resolvedUserHostInfo = useMemo<UserHostInfo | null>(() => {
+    if (initialUserHostInfo?.user && initialUserHostInfo.host) {
+      return initialUserHostInfo;
+    }
+    if (userHostInfo?.user && userHostInfo.host) {
+      return userHostInfo;
+    }
+    if (targetUser?.ident && targetUser.host) {
+      return { user: targetUser.ident, host: targetUser.host };
+    }
+    return null;
+  }, [initialUserHostInfo, targetUser?.host, targetUser?.ident, userHostInfo]);
+  const resolvedHostmask =
+    nick && resolvedUserHostInfo
+      ? `${nick}!${resolvedUserHostInfo.user}@${resolvedUserHostInfo.host}`
+      : (nick ?? '');
+
+  // Send silent WHO when menu opens to get user@host info.
+  useEffect(() => {
+    if (visible && nick && activeIrc?.sendSilentWho && !resolvedUserHostInfo) {
+      activeIrc.sendSilentWho(nick, (user: string, host: string) => {
+        setUserHostInfo({ user, host });
+      });
+    }
+  }, [visible, nick, activeIrc, resolvedUserHostInfo]);
+
   const isCurrentUserHalfOp =
     currentUser?.modes.some(mode => ['h', 'o', 'a', 'q'].includes(mode)) ||
     false;
@@ -244,8 +274,8 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
   ) => {
     if (!channel || !nick) return;
 
-    const user = userHostInfo?.user || targetUser?.ident || '';
-    const host = userHostInfo?.host || targetUser?.host || '';
+    const user = resolvedUserHostInfo?.user || '';
+    const host = resolvedUserHostInfo?.host || '';
     const banMask =
       user && host
         ? banService.generateBanMask(nick, user, host, defaultBanType)
@@ -445,9 +475,9 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
           <View style={styles.contextHeaderRow}>
             <View style={styles.contextHeaderText}>
               <Text style={styles.contextTitle}>{nick}</Text>
-              {userHostInfo ? (
+              {resolvedUserHostInfo ? (
                 <Text style={styles.contextSubtitle}>
-                  {userHostInfo.user}@{userHostInfo.host}
+                  {resolvedUserHostInfo.user}@{resolvedUserHostInfo.host}
                 </Text>
               ) : targetUser?.account && targetUser.account !== '*' ? (
                 <Text style={styles.contextSubtitle}>
@@ -518,11 +548,15 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                 <Text style={styles.contextText}>{t('Open Query')}</Text>
               </View>
             </TouchableOpacity>
-            {userHostInfo && (
+            {resolvedUserHostInfo && (
               <>
                 <TouchableOpacity
                   style={styles.contextItem}
-                  onPress={() => onAction('copy_userhost')}
+                  onPress={() =>
+                    onAction('copy_userhost', {
+                      userHostInfo: resolvedUserHostInfo,
+                    })
+                  }
                 >
                   <View style={styles.contextItemWithIcon}>
                     <Icon
@@ -538,7 +572,11 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.contextItem}
-                  onPress={() => onAction('copy_hostmask')}
+                  onPress={() =>
+                    onAction('copy_hostmask', {
+                      userHostInfo: resolvedUserHostInfo,
+                    })
+                  }
                 >
                   <View style={styles.contextItemWithIcon}>
                     <Icon
@@ -685,10 +723,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                       listType: 'notify',
                       networkId: network || '',
                       nick: nick ?? '',
-                      mask:
-                        userHostInfo?.user && userHostInfo?.host
-                          ? `${nick}!${userHostInfo.user}@${userHostInfo.host}`
-                          : (nick ?? ''),
+                      mask: resolvedHostmask,
                       channels: channel ? [channel] : undefined,
                     });
                     useUIStore.getState().setShowUserLists(true);
@@ -713,10 +748,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                       listType: 'autoop',
                       networkId: network || '',
                       nick: nick ?? '',
-                      mask:
-                        userHostInfo?.user && userHostInfo?.host
-                          ? `${nick}!${userHostInfo.user}@${userHostInfo.host}`
-                          : (nick ?? ''),
+                      mask: resolvedHostmask,
                       channels: channel ? [channel] : undefined,
                     });
                     useUIStore.getState().setShowUserLists(true);
@@ -741,10 +773,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                       listType: 'autovoice',
                       networkId: network || '',
                       nick: nick ?? '',
-                      mask:
-                        userHostInfo?.user && userHostInfo?.host
-                          ? `${nick}!${userHostInfo.user}@${userHostInfo.host}`
-                          : (nick ?? ''),
+                      mask: resolvedHostmask,
                       channels: channel ? [channel] : undefined,
                     });
                     useUIStore.getState().setShowUserLists(true);
@@ -771,10 +800,7 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                       listType: 'other',
                       networkId: network || '',
                       nick: nick ?? '',
-                      mask:
-                        userHostInfo?.user && userHostInfo?.host
-                          ? `${nick}!${userHostInfo.user}@${userHostInfo.host}`
-                          : (nick ?? ''),
+                      mask: resolvedHostmask,
                       channels: channel ? [channel] : undefined,
                     });
                     useUIStore.getState().setShowUserLists(true);
@@ -811,24 +837,6 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                     </Text>
                   </View>
                 </TouchableOpacity>
-                {isServerOper && (
-                  <TouchableOpacity
-                    style={styles.contextItem}
-                    onPress={handleKillPress}
-                  >
-                    <View style={styles.contextItemWithIcon}>
-                      <Icon
-                        name="skull"
-                        size={14}
-                        color="#EF5350"
-                        style={styles.contextIcon}
-                      />
-                      <Text style={[styles.contextText, styles.contextDanger]}>
-                        {t('KILL (with reason)')}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
               </View>
             )}
 
@@ -1056,6 +1064,50 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
                   </>
                 )}
               </View>
+            )}
+
+            {effectiveIsServerOper && (
+              <>
+                <View style={styles.contextDivider} />
+                <TouchableOpacity
+                  style={styles.contextItem}
+                  onPress={() => setShowIrcopGroup(prev => !prev)}
+                >
+                  <View style={styles.contextItemWithIcon}>
+                    <Icon
+                      name="shield-alt"
+                      size={14}
+                      color={colors.text}
+                      style={styles.contextIcon}
+                    />
+                    <Text style={styles.contextText}>
+                      {`${t('IRCop Commands')} ${showIrcopGroup ? 'v' : '>'}`}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                {showIrcopGroup && (
+                  <View style={styles.contextSubGroup}>
+                    <TouchableOpacity
+                      style={styles.contextItem}
+                      onPress={handleKillPress}
+                    >
+                      <View style={styles.contextItemWithIcon}>
+                        <Icon
+                          name="skull"
+                          size={14}
+                          color="#EF5350"
+                          style={styles.contextIcon}
+                        />
+                        <Text
+                          style={[styles.contextText, styles.contextDanger]}
+                        >
+                          {t('KILL (with reason)')}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
             )}
 
             {(isCurrentUserOp || isCurrentUserHalfOp) && (
@@ -1511,8 +1563,8 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
             return;
           }
 
-          const user = userHostInfo?.user || targetUser?.ident || '';
-          const host = userHostInfo?.host || targetUser?.host || '';
+          const user = resolvedUserHostInfo?.user || '';
+          const host = resolvedUserHostInfo?.host || '';
           const banMask =
             user && host
               ? banService.generateBanMask(nick, user, host, options.banType)
@@ -1548,11 +1600,9 @@ export const NickContextMenu: React.FC<NickContextMenuProps> = ({
         }}
         nick={nick || ''}
         userHost={
-          userHostInfo
-            ? `${userHostInfo.user}@${userHostInfo.host}`
-            : targetUser?.host
-              ? `${targetUser.ident || '*'}@${targetUser.host}`
-              : undefined
+          resolvedUserHostInfo
+            ? `${resolvedUserHostInfo.user}@${resolvedUserHostInfo.host}`
+            : undefined
         }
         mode={kickBanMode}
         colors={{

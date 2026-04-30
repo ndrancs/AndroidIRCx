@@ -2,13 +2,22 @@
  * Copyright (c) 2025-2026 Velimir Majstorov
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-jest.skip = true; //skipped for now
 
 import React from 'react';
 import { Alert } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { MessageHistoryViewerScreen } from '../../src/screens/MessageHistoryViewerScreen';
 import { messageHistoryService } from '../../src/services/MessageHistoryService';
+
+const mockT = (key: string, params?: Record<string, unknown>) => {
+  let result = key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      result = result.replace(`{${k}}`, String(v));
+    }
+  }
+  return result;
+};
 
 jest.mock('../../src/hooks/useTheme', () => ({
   useTheme: () => ({
@@ -27,15 +36,7 @@ jest.mock('../../src/hooks/useTheme', () => ({
 }));
 
 jest.mock('../../src/i18n/transifex', () => ({
-  useT: () => (key: string, params?: Record<string, unknown>) => {
-    let result = key;
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        result = result.replace(`{${k}}`, String(v));
-      }
-    }
-    return result;
-  },
+  useT: () => mockT,
 }));
 
 jest.mock('../../src/services/MessageHistoryService', () => ({
@@ -144,6 +145,42 @@ describe('MessageHistoryViewerScreen', () => {
     expect(queryByText('#beta · beta')).toBeNull();
   });
 
+  it('opens history search from the header and clears the query', async () => {
+    const {
+      findByText,
+      getByText,
+      getByPlaceholderText,
+      queryByPlaceholderText,
+    } = render(<MessageHistoryViewerScreen visible onClose={jest.fn()} />);
+
+    await findByText('History Viewer');
+    fireEvent.press(getByText('search'));
+
+    const input = getByPlaceholderText('Search history...');
+    fireEvent.changeText(input, 'alpha');
+    expect(input.props.value).toBe('alpha');
+
+    fireEvent.press(getByText('times-circle'));
+    expect(getByPlaceholderText('Search history...').props.value).toBe('');
+
+    fireEvent.press(getByText('times'));
+    expect(queryByPlaceholderText('Search history...')).toBeNull();
+  });
+
+  it('filters history entries by channel or network search', async () => {
+    const { findByText, getByText, getByPlaceholderText, queryByText } = render(
+      <MessageHistoryViewerScreen visible onClose={jest.fn()} />,
+    );
+
+    await findByText('#general · alpha');
+    fireEvent.press(getByText('search'));
+    fireEvent.changeText(getByPlaceholderText('Search history...'), 'beta');
+
+    expect(getByText('#beta · beta')).toBeTruthy();
+    expect(queryByText('#general · alpha')).toBeNull();
+    expect(getByText('1 result(s) found')).toBeTruthy();
+  });
+
   it('opens an entry, loads messages, toggles sort, and goes back', async () => {
     const { findByText, getByText, queryByText } = render(
       <MessageHistoryViewerScreen visible onClose={jest.fn()} />,
@@ -163,6 +200,27 @@ describe('MessageHistoryViewerScreen', () => {
 
     fireEvent.press(getByText('Back'));
     expect(queryByText('newer message')).toBeNull();
+  });
+
+  it('filters opened history messages by text and nick', async () => {
+    const { findByText, getByText, getByPlaceholderText, queryByText } = render(
+      <MessageHistoryViewerScreen visible onClose={jest.fn()} />,
+    );
+
+    await findByText('#general · alpha');
+    fireEvent.press(getByText('#general · alpha'));
+    await findByText('newer message');
+
+    fireEvent.press(getByText('search'));
+    fireEvent.changeText(getByPlaceholderText('Search history...'), 'alice');
+
+    expect(getByText('older message')).toBeTruthy();
+    expect(queryByText('newer message')).toBeNull();
+    expect(getByText('1 result(s) found')).toBeTruthy();
+
+    fireEvent.changeText(getByPlaceholderText('Search history...'), 'newer');
+    expect(getByText('newer message')).toBeTruthy();
+    expect(queryByText('older message')).toBeNull();
   });
 
   it('deletes a channel entry from the list', async () => {

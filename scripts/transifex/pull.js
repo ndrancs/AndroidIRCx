@@ -17,6 +17,23 @@ const cliPath = path.resolve(
 );
 const outDir = path.resolve(__dirname, '../../src/i18n/translations');
 
+const ensureTrailingNewline = filePath => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (content && !content.endsWith('\n')) {
+    fs.writeFileSync(filePath, `${content}\n`, 'utf8');
+  }
+};
+
+const normalizeTranslationFiles = () => {
+  if (!fs.existsSync(outDir)) {
+    return;
+  }
+
+  fs.readdirSync(outDir)
+    .filter(fileName => fileName.endsWith('.json'))
+    .forEach(fileName => ensureTrailingNewline(path.join(outDir, fileName)));
+};
+
 // Preserve the manually maintained Serbian translation file across pulls.
 const srPath = path.join(outDir, 'sr.json');
 const srBackupPath = path.join(outDir, 'sr.json.__manual_backup__');
@@ -55,6 +72,7 @@ try {
       );
     }
   }
+  normalizeTranslationFiles();
 }
 
 process.exit(result && typeof result.status === 'number' ? result.status : 1);

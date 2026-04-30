@@ -287,8 +287,42 @@ describe('NickContextMenu', () => {
       fireEvent.press(getByText('Copy user@host'));
       fireEvent.press(getByText('Copy hostmask'));
 
-      expect(onAction).toHaveBeenCalledWith('copy_userhost');
-      expect(onAction).toHaveBeenCalledWith('copy_hostmask');
+      expect(onAction).toHaveBeenCalledWith('copy_userhost', {
+        userHostInfo: { user: '~test', host: 'host.test' },
+      });
+      expect(onAction).toHaveBeenCalledWith('copy_hostmask', {
+        userHostInfo: { user: '~test', host: 'host.test' },
+      });
+    });
+
+    it('uses channel user host info for display and copy actions', () => {
+      mockGetChannelUsers.mockReturnValue([
+        { nick: 'MyNick', modes: ['o'], account: '*' },
+        {
+          nick: 'TestUser',
+          modes: [],
+          ident: '~known',
+          host: 'known.host',
+          account: '*',
+        },
+      ]);
+      const onAction = jest.fn();
+      const { getByText } = render(
+        <NickContextMenu {...baseProps} onAction={onAction} />,
+      );
+
+      expect(getByText('~known@known.host')).toBeTruthy();
+
+      fireEvent.press(getByText('Copy user@host'));
+      fireEvent.press(getByText('Copy hostmask'));
+
+      expect(mockSendSilentWho).not.toHaveBeenCalled();
+      expect(onAction).toHaveBeenCalledWith('copy_userhost', {
+        userHostInfo: { user: '~known', host: 'known.host' },
+      });
+      expect(onAction).toHaveBeenCalledWith('copy_hostmask', {
+        userHostInfo: { user: '~known', host: 'known.host' },
+      });
     });
   });
 
@@ -499,21 +533,21 @@ describe('NickContextMenu', () => {
       expect(onAction).toHaveBeenCalledWith('add_note');
     });
 
-    it('shows KILL option for server operators', () => {
+    it('shows IRCop commands for server operators', () => {
       const { getByText } = render(
         <NickContextMenu {...baseProps} isServerOper={true} />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      fireEvent.press(getByText('IRCop Commands >'));
       expect(getByText('KILL (with reason)')).toBeTruthy();
     });
 
-    it('does not show KILL option for non-operators', () => {
-      const { getByText, queryByText } = render(
+    it('does not show IRCop commands for non-operators', () => {
+      const { queryByText } = render(
         <NickContextMenu {...baseProps} isServerOper={false} />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      expect(queryByText('IRCop Commands >')).toBeNull();
       expect(queryByText('KILL (with reason)')).toBeNull();
     });
   });
@@ -728,6 +762,21 @@ describe('NickContextMenu', () => {
 
       const { getByText } = render(<NickContextMenu {...baseProps} />);
       expect(getByText('Operator Controls >')).toBeTruthy();
+    });
+
+    it('uses provided channel users for operator controls before service data', () => {
+      mockGetChannelUsers.mockReturnValue([]);
+      const channelUsers = [
+        { nick: 'MyNick', modes: ['o'], host: 'test.com', account: '*' },
+        { nick: 'TestUser', modes: [], host: 'test.com', account: '*' },
+      ];
+
+      const { getByText } = render(
+        <NickContextMenu {...baseProps} channelUsers={channelUsers as any} />,
+      );
+
+      expect(getByText('Operator Controls >')).toBeTruthy();
+      expect(mockGetChannelUsers).not.toHaveBeenCalled();
     });
 
     it('shows give voice for non-voiced user', () => {
@@ -1247,7 +1296,7 @@ describe('NickContextMenu', () => {
         <NickContextMenu {...baseProps} isServerOper={true} />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      fireEvent.press(getByText('IRCop Commands >'));
       fireEvent.press(getByText('KILL (with reason)'));
 
       expect(getByText('KILL TestUser')).toBeTruthy();
@@ -1259,7 +1308,7 @@ describe('NickContextMenu', () => {
         <NickContextMenu {...baseProps} isServerOper={true} />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      fireEvent.press(getByText('IRCop Commands >'));
       fireEvent.press(getByText('KILL (with reason)'));
 
       // Find and press Send button
@@ -1287,7 +1336,7 @@ describe('NickContextMenu', () => {
         />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      fireEvent.press(getByText('IRCop Commands >'));
       fireEvent.press(getByText('KILL (with reason)'));
 
       fireEvent.changeText(getByPlaceholderText('Enter reason'), 'Spamming');
@@ -1302,7 +1351,7 @@ describe('NickContextMenu', () => {
         <NickContextMenu {...baseProps} isServerOper={true} />,
       );
 
-      fireEvent.press(getByText('User list >'));
+      fireEvent.press(getByText('IRCop Commands >'));
       fireEvent.press(getByText('KILL (with reason)'));
 
       fireEvent.press(getByText('Cancel'));

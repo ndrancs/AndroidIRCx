@@ -1309,8 +1309,16 @@ describe('MessageArea', () => {
 
   it('opens nick context menu and executes core nick actions', async () => {
     const messages = [makeMsg({ from: 'Alice', text: 'Hello there' })];
+    const channelUsers = [
+      { nick: 'Alice', modes: [], account: '*' },
+      { nick: 'TestNick', modes: ['o'], account: '*' },
+    ];
     const { getAllByText } = await renderAndSettle(
-      <MessageArea {...baseProps} messages={messages} />,
+      <MessageArea
+        {...baseProps}
+        messages={messages}
+        channelUsers={channelUsers as any}
+      />,
     );
 
     const nickNode = getAllByText(/Alice/)[0];
@@ -1320,6 +1328,7 @@ describe('MessageArea', () => {
 
     expect(mockNickContextMenuProps).toBeTruthy();
     expect(mockNickContextMenuProps.nick).toBe('Alice');
+    expect(mockNickContextMenuProps.channelUsers).toBe(channelUsers);
 
     await act(async () => {
       await mockNickContextMenuProps.onAction('whois');
@@ -1386,6 +1395,44 @@ describe('MessageArea', () => {
     const connection = mockGetConnection.mock.results[0]?.value;
     const irc = connection?.ircService;
     expect(irc.sendMessage).toHaveBeenCalledWith('#general', '/whowas Alice');
+  });
+
+  it('copies menu-provided userhost metadata to clipboard', async () => {
+    const Clipboard = require('@react-native-clipboard/clipboard');
+    const messages = [
+      makeMsg({
+        type: 'message',
+        text: 'Hello Alice',
+        from: 'Bob',
+      }),
+    ];
+    const channelUsers = [{ nick: 'Alice', modes: [], account: '*' }];
+    const { getByText } = await renderAndSettle(
+      <MessageArea
+        {...baseProps}
+        messages={messages}
+        channelUsers={channelUsers as any}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText('Alice'));
+    });
+
+    expect(mockNickContextMenuProps).toBeTruthy();
+    expect(mockNickContextMenuProps.nick).toBe('Alice');
+
+    await act(async () => {
+      await mockNickContextMenuProps.onAction('copy_userhost', {
+        userHostInfo: { user: '~alice', host: 'host.test' },
+      });
+      await mockNickContextMenuProps.onAction('copy_hostmask', {
+        userHostInfo: { user: '~alice', host: 'host.test' },
+      });
+    });
+
+    expect(Clipboard.setString).toHaveBeenCalledWith('~alice@host.test');
+    expect(Clipboard.setString).toHaveBeenCalledWith('Alice!~alice@host.test');
   });
 
   it('uses clicked quit userhost metadata for ban masks', async () => {

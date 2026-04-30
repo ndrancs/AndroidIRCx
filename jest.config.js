@@ -19,9 +19,5 @@ module.exports = {
     // Allow ESM React Native dependencies to be transformed for Jest
     'node_modules/(?!(react-native|@react-native|@react-native-community|@react-native-firebase|react-native-tcp-socket|@noble)/)',
   ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    'ZncSubscriptionScreen.test.tsx',
-    'MessageHistoryViewerScreen.test.tsx',
-  ],
+  testPathIgnorePatterns: ['/node_modules/', 'ZncSubscriptionScreen.test.tsx'],
 };

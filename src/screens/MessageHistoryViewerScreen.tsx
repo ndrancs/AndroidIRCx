@@ -18,6 +18,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -62,6 +63,8 @@ export const MessageHistoryViewerScreen: React.FC<
   const [messageSortOrder, setMessageSortOrder] = useState<'desc' | 'asc'>(
     'desc',
   );
+  const [historySearchVisible, setHistorySearchVisible] = useState(false);
+  const [historySearchTerm, setHistorySearchTerm] = useState('');
   const migrationSummaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -136,6 +139,8 @@ export const MessageHistoryViewerScreen: React.FC<
     setSelectedEntry(null);
     setSelectedNetwork('all');
     setMessages([]);
+    setHistorySearchVisible(false);
+    setHistorySearchTerm('');
     loadEntries();
   }, [visible, loadEntries]);
 
@@ -144,14 +149,56 @@ export const MessageHistoryViewerScreen: React.FC<
     return ['all', ...unique];
   }, [entries]);
 
+  const normalizedHistorySearchTerm = historySearchTerm.trim().toLowerCase();
+
   const filteredEntries = useMemo(() => {
-    if (selectedNetwork === 'all') return entries;
-    return entries.filter(e => e.network === selectedNetwork);
-  }, [entries, selectedNetwork]);
+    const networkFiltered =
+      selectedNetwork === 'all'
+        ? entries
+        : entries.filter(e => e.network === selectedNetwork);
+
+    if (!normalizedHistorySearchTerm) return networkFiltered;
+
+    return networkFiltered.filter(entry => {
+      const channel = entry.channel.toLowerCase();
+      const entryNetwork = entry.network.toLowerCase();
+      return (
+        channel.includes(normalizedHistorySearchTerm) ||
+        entryNetwork.includes(normalizedHistorySearchTerm)
+      );
+    });
+  }, [entries, normalizedHistorySearchTerm, selectedNetwork]);
+
+  const filteredMessages = useMemo(() => {
+    if (!normalizedHistorySearchTerm) return messages;
+
+    return messages.filter(message => {
+      const text = message.text?.toLowerCase() || '';
+      const from = message.from?.toLowerCase() || '';
+      const channel =
+        message.channel?.toLowerCase() ||
+        selectedEntry?.channel.toLowerCase() ||
+        '';
+      return (
+        text.includes(normalizedHistorySearchTerm) ||
+        from.includes(normalizedHistorySearchTerm) ||
+        channel.includes(normalizedHistorySearchTerm)
+      );
+    });
+  }, [messages, normalizedHistorySearchTerm, selectedEntry?.channel]);
+
+  const historySearchResultCount = selectedEntry
+    ? filteredMessages.length
+    : filteredEntries.length;
 
   const handleOpenEntry = async (entry: HistoryEntry) => {
     setSelectedEntry(entry);
     await loadMessages(entry);
+  };
+
+  const closeHistorySearch = () => {
+    setHistorySearchVisible(false);
+    setHistorySearchTerm('');
   };
 
   const handleDeleteEntry = async (entry: HistoryEntry) => {
@@ -296,10 +343,69 @@ export const MessageHistoryViewerScreen: React.FC<
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t('History Viewer')}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>{t('Close')}</Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() =>
+                historySearchVisible
+                  ? closeHistorySearch()
+                  : setHistorySearchVisible(true)
+              }
+              style={styles.headerIconButton}
+            >
+              <Icon
+                name={historySearchVisible ? 'times' : 'search'}
+                size={16}
+                color={colors.text || '#212121'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>{t('Close')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {historySearchVisible && (
+          <View style={styles.searchBar}>
+            <View style={styles.searchInputRow}>
+              <Icon
+                name="search"
+                size={14}
+                color={colors.textSecondary || '#757575'}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t('Search history...')}
+                placeholderTextColor={colors.textSecondary || '#757575'}
+                value={historySearchTerm}
+                onChangeText={setHistorySearchTerm}
+                autoFocus
+              />
+              {historySearchTerm.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setHistorySearchTerm('')}
+                  style={styles.clearSearchButton}
+                >
+                  <Icon
+                    name="times-circle"
+                    size={16}
+                    color={colors.textSecondary || '#757575'}
+                    solid
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            {historySearchTerm.trim().length > 0 && (
+              <Text style={styles.searchResultText}>
+                {historySearchResultCount === 0
+                  ? t('No results found')
+                  : t('{count} result(s) found', {
+                      count: historySearchResultCount.toString(),
+                    })}
+              </Text>
+            )}
+          </View>
+        )}
 
         <View style={styles.toolbar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -365,7 +471,11 @@ export const MessageHistoryViewerScreen: React.FC<
             renderItem={renderEntry}
             ListEmptyComponent={
               !loading ? (
-                <Text style={styles.emptyText}>{t('No stored messages')}</Text>
+                <Text style={styles.emptyText}>
+                  {historySearchTerm.trim()
+                    ? t('No results found')
+                    : t('No stored messages')}
+                </Text>
               ) : null
             }
             contentContainerStyle={styles.listContent}
@@ -407,13 +517,15 @@ export const MessageHistoryViewerScreen: React.FC<
               </View>
             </View>
             <FlatList
-              data={messages}
+              data={filteredMessages}
               keyExtractor={item => item.id}
               renderItem={renderMessage}
               ListEmptyComponent={
                 !loading ? (
                   <Text style={styles.emptyText}>
-                    {t('No stored messages')}
+                    {historySearchTerm.trim()
+                      ? t('No results found')
+                      : t('No stored messages')}
                   </Text>
                 ) : null
               }
@@ -446,6 +558,14 @@ const createStyles = (colors: any) =>
       fontWeight: '600',
       color: colors.text || '#212121',
     },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    headerIconButton: {
+      padding: 8,
+    },
     closeButton: {
       paddingVertical: 4,
       paddingHorizontal: 8,
@@ -454,6 +574,42 @@ const createStyles = (colors: any) =>
       color: colors.buttonPrimary || '#2196F3',
       fontSize: 16,
       fontWeight: '500',
+    },
+    searchBar: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border || '#E0E0E0',
+      backgroundColor: colors.surface || '#F5F5F5',
+    },
+    searchInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      minHeight: 40,
+      paddingHorizontal: 10,
+      borderRadius: 20,
+      backgroundColor: colors.background || '#FFFFFF',
+      borderWidth: 1,
+      borderColor: colors.border || '#E0E0E0',
+    },
+    searchIcon: {
+      width: 14,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text || '#212121',
+      fontSize: 14,
+      paddingVertical: 8,
+    },
+    clearSearchButton: {
+      padding: 4,
+    },
+    searchResultText: {
+      color: colors.textSecondary || '#757575',
+      fontSize: 12,
+      marginTop: 6,
+      paddingHorizontal: 4,
     },
     toolbar: {
       flexDirection: 'row',

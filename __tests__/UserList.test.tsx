@@ -703,6 +703,8 @@ describe('UserList', () => {
       });
 
       expect(mockNickContextMenuProps).toBeTruthy();
+      expect(mockNickContextMenuProps.nick).toBe('Alice');
+      expect(mockNickContextMenuProps.channelUsers).toBe(users);
       await act(async () => {
         await mockNickContextMenuProps.onAction('whois');
         await mockNickContextMenuProps.onAction('query');
@@ -715,6 +717,58 @@ describe('UserList', () => {
       );
       expect(Clipboard.setString).toHaveBeenCalledWith('Alice');
       expect(irc.sendCommand).not.toHaveBeenCalledWith('WHOIS Alice');
+      timeoutSpy.mockRestore();
+    });
+
+    it('copies userhost payload from the shared nick context menu', async () => {
+      const timeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation(((
+        fn: any,
+      ) => {
+        if (typeof fn === 'function') fn();
+        return 0 as any;
+      }) as any);
+      (performanceService.getConfig as jest.Mock).mockReturnValue({
+        userListType: 'simple',
+        userListSearchDebounceMs: 0,
+        userListInitialRenderCount: 50,
+        userListEnableChunkLoading: false,
+        userListChunkSize: 100,
+        userListSkipSortThreshold: 1000,
+        userListGrouping: true,
+        userListAutoDisableGroupingThreshold: 1000,
+      });
+      const users: ChannelUser[] = [{ nick: 'Alice', modes: [] }];
+
+      let tree: TestRenderer.ReactTestRenderer;
+      await act(async () => {
+        tree = TestRenderer.create(
+          <UserList users={users} channelName="#test" network="testnet" />,
+        );
+      });
+
+      const instance = tree!.root;
+      const userTouchable = instance.findAll(
+        (node: any) =>
+          node?.props && typeof node.props.onLongPress === 'function',
+      )[0];
+
+      await act(async () => {
+        userTouchable?.props.onLongPress();
+      });
+
+      await act(async () => {
+        await mockNickContextMenuProps.onAction('copy_userhost', {
+          userHostInfo: { user: '~alice', host: 'host.test' },
+        });
+        await mockNickContextMenuProps.onAction('copy_hostmask', {
+          userHostInfo: { user: '~alice', host: 'host.test' },
+        });
+      });
+
+      expect(Clipboard.setString).toHaveBeenCalledWith('~alice@host.test');
+      expect(Clipboard.setString).toHaveBeenCalledWith(
+        'Alice!~alice@host.test',
+      );
       timeoutSpy.mockRestore();
     });
 

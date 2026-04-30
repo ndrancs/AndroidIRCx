@@ -1,0 +1,8 @@
+What's new in 1.9.11:
+- Updated dependencies, including the PostCSS security fix
+- Made JOIN, PART, and QUIT user@host details clickable
+- Added quick WHOWAS and hostmask copy actions from user context menus
+- Fixed operator and IRCop command visibility in user context menus
+- Improved ban/blacklist actions to use known user@host data when available
+- Added top search in Message History Viewer for saved channels, networks, and opened history messages
+- Added history search result counts and a clear-search action

@@ -92,6 +92,15 @@ type BlacklistTemplatesSetting = {
   global?: BlacklistTemplateMap;
 } & Record<string, BlacklistTemplateMap | undefined>;
 
+type UserHostInfo = {
+  user: string;
+  host: string;
+};
+
+type NickActionContext = {
+  userHostInfo?: UserHostInfo | null;
+};
+
 export const UserList: React.FC<UserListProps> = ({
   users,
   channelName,
@@ -716,8 +725,18 @@ export const UserList: React.FC<UserListProps> = ({
     [activeIrc],
   );
 
-  const handleContextMenuAction = async (action: string) => {
+  const handleContextMenuAction = async (
+    action: string,
+    actionContext?: NickActionContext,
+  ) => {
     if (!selectedUser || !channelName) return;
+    const actionHostInfo = actionContext?.userHostInfo;
+    const selectedHostInfo =
+      actionHostInfo?.user && actionHostInfo.host
+        ? actionHostInfo
+        : selectedUser.ident && selectedUser.host
+          ? { user: selectedUser.ident, host: selectedUser.host }
+          : null;
 
     // Keep menu open; show feedback inline
     switch (action) {
@@ -1106,6 +1125,20 @@ export const UserList: React.FC<UserListProps> = ({
         break;
       case 'copy':
         setActionMessage(copyNickToClipboard(selectedUser.nick, t));
+        break;
+      case 'copy_userhost':
+        if (selectedHostInfo) {
+          const userHost = `${selectedHostInfo.user}@${selectedHostInfo.host}`;
+          Clipboard.setString(userHost);
+          setActionMessage(t('Copied {nick}').replace('{nick}', userHost));
+        }
+        break;
+      case 'copy_hostmask':
+        if (selectedHostInfo) {
+          const hostmask = `${selectedUser.nick}!${selectedHostInfo.user}@${selectedHostInfo.host}`;
+          Clipboard.setString(hostmask);
+          setActionMessage(t('Copied {nick}').replace('{nick}', hostmask));
+        }
         break;
       case 'ctcp_ping':
         activeIrc.sendCTCPRequest(
@@ -1646,6 +1679,7 @@ export const UserList: React.FC<UserListProps> = ({
         network={network}
         channel={channelName}
         activeNick={activeIrc.getCurrentNick()}
+        channelUsers={users}
         allowQrVerification={allowQrVerification}
         allowFileExchange={allowFileExchange}
         allowNfcExchange={allowNfcExchange}
