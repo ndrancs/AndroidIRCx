@@ -94,9 +94,6 @@ describe('useConnectionManager', () => {
     it('setIsConnected should update store', () => {
       const { result } = renderHook(() => useConnectionManager());
 
-      act(() => {
-      });
-
       // Test the connect flow which uses setIsConnected internally
       expect(result.current.isConnected).toBe(false);
     });
