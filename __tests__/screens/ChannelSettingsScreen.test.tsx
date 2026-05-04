@@ -355,12 +355,12 @@ describe('ChannelSettingsScreen', () => {
 
     fireEvent.press(getByText('Generate Key'));
     expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      '/chankey generate',
+      'chankey generate',
     );
 
     fireEvent.press(getByText('Request Key from...'));
     expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      '/chankey request targetNick',
+      'chankey request targetNick',
     );
 
     mockChannelEncryptionService.hasChannelKey.mockResolvedValue(true);
@@ -374,7 +374,7 @@ describe('ChannelSettingsScreen', () => {
     );
     fireEvent.press(await secondRender.findByText('Share Key with...'));
     expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      '/chankey share targetNick',
+      'chankey share targetNick',
     );
 
     fireEvent.press(
@@ -384,7 +384,7 @@ describe('ChannelSettingsScreen', () => {
     await act(async () => {
       await removeButtons?.[1]?.onPress?.();
     });
-    expect(mockIrcService.sendCommand).toHaveBeenCalledWith('/chankey remove');
+    expect(mockIrcService.sendCommand).toHaveBeenCalledWith('chankey remove');
   });
 
   it('shows empty-style and mode toggle branches', async () => {
