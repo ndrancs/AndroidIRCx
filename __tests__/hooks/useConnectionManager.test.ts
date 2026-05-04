@@ -94,8 +94,12 @@ describe('useConnectionManager', () => {
     it('setIsConnected should update store', () => {
       const { result } = renderHook(() => useConnectionManager());
 
-      // Test the connect flow which uses setIsConnected internally
-      expect(result.current.isConnected).toBe(false);
+      act(() => {
+        useConnectionStore.getState().setIsConnected(true);
+      });
+
+      expect(useConnectionStore.getState().isConnected).toBe(true);
+      expect(result.current.isConnected).toBe(true);
     });
 
     it('setSelectedNetworkName should update store', () => {
@@ -454,7 +458,7 @@ describe('useConnectionManager', () => {
 
       const { result } = renderHook(() => useConnectionManager());
 
-      let connected: boolean = false;
+      let connected: boolean;
       act(() => {
         connected = result.current.isNetworkConnected('DBase');
       });
@@ -469,7 +473,7 @@ describe('useConnectionManager', () => {
 
       const { result } = renderHook(() => useConnectionManager());
 
-      let connected: boolean = true;
+      let connected: boolean;
       act(() => {
         connected = result.current.isNetworkConnected('DBase');
       });
@@ -482,7 +486,7 @@ describe('useConnectionManager', () => {
 
       const { result } = renderHook(() => useConnectionManager());
 
-      let connected: boolean = true;
+      let connected: boolean;
       act(() => {
         connected = result.current.isNetworkConnected('Unknown');
       });

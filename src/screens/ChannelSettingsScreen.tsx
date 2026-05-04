@@ -450,7 +450,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
 
   const handleGenerateKey = async () => {
     try {
-      ircService.sendCommand(`/chankey generate`);
+      ircService.sendCommand(`chankey generate`);
       // Refresh key status after a short delay
       setTimeout(async () => {
         const hasKey = await channelEncryptionService.hasChannelKey(
@@ -481,7 +481,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Request'),
           onPress: (nick: string | undefined) => {
             if (nick && nick.trim()) {
-              ircService.sendCommand(`/chankey request ${nick.trim()}`);
+              ircService.sendCommand(`chankey request ${nick.trim()}`);
               Alert.alert(
                 t('Success'),
                 t('Key request sent to {nick}').replace('{nick}', nick.trim()),
@@ -504,7 +504,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Share'),
           onPress: (nick: string | undefined) => {
             if (nick && nick.trim()) {
-              ircService.sendCommand(`/chankey share ${nick.trim()}`);
+              ircService.sendCommand(`chankey share ${nick.trim()}`);
               Alert.alert(
                 t('Success'),
                 t('Key shared with {nick}').replace('{nick}', nick.trim()),
@@ -529,7 +529,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Remove'),
           style: 'destructive',
           onPress: async () => {
-            ircService.sendCommand(`/chankey remove`);
+            ircService.sendCommand(`chankey remove`);
             setTimeout(async () => {
               const hasKey = await channelEncryptionService.hasChannelKey(
                 channel,
