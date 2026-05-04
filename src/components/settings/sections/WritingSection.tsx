@@ -701,22 +701,18 @@ export const WritingSection: React.FC<WritingSectionProps> = ({
 
   const renderIrcPreview = (styleName: string) => {
     const display = decorStyleDisplay(styleName, false);
-    const plain = stripIRCFormatting(display).trim();
-    const fallback = plain.length > 0 ? plain : display;
     return (
       <Text style={stylesLocal.presetText}>
-        {formatIRCTextAsComponent(display, stylesLocal.presetText) || fallback}
+        {formatIRCTextAsComponent(display, stylesLocal.presetText)}
       </Text>
     );
   };
 
   const renderNickPreview = (styleName: string) => {
     const display = nickStyleDisplay(styleName, false);
-    const plain = stripIRCFormatting(display).trim();
-    const fallback = plain.length > 0 ? plain : display;
     return (
       <Text style={stylesLocal.presetText}>
-        {formatIRCTextAsComponent(display, stylesLocal.presetText) || fallback}
+        {formatIRCTextAsComponent(display, stylesLocal.presetText)}
       </Text>
     );
   };

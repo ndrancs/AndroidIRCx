@@ -273,16 +273,14 @@ class MediaEncryptionService {
         isContentUri = true;
       }
 
-      // Check if file exists
-      let fileExists = false;
-      let actualUri = normalizedUri;
+      // Resolve the URI we will read from.
+      let actualUri: string;
 
       if (isContentUri) {
         // For content URIs, try to read directly (exists check might not work)
         try {
           // Try reading a small chunk to verify file exists
           await RNFS.read(normalizedUri, 1, 0, 'base64');
-          fileExists = true;
           actualUri = normalizedUri;
         } catch (err) {
           console.error(
@@ -295,7 +293,7 @@ class MediaEncryptionService {
           };
         }
       } else {
-        fileExists = await RNFS.exists(normalizedUri);
+        const fileExists = await RNFS.exists(normalizedUri);
         if (!fileExists) {
           // Try with original URI (with file:// prefix)
           const originalExists = await RNFS.exists(fileUri);
@@ -359,7 +357,7 @@ class MediaEncryptionService {
         fileBytes = new Uint8Array(buffer);
 
         // Validate that conversion succeeded
-        if (!fileBytes || fileBytes.length === 0) {
+        if (fileBytes.length === 0) {
           return {
             success: false,
             error: 'File conversion failed: empty result',

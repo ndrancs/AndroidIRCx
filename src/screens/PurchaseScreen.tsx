@@ -297,10 +297,6 @@ export const PurchaseScreen: React.FC<PurchaseScreenProps> = ({
         },
       });
 
-      if (!request) {
-        throw new Error('Unsupported platform for purchases.');
-      }
-
       await RNIap.requestPurchase(request);
       // The purchase will be handled by purchaseUpdatedListener
     } catch (error: any) {

@@ -2509,21 +2509,20 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         case 'ban_with_options':
         case 'kick_ban_with_options': {
           // Set up the kickban target and show the modal
-          if (channel && contextNick) {
-            setKickBanTarget({
-              nick: contextNick,
-              user: selectedHostInfo?.user,
-              host: selectedHostInfo?.host,
-            });
-            setKickBanMode(
-              action === 'kick_with_options'
-                ? 'kick'
-                : action === 'ban_with_options'
-                  ? 'ban'
-                  : 'kickban',
-            );
-            setShowKickBanModal(true);
-          }
+          if (!channel) break;
+          setKickBanTarget({
+            nick: contextNick!,
+            user: selectedHostInfo?.user,
+            host: selectedHostInfo?.host,
+          });
+          setKickBanMode(
+            action === 'kick_with_options'
+              ? 'kick'
+              : action === 'ban_with_options'
+                ? 'ban'
+                : 'kickban',
+          );
+          setShowKickBanModal(true);
           break;
         }
         default:

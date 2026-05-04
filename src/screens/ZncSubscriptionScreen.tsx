@@ -863,10 +863,6 @@ export const ZncSubscriptionScreen: React.FC<ZncSubscriptionScreenProps> = ({
         };
       }
 
-      if (!request) {
-        throw new Error('Unsupported platform for subscriptions.');
-      }
-
       await RNIap.requestPurchase(request);
     } catch (error: any) {
       setPurchasing(false);

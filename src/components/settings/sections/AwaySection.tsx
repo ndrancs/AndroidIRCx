@@ -343,11 +343,9 @@ export const AwaySection: React.FC<AwaySectionProps> = ({
   };
 
   const renderPresetPreview = (preset: string) => {
-    const plain = stripIRCFormatting(preset).trim();
-    const fallback = plain.length > 0 ? plain : preset;
     return (
       <Text style={stylesLocal.presetText}>
-        {formatIRCTextAsComponent(preset, stylesLocal.presetText) || fallback}
+        {formatIRCTextAsComponent(preset, stylesLocal.presetText)}
       </Text>
     );
   };

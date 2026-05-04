@@ -383,7 +383,7 @@ class DataPrivacyService {
       }
 
       // Get storage size
-      let storageSize = '0 KB';
+      let storageSize: string;
       try {
         const keys = await AsyncStorage.getAllKeys();
         let totalSize = 0;

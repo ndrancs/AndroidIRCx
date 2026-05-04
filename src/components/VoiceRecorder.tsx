@@ -345,14 +345,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <Text style={styles.durationText}>{formatDuration(duration)}</Text>
 
           {/* Audio preview player */}
-          {recordingUri && (
-            <Video
-              source={{ uri: `file://${recordingUri}` }}
-              controls
-              paused={false}
-              style={styles.audioPlayer}
-            />
-          )}
+          <Video
+            source={{ uri: `file://${recordingUri}` }}
+            controls
+            paused={false}
+            style={styles.audioPlayer}
+          />
 
           <View style={styles.recordedActions}>
             <TouchableOpacity

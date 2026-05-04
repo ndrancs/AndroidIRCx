@@ -95,8 +95,6 @@ describe('useConnectionManager', () => {
       const { result } = renderHook(() => useConnectionManager());
 
       act(() => {
-        result.current.connect; // access to ensure hook is set up
-        // Use the internal setter via the hook
       });
 
       // Test the connect flow which uses setIsConnected internally

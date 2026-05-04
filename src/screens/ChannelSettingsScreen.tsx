@@ -240,9 +240,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
     const replaced = styleText
       ? styleText.replace(/<TOPIC>/gi, sampleText)
       : sampleText;
-    const plain = stripIRCFormatting(replaced).trim();
-    const fallback = plain.length > 0 ? plain : replaced;
-    return formatIRCTextAsComponent(replaced, baseStyle) || fallback;
+    return formatIRCTextAsComponent(replaced, baseStyle);
   };
 
   const handleInsertColor = (code: string) => {
