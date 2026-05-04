@@ -26,10 +26,7 @@ import { channelEncryptionSettingsService } from '../services/ChannelEncryptionS
 import { settingsService } from '../services/SettingsService';
 import { useT } from '../i18n/transifex';
 import { getChannelModeDescription } from '../utils/modeDescriptions';
-import {
-  formatIRCTextAsComponent,
-  stripIRCFormatting,
-} from '../utils/IRCFormatter';
+import { formatIRCTextAsComponent } from '../utils/IRCFormatter';
 import { repairMojibake } from '../utils/EncodingUtils';
 import { ColorPickerModal } from '../components/ColorPickerModal';
 import { useTheme } from '../hooks/useTheme';
