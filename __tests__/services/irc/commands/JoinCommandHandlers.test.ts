@@ -270,6 +270,34 @@ describe('JoinCommandHandlers', () => {
       );
     });
 
+    it('should keep host text after the first @ in the JOIN prefix', () => {
+      ctx.getCurrentNick = jest.fn().mockReturnValue('TestUser');
+      ctx.extractNick = jest.fn().mockReturnValue('JoiningUser');
+      ctx.getUser = jest.fn().mockReturnValue(undefined);
+
+      handleJOIN(
+        ctx,
+        'JoiningUser!~username@hostname@relay',
+        ['#general'],
+        Date.now(),
+      );
+
+      expect(ctx.addMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: '~username',
+          hostname: 'hostname@relay',
+        }),
+      );
+      expect(ctx.setUser).toHaveBeenCalledWith(
+        '#general',
+        'JoiningUser',
+        expect.objectContaining({
+          ident: '~username',
+          host: 'hostname@relay',
+        }),
+      );
+    });
+
     it('should update channel user list when new user joins', () => {
       ctx.getCurrentNick = jest.fn().mockReturnValue('TestUser');
       ctx.extractNick = jest.fn().mockReturnValue('NewUser');

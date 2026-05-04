@@ -12,12 +12,32 @@ import type { CommandHandler, CommandHandlerRegistry } from '../commandTypes';
 
 const t = (key: string, params?: Record<string, unknown>) => tx.t(key, params);
 
+const parseJoinUserHost = (
+  prefix: string,
+): { username?: string; hostname?: string } => {
+  const bangIndex = prefix.indexOf('!');
+  if (bangIndex === -1) {
+    return {};
+  }
+
+  const userHost = prefix.slice(bangIndex + 1);
+  const atIndex = userHost.indexOf('@');
+
+  if (atIndex === -1) {
+    return { username: userHost };
+  }
+
+  return {
+    username: userHost.slice(0, atIndex),
+    hostname: userHost.slice(atIndex + 1),
+  };
+};
+
 export const handleJOIN: CommandHandler = (ctx, prefix, params, timestamp) => {
   const channel = params[0] || '';
   const nick = ctx.extractNick(prefix);
-  const joinPrefixParts = prefix.split('!');
-  const joinUsername = joinPrefixParts[1]?.split('@')[0];
-  const joinHostname = joinPrefixParts[1]?.split('@')[1];
+  const { username: joinUsername, hostname: joinHostname } =
+    parseJoinUserHost(prefix);
 
   let joinText = t('{nick} joined {channel}', { nick, channel });
   let account: string | undefined;

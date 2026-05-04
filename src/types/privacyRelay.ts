@@ -84,10 +84,24 @@ export const DEFAULT_PRIVACY_RELAY_TURN_SERVER: PrivacyRelayTurnServer = {
 
 export function isPrivacyRelayActive(
   subscription: PrivacyRelaySubscription | null | undefined,
+  now: Date = new Date(),
 ): boolean {
   if (!subscription) {
     return false;
   }
 
-  return subscription.status === 'active' || subscription.status === 'grace';
+  if (subscription.status !== 'active' && subscription.status !== 'grace') {
+    return false;
+  }
+
+  if (!subscription.expiresAt) {
+    return true;
+  }
+
+  const expiresAt = Date.parse(subscription.expiresAt);
+  if (Number.isNaN(expiresAt)) {
+    return false;
+  }
+
+  return expiresAt > now.getTime();
 }

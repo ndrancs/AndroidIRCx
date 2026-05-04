@@ -126,11 +126,25 @@ describe('MessageHistoryViewerScreen', () => {
     expect(await findByText('#beta · beta')).toBeTruthy();
     expect(await findByText('Migrated 2 channels.')).toBeTruthy();
 
-    await act(async () => {
-      jest.advanceTimersByTime(3693);
+    act(() => {
+      jest.runOnlyPendingTimers();
     });
 
     expect(getAllByText('Close').length).toBeGreaterThan(0);
+  });
+
+  it('clears the migration summary timer on unmount', async () => {
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    const { findByText, unmount } = render(
+      <MessageHistoryViewerScreen visible onClose={jest.fn()} />,
+    );
+
+    expect(await findByText('Migrated 2 channels.')).toBeTruthy();
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
   });
 
   it('filters entries by selected network', async () => {

@@ -6,28 +6,32 @@
 import { NativeModules, Platform } from 'react-native';
 
 interface ScreenshotProtectionNativeModule {
-  setScreenshotProtectionEnabled: (enabled: boolean) => Promise<boolean> | void;
+  setScreenshotProtectionEnabled: (enabled: boolean) => Promise<void>;
 }
 
-const ScreenshotProtectionModule: ScreenshotProtectionNativeModule | undefined =
-  NativeModules?.ScreenshotProtectionModule;
-
-class ScreenshotProtectionService {
-  private readonly isAvailable: boolean;
-
-  constructor() {
-    this.isAvailable =
-      Platform.OS === 'android' && !!ScreenshotProtectionModule;
+const getScreenshotProtectionModule = ():
+  | ScreenshotProtectionNativeModule
+  | undefined => {
+  if (Platform.OS !== 'android') {
+    return undefined;
   }
 
+  return NativeModules?.ScreenshotProtectionModule;
+};
+
+class ScreenshotProtectionService {
   async setAllowScreenshots(allowScreenshots: boolean): Promise<void> {
-    if (!this.isAvailable || !ScreenshotProtectionModule) {
+    const screenshotProtectionModule = getScreenshotProtectionModule();
+    if (!screenshotProtectionModule) {
       return;
     }
 
     try {
-      await ScreenshotProtectionModule.setScreenshotProtectionEnabled(
-        !allowScreenshots,
+      // Native API uses "protection enabled" semantics, while this service uses
+      // "allow screenshots" semantics.
+      const enableProtection = !allowScreenshots;
+      await screenshotProtectionModule.setScreenshotProtectionEnabled(
+        enableProtection,
       );
     } catch (error) {
       console.warn(

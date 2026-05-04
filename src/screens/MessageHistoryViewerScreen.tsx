@@ -42,6 +42,8 @@ type HistoryEntry = {
   oldest?: number;
 };
 
+const MIGRATION_SUMMARY_DISPLAY_DURATION_MS = 3693;
+
 export const MessageHistoryViewerScreen: React.FC<
   MessageHistoryViewerScreenProps
 > = ({ visible, onClose }) => {
@@ -69,6 +71,15 @@ export const MessageHistoryViewerScreen: React.FC<
     null,
   );
 
+  useEffect(() => {
+    return () => {
+      if (migrationSummaryTimerRef.current) {
+        clearTimeout(migrationSummaryTimerRef.current);
+        migrationSummaryTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const loadEntries = useCallback(async () => {
     setLoading(true);
     try {
@@ -91,7 +102,7 @@ export const MessageHistoryViewerScreen: React.FC<
         migrationSummaryTimerRef.current = setTimeout(() => {
           setMigrationSummary('');
           migrationSummaryTimerRef.current = null;
-        }, 3693);
+        }, MIGRATION_SUMMARY_DISPLAY_DURATION_MS);
       } else {
         setMigrationSummary('');
       }
