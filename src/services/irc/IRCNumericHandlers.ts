@@ -81,6 +81,8 @@ interface IRCServiceInterface {
   inviteListBuffer: Map<string, any[]>;
   exceptListBuffer: Map<string, any[]>;
   namesBuffer: Map<string, Set<string>>;
+  isUserRequestedNames?: (channel: string) => boolean;
+  clearUserRequestedNames?: (channel: string) => void;
 
   // SASL
   saslMechanism: string | null;
@@ -278,6 +280,10 @@ export class IRCNumericHandlers {
         }
         names.forEach(name => buffer!.add(name));
       },
+      isUserRequestedNames: (channel: string) =>
+        svc.isUserRequestedNames?.(channel) || false,
+      clearUserRequestedNames: (channel: string) =>
+        svc.clearUserRequestedNames?.(channel),
 
       // SASL state
       getSaslMechanism: () => svc.saslMechanism,

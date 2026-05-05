@@ -227,6 +227,7 @@ export const handleNAMES: SendMessageHandler = (ctx, args, target) => {
         ? target
         : '';
   if (namesChannel) {
+    ctx.markUserRequestedNames?.(namesChannel);
     ctx.sendCommand(`NAMES ${namesChannel}`);
   } else {
     ctx.addMessage({

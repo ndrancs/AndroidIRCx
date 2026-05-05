@@ -125,11 +125,26 @@ export type MessageFormatToken =
   | 'account'
   | 'username'
   | 'hostname'
+  | 'userhost'
   | 'hostmask'
+  | 'server'
   | 'target'
   | 'mode'
   | 'topic'
   | 'reason'
+  | 'realname'
+  | 'channels'
+  | 'names'
+  | 'owners'
+  | 'admins'
+  | 'ops'
+  | 'halfops'
+  | 'voices'
+  | 'normal'
+  | 'count'
+  | 'idle'
+  | 'date'
+  | 'status'
   | 'numeric'
   | 'command';
 
@@ -166,6 +181,9 @@ export interface ThemeMessageFormats {
   mode: MessageFormatPart[];
   topic: MessageFormatPart[];
   raw: MessageFormatPart[];
+  whois: MessageFormatPart[];
+  who: MessageFormatPart[];
+  names: MessageFormatPart[];
   error: MessageFormatPart[];
   ctcp: MessageFormatPart[];
 }

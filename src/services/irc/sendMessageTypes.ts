@@ -48,6 +48,9 @@ export interface SendMessageContext {
 
   // Capability check
   hasCapability: (cap: string) => boolean;
+
+  // User-requested response tracking
+  markUserRequestedNames?: (channel: string) => void;
 }
 
 /**

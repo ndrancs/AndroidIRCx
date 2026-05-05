@@ -36,6 +36,9 @@ const buildFormats = () => ({
   mode: [{ type: 'token', value: 'message', style: {} }],
   topic: [{ type: 'token', value: 'message', style: {} }],
   raw: [{ type: 'token', value: 'message', style: {} }],
+  whois: [{ type: 'token', value: 'message', style: {} }],
+  who: [{ type: 'token', value: 'message', style: {} }],
+  names: [{ type: 'token', value: 'message', style: {} }],
   error: [{ type: 'token', value: 'message', style: {} }],
   ctcp: [{ type: 'token', value: 'message', style: {} }],
   event: [{ type: 'token', value: 'message', style: {} }],
@@ -47,11 +50,22 @@ jest.mock('../../src/i18n/transifex', () => ({
 
 jest.mock('../../src/utils/MessageFormatDefaults', () => ({
   AVAILABLE_MESSAGE_FORMAT_TOKENS: [
-    { value: 'time' },
-    { value: 'message' },
-    { value: 'nick' },
+    { type: 'token', value: 'time' },
+    { type: 'token', value: 'message' },
+    { type: 'token', value: 'nick' },
   ],
   getDefaultMessageFormats: jest.fn(() => buildFormats()),
+  RAW_RESPONSE_FORMAT_PRESETS: [
+    {
+      id: 'compact',
+      title: 'Compact',
+      formats: {
+        whois: [{ type: 'text', value: 'preset whois', style: {} }],
+        who: [{ type: 'text', value: 'preset who', style: {} }],
+        names: [{ type: 'text', value: 'preset names', style: {} }],
+      },
+    },
+  ],
 }));
 
 jest.mock('../../src/components/ColorPalettePicker', () => ({

@@ -181,6 +181,11 @@ export interface IRCMessage {
   reason?: string;
   numeric?: string;
   command?: string;
+  rawFormatType?: 'whois' | 'who' | 'names';
+  rawFormatData?: Record<
+    string,
+    string | number | boolean | string[] | undefined
+  >;
   isScrollback?: boolean; // Message loaded from local scrollback history
   isPlayback?: boolean; // Message from bouncer playback buffer
   batchTag?: string; // IRCv3.2 batch tag - indicates message is part of a batch
@@ -307,6 +312,7 @@ export class IRCService {
     users: ChannelUser[],
   ) => void)[] = [];
   private namesBuffer: Map<string, Set<string>> = new Map(); // channel -> set of nicks being built
+  private userRequestedNamesChannels: Set<string> = new Set();
   private channelTopics: Map<string, ChannelTopicInfo> = new Map(); // channel -> topic info
   private pendingChannelIntro: Set<string> = new Set();
   private pendingMessages: IRCMessage[] = []; // buffer messages until UI listeners attach
@@ -363,6 +369,29 @@ export class IRCService {
         );
       }
     });
+  }
+
+  private normalizeNamesChannel(channel: string): string {
+    return channel.trim().toLowerCase();
+  }
+
+  public markUserRequestedNames(channel: string) {
+    const key = this.normalizeNamesChannel(channel);
+    if (key) {
+      this.userRequestedNamesChannels.add(key);
+    }
+  }
+
+  public isUserRequestedNames(channel: string): boolean {
+    const key = this.normalizeNamesChannel(channel);
+    return key ? this.userRequestedNamesChannels.has(key) : false;
+  }
+
+  public clearUserRequestedNames(channel: string) {
+    const key = this.normalizeNamesChannel(channel);
+    if (key) {
+      this.userRequestedNamesChannels.delete(key);
+    }
   }
 
   private logRaw(...args: any[]): void {
@@ -2331,6 +2360,7 @@ export class IRCService {
     }
     this.channelUsers.clear();
     this.namesBuffer.clear();
+    this.userRequestedNamesChannels.clear();
     this.channelUsers.forEach((_, channel) =>
       this.emit('clear-channel', channel),
     );

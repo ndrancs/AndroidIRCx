@@ -41,6 +41,7 @@ describe('InfoCommands', () => {
       sendRaw: jest.fn(),
       addMessage: jest.fn(),
       getCurrentNick: jest.fn().mockReturnValue('MyNick'),
+      markUserRequestedNames: jest.fn(),
     };
   });
 
@@ -363,11 +364,13 @@ describe('InfoCommands', () => {
   describe('handleNAMES', () => {
     it('sends NAMES with channel arg', () => {
       handleNAMES(ctx, ['#general'], '#other');
+      expect(ctx.markUserRequestedNames).toHaveBeenCalledWith('#general');
       expect(ctx.sendCommand).toHaveBeenCalledWith('NAMES #general');
     });
 
     it('uses current channel target when no args and in channel', () => {
       handleNAMES(ctx, [], '#current');
+      expect(ctx.markUserRequestedNames).toHaveBeenCalledWith('#current');
       expect(ctx.sendCommand).toHaveBeenCalledWith('NAMES #current');
     });
 
@@ -381,6 +384,7 @@ describe('InfoCommands', () => {
 
     it('uses & channel prefix too', () => {
       handleNAMES(ctx, [], '&local');
+      expect(ctx.markUserRequestedNames).toHaveBeenCalledWith('&local');
       expect(ctx.sendCommand).toHaveBeenCalledWith('NAMES &local');
     });
   });

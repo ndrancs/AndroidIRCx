@@ -14,6 +14,50 @@ import type { NumericHandler } from '../types';
 
 const t = (key: string, params?: Record<string, unknown>) => tx.t(key, params);
 
+const joinNames = (names: string[]): string => names.filter(Boolean).join(' ');
+
+const buildNamesFormatData = (channel: string, names: string[]) => {
+  const groups = {
+    owners: [] as string[],
+    admins: [] as string[],
+    ops: [] as string[],
+    halfops: [] as string[],
+    voices: [] as string[],
+    normal: [] as string[],
+  };
+
+  names.forEach(name => {
+    if (name.startsWith('~')) {
+      groups.owners.push(name);
+    } else if (name.startsWith('&')) {
+      groups.admins.push(name);
+    } else if (name.startsWith('@')) {
+      groups.ops.push(name);
+    } else if (name.startsWith('%')) {
+      groups.halfops.push(name);
+    } else if (name.startsWith('+')) {
+      groups.voices.push(name);
+    } else {
+      groups.normal.push(name);
+    }
+  });
+
+  return {
+    channel,
+    count: names.length,
+    names: joinNames(names),
+    owners: joinNames(groups.owners),
+    admins: joinNames(groups.admins),
+    ops: joinNames(groups.ops),
+    halfops: joinNames(groups.halfops),
+    voices: joinNames(groups.voices),
+    normal: joinNames(groups.normal),
+    message: t('Nicks on {channel}', { channel }),
+    numeric: '353',
+    command: 'NAMES',
+  };
+};
+
 /** 315 RPL_ENDOFWHO */
 export const handle315: NumericHandler = (ctx, prefix, params, timestamp) => {
   const whoChannel = params[1] || '';
@@ -31,6 +75,13 @@ export const handle315: NumericHandler = (ctx, prefix, params, timestamp) => {
     timestamp,
     isRaw: true,
     rawCategory: 'server',
+    rawFormatType: 'who',
+    rawFormatData: {
+      channel: whoChannel,
+      message: t('End of WHO list for {channel}', { channel: whoChannel }),
+      numeric: '315',
+      command: 'WHO',
+    },
   });
 };
 
@@ -130,6 +181,27 @@ export const handle352: NumericHandler = (ctx, prefix, params, timestamp) => {
     timestamp,
     isRaw: true,
     rawCategory: 'server',
+    from: whoNick,
+    username: whoUser,
+    hostname: whoHost,
+    channel: whoChannel,
+    rawFormatType: 'who',
+    rawFormatData: {
+      channel: whoChannel,
+      nick: whoNick,
+      username: whoUser,
+      hostname: whoHost,
+      userhost: `${whoUser}@${whoHost}`,
+      hostmask: `${whoNick}!${whoUser}@${whoHost}`,
+      server: whoServer,
+      realname: whoReal,
+      status: whoFlags,
+      message: [whoReal, awayStatus.trim(), opStatus.trim()]
+        .filter(Boolean)
+        .join(' '),
+      numeric: '352',
+      command: 'WHO',
+    },
   });
 };
 
@@ -163,6 +235,24 @@ export const handle366: NumericHandler = (ctx, prefix, params, timestamp) => {
   ctx.clearNamesBuffer(endChannel);
   ctx.emitUserListChange(endChannel, Array.from(usersMap.values()));
   ctx.maybeEmitChannelIntro(endChannel, timestamp);
+
+  if (ctx.isUserRequestedNames?.(endChannel)) {
+    const names = Array.from(buffer);
+    ctx.addMessage({
+      type: 'raw',
+      text: t('*** Nicks on {channel}: {names}', {
+        channel: endChannel,
+        names: joinNames(names),
+      }),
+      timestamp,
+      isRaw: true,
+      rawCategory: 'server',
+      channel: endChannel,
+      rawFormatType: 'names',
+      rawFormatData: buildNamesFormatData(endChannel, names),
+    });
+    ctx.clearUserRequestedNames?.(endChannel);
+  }
 
   if (
     ctx.hasCapability('chathistory') ||

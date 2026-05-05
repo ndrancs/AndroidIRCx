@@ -25,6 +25,8 @@ import { ColorPalettePicker } from '../components/ColorPalettePicker';
 import {
   AVAILABLE_MESSAGE_FORMAT_TOKENS,
   getDefaultMessageFormats,
+  RAW_RESPONSE_FORMAT_PRESETS,
+  RawResponseFormatPreset,
 } from '../utils/MessageFormatDefaults';
 
 interface MessageFormatEditorScreenProps {
@@ -119,7 +121,10 @@ export const MessageFormatEditorScreen: React.FC<
     if (visible) {
       setFormats(
         initialFormats
-          ? JSON.parse(JSON.stringify(initialFormats))
+          ? {
+              ...getDefaultMessageFormats(),
+              ...JSON.parse(JSON.stringify(initialFormats)),
+            }
           : getDefaultMessageFormats(),
       );
     }
@@ -145,6 +150,9 @@ export const MessageFormatEditorScreen: React.FC<
       { key: 'mode', title: t('Mode message format') },
       { key: 'topic', title: t('Topic message format') },
       { key: 'raw', title: t('Raw message format') },
+      { key: 'whois', title: t('WHOIS response format') },
+      { key: 'who', title: t('WHO response format') },
+      { key: 'names', title: t('NAMES response format') },
       { key: 'error', title: t('Error message format') },
       { key: 'ctcp', title: t('CTCP message format') },
       { key: 'event', title: t('Event (fallback) message format') },
@@ -164,18 +172,73 @@ export const MessageFormatEditorScreen: React.FC<
       account: t('account'),
       username: t('username'),
       hostname: t('hostname'),
+      userhost: t('user@host'),
       hostmask: t('hostmask'),
+      server: t('server'),
       target: t('target'),
       mode: t('mode'),
       topic: t('topic'),
       reason: t('reason'),
+      realname: t('real name'),
+      channels: t('channels'),
+      names: t('names'),
+      owners: t('owners'),
+      admins: t('admins'),
+      ops: t('ops'),
+      halfops: t('halfops'),
+      voices: t('voices'),
+      normal: t('normal'),
+      count: t('count'),
+      idle: t('idle'),
+      date: t('date'),
+      status: t('status'),
       numeric: t('numeric'),
       command: t('command'),
     }),
     [t],
   );
 
-  const previewValues = useMemo<Record<FormatKey, Record<string, string>>>(
+  const commonPreviewValues = useMemo<Record<string, string>>(
+    () => ({
+      time: '12:00',
+      nick: 'sender-nick',
+      oldnick: 'old-nick',
+      newnick: 'new-nick',
+      message: t('This is an example message.'),
+      channel: '#example',
+      network: 'Network',
+      account: 'account',
+      username: 'user',
+      hostname: 'host.test',
+      userhost: 'user@host.test',
+      hostmask: 'sender-nick!user@host.test',
+      server: 'irc.example.org',
+      target: '#example',
+      mode: '+o',
+      topic: t('Example topic'),
+      reason: t('Example reason'),
+      realname: 'Example Real Name',
+      channels: '#example @#ops +#voice',
+      names: '@Alice +Bob Carol',
+      owners: '~Root',
+      admins: '&Admin',
+      ops: '@Alice',
+      halfops: '%HalfOp',
+      voices: '+Bob',
+      normal: 'Carol Dave',
+      count: '6',
+      idle: '5 minutes',
+      date: new Date(1700000000000).toLocaleString(),
+      status: 'online',
+      numeric: '001',
+      command: 'PRIVMSG',
+    }),
+    [t],
+  );
+
+  const previewValues = useMemo<
+    Partial<Record<FormatKey, Record<string, string>>>
+  >(
     () => ({
       message: {
         time: '12:00',
@@ -188,6 +251,7 @@ export const MessageFormatEditorScreen: React.FC<
         account: 'account',
         username: 'user',
         hostname: 'host.test',
+        userhost: 'user@host.test',
         hostmask: 'sender-nick!user@host.test',
         target: '#example',
         mode: '+o',
@@ -462,6 +526,51 @@ export const MessageFormatEditorScreen: React.FC<
         numeric: '001',
         command: 'RAW',
       },
+      whois: {
+        ...commonPreviewValues,
+        nick: 'munZe',
+        username: 'MyH3e',
+        hostname: 'MyH3e.KoH3a.MaToPu',
+        userhost: 'MyH3e@MyH3e.KoH3a.MaToPu',
+        hostmask: 'munZe!MyH3e@MyH3e.KoH3a.MaToPu',
+        server: 'irc.dbase.in.rs',
+        realname: 'DBase Network user',
+        channels: '~#AndroidIRCx @#DBase +#Vesti',
+        message: t('is connecting from {userhost}', {
+          userhost: 'MyH3e@MyH3e.KoH3a.MaToPu',
+        }),
+        numeric: '311',
+        command: 'WHOIS',
+      },
+      who: {
+        ...commonPreviewValues,
+        nick: 'Ident',
+        username: 'dev',
+        hostname: 'null',
+        userhost: 'dev@null',
+        hostmask: 'Ident!dev@null',
+        server: 'irc.example.org',
+        channel: '#AndroidIRCx',
+        realname: 'Gs*! 8',
+        message: t('Gs*! 8'),
+        numeric: '352',
+        command: 'WHO',
+      },
+      names: {
+        ...commonPreviewValues,
+        channel: '#AndroidIRCx',
+        count: '6',
+        names: '@munZe +AndroidIRCxBridge BotUser Carol Dave Eve',
+        owners: '~OwnerNick',
+        admins: '&AdminNick',
+        ops: '@munZe',
+        halfops: '%HalfOpNick',
+        voices: '+AndroidIRCxBridge',
+        normal: 'BotUser Carol Dave Eve',
+        message: t('Nicks on {channel}', { channel: '#AndroidIRCx' }),
+        numeric: '353',
+        command: 'NAMES',
+      },
       error: {
         time: '12:00',
         nick: 'server',
@@ -505,7 +614,9 @@ export const MessageFormatEditorScreen: React.FC<
         nick: 'sender-nick',
         oldnick: 'old-nick',
         newnick: 'new-nick',
-        message: t('[sender-nick!user@host.test has joined]'),
+        message: t('[{hostmask} has joined]', {
+          hostmask: 'sender-nick!user@host.test',
+        }),
         channel: '#example',
         network: 'Network',
         account: 'account',
@@ -520,8 +631,17 @@ export const MessageFormatEditorScreen: React.FC<
         command: 'JOIN',
       },
     }),
-    [t],
+    [commonPreviewValues, t],
   );
+
+  const applyRawPreset = (preset: RawResponseFormatPreset) => {
+    setFormats(prev => ({
+      ...prev,
+      whois: JSON.parse(JSON.stringify(preset.formats.whois)),
+      who: JSON.parse(JSON.stringify(preset.formats.who)),
+      names: JSON.parse(JSON.stringify(preset.formats.names)),
+    }));
+  };
 
   const updateFormatParts = (
     formatKey: FormatKey,
@@ -632,7 +752,10 @@ export const MessageFormatEditorScreen: React.FC<
 
   const renderPreviewParts = (formatKey: FormatKey) => {
     const parts = formats[formatKey];
-    const values = previewValues[formatKey];
+    const values = {
+      ...commonPreviewValues,
+      ...(previewValues[formatKey] || {}),
+    };
     const baseStyle: TextStyle = {
       fontSize: 14,
       color: colors.text,
@@ -696,6 +819,31 @@ export const MessageFormatEditorScreen: React.FC<
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
         >
+          <View style={[styles.section, { borderBottomColor: colors.divider }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t('Raw response presets')}
+            </Text>
+            <View style={styles.presetRow}>
+              {RAW_RESPONSE_FORMAT_PRESETS.map(preset => (
+                <TouchableOpacity
+                  key={preset.id}
+                  style={[
+                    styles.presetButton,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  onPress={() => applyRawPreset(preset)}
+                >
+                  <Text style={[styles.presetText, { color: colors.text }]}>
+                    {t(preset.title)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {formatSections.map(section => {
             const formatKey = section.key as FormatKey;
             return (
@@ -1320,6 +1468,22 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 16,
       fontWeight: '600',
       marginBottom: 8,
+    },
+    presetRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    presetButton: {
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    presetText: {
+      fontSize: 13,
+      fontWeight: '600',
     },
     partsRow: {
       flexDirection: 'row',

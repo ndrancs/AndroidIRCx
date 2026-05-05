@@ -76,10 +76,7 @@ import { dccChatService } from '../services/DCCChatService';
 import { ircService } from '../services/IRCService';
 import { encryptedDMService } from '../services/EncryptedDMService';
 import { channelEncryptionService } from '../services/ChannelEncryptionService';
-import {
-  formatIRCTextAsComponent,
-  formatIRCTextWithLinks,
-} from '../utils/IRCFormatter';
+import { formatIRCTextWithLinks } from '../utils/IRCFormatter';
 import { MessageSearchBar, MessageSearchFilters } from './MessageSearchBar';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { NickContextMenu } from './NickContextMenu';
@@ -500,6 +497,12 @@ const MessageItem = React.memo<MessageItemProps>(
         return normalizedMessageFormats.topic;
       }
       if (message.type === 'raw') {
+        if (
+          message.rawFormatType &&
+          normalizedMessageFormats[message.rawFormatType]
+        ) {
+          return normalizedMessageFormats[message.rawFormatType];
+        }
         return normalizedMessageFormats.raw;
       }
       if (message.type === 'error') {
@@ -517,7 +520,13 @@ const MessageItem = React.memo<MessageItemProps>(
       }
 
       return null;
-    }, [normalizedMessageFormats, message.type, isHighlighted, actionText]);
+    }, [
+      normalizedMessageFormats,
+      message.rawFormatType,
+      message.type,
+      isHighlighted,
+      actionText,
+    ]);
 
     const baseLineColor =
       message.type === 'message'
@@ -688,7 +697,7 @@ const MessageItem = React.memo<MessageItemProps>(
                   >
                     {leadingIdentity}
                     <Text
-                      style={styles.linkText}
+                      style={styles.clickableIdentityText}
                       onPress={openMessageNickContext}
                       onLongPress={openMessageNickContext}
                     >
@@ -758,6 +767,7 @@ const MessageItem = React.memo<MessageItemProps>(
         message.username,
         openMessageNickContext,
         styles.nick,
+        styles.clickableIdentityText,
         styles.linkText,
         colors.primary,
       ],
@@ -769,6 +779,22 @@ const MessageItem = React.memo<MessageItemProps>(
           message.username && message.hostname
             ? `${message.from || ''}!${message.username}@${message.hostname}`
             : '';
+        const userhost =
+          message.username && message.hostname
+            ? `${message.username}@${message.hostname}`
+            : '';
+        const rawTokenValues = Object.entries(
+          message.rawFormatData || {},
+        ).reduce<Record<string, string>>((acc, [key, value]) => {
+          if (Array.isArray(value)) {
+            acc[key] = value.join(' ');
+          } else if (typeof value === 'string') {
+            acc[key] = value;
+          } else if (typeof value === 'number' || typeof value === 'boolean') {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {});
         const tokenValues: Record<string, string> = {
           time: shouldShowTimestamp ? formatTimestamp(message.timestamp) : '',
           nick: !isGrouped ? message.from || '' : '',
@@ -780,6 +806,7 @@ const MessageItem = React.memo<MessageItemProps>(
           account: message.account || '',
           username: message.username || '',
           hostname: message.hostname || '',
+          userhost,
           hostmask,
           target: message.target || message.channel || channel || '',
           mode: message.mode || '',
@@ -787,6 +814,7 @@ const MessageItem = React.memo<MessageItemProps>(
           reason: message.reason || '',
           numeric: message.numeric || '',
           command: message.command || '',
+          ...rawTokenValues,
         };
 
         return parts.map((part, index) => {
@@ -809,9 +837,10 @@ const MessageItem = React.memo<MessageItemProps>(
               return null;
             }
             return React.cloneElement(
-              formatIRCTextAsComponent(
+              renderTextWithNickActions(
                 tokenValues.message,
                 applyMessageFormatStyle(inlineBaseStyle, part.style),
+                `part-${message.id}-${index}`,
               ),
               { key: `part-${index}` },
             );
@@ -836,7 +865,9 @@ const MessageItem = React.memo<MessageItemProps>(
           }
 
           if (
-            ['username', 'hostname', 'hostmask'].includes(part.value) &&
+            ['username', 'hostname', 'userhost', 'hostmask'].includes(
+              part.value,
+            ) &&
             message.from &&
             message.username &&
             message.hostname
@@ -846,7 +877,7 @@ const MessageItem = React.memo<MessageItemProps>(
                 key={`part-${index}`}
                 style={[
                   applyMessageFormatStyle(inlineBaseStyle, part.style),
-                  styles.linkText,
+                  styles.clickableIdentityText,
                 ]}
                 onPress={openMessageNickContext}
                 onLongPress={openMessageNickContext}
@@ -876,6 +907,7 @@ const MessageItem = React.memo<MessageItemProps>(
         message.channel,
         message.command,
         message.hostname,
+        message.id,
         message.mode,
         message.network,
         message.numeric,
@@ -888,10 +920,12 @@ const MessageItem = React.memo<MessageItemProps>(
         message.target,
         message.topic,
         message.username,
+        message.rawFormatData,
         network,
         openMessageNickContext,
+        renderTextWithNickActions,
         shouldShowTimestamp,
-        styles.linkText,
+        styles.clickableIdentityText,
       ],
     );
 
@@ -949,7 +983,13 @@ const MessageItem = React.memo<MessageItemProps>(
               {formatTimestamp(message.timestamp)}
             </Text>
           )}
-          {message.type === 'raw' ? (
+          {message.type === 'raw' && formatParts ? (
+            <View style={styles.messageContent}>
+              <Text style={styles.messageText}>
+                {renderFormattedParts(formatParts)}
+              </Text>
+            </View>
+          ) : message.type === 'raw' ? (
             message.whoisData?.channels ? (
               // Render WHOIS channels with clickable links
               <Text
@@ -1424,9 +1464,12 @@ const MessageItem = React.memo<MessageItemProps>(
       prevProps.message.username === nextProps.message.username &&
       prevProps.message.hostname === nextProps.message.hostname &&
       prevProps.message.command === nextProps.message.command &&
+      prevProps.message.rawFormatType === nextProps.message.rawFormatType &&
+      prevProps.message.rawFormatData === nextProps.message.rawFormatData &&
       prevProps.isGrouped === nextProps.isGrouped &&
       prevProps.timestampDisplay === nextProps.timestampDisplay &&
       prevProps.timestampFormat === nextProps.timestampFormat &&
+      prevProps.colors === nextProps.colors &&
       prevProps.currentNick === nextProps.currentNick &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.selectionMode === nextProps.selectionMode &&
@@ -1434,6 +1477,7 @@ const MessageItem = React.memo<MessageItemProps>(
       prevProps.network === nextProps.network &&
       prevProps.channel === nextProps.channel &&
       prevProps.layoutWidth === nextProps.layoutWidth &&
+      prevProps.messageFormats === nextProps.messageFormats &&
       prevProps.channelUsers === nextProps.channelUsers
     );
   },
@@ -3823,6 +3867,10 @@ const createStyles = (
     },
     linkText: {
       color: colors.primary,
+      textDecorationLine: 'underline',
+      writingDirection: layoutConfig.messageTextDirection || 'auto',
+    },
+    clickableIdentityText: {
       textDecorationLine: 'underline',
       writingDirection: layoutConfig.messageTextDirection || 'auto',
     },
