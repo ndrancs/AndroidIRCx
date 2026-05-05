@@ -550,6 +550,20 @@ const MessageItem = React.memo<MessageItemProps>(
       };
     }, [baseLineColor, styles.messageText]);
 
+    const inlineNickStyle = useMemo<TextStyle>(() => {
+      const nickStyle = StyleSheet.flatten([
+        inlineBaseStyle,
+        styles.nick,
+      ]) as TextStyle;
+      return {
+        ...nickStyle,
+        marginRight: undefined,
+        flex: undefined,
+        flexGrow: undefined,
+        flexShrink: undefined,
+      };
+    }, [inlineBaseStyle, styles.nick]);
+
     const nickMap = useMemo(() => {
       const map = new Map<string, string>();
       (channelUsers || []).forEach(user => {
@@ -855,7 +869,7 @@ const MessageItem = React.memo<MessageItemProps>(
             return (
               <Text
                 key={`part-${index}`}
-                style={applyMessageFormatStyle(inlineBaseStyle, part.style)}
+                style={applyMessageFormatStyle(inlineNickStyle, part.style)}
                 onPress={openMessageNickContext}
                 onLongPress={openMessageNickContext}
               >
@@ -900,6 +914,7 @@ const MessageItem = React.memo<MessageItemProps>(
       [
         actionText,
         inlineBaseStyle,
+        inlineNickStyle,
         channel,
         formatTimestamp,
         isGrouped,

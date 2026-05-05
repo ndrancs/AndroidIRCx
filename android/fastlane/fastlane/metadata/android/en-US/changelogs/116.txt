@@ -4,4 +4,6 @@ What's new in 1.9.13:
 - Added customizable WHOIS, WHO, and NAMES response formats
 - Added raw response presets for compact, IRcap-like, and plain layouts
 - Improved dark and IRcap theme formatting for IRC response output
+- Restored interactive nick coloring in custom formatted themes
+- Fixed a video Picture-in-Picture crash from the media player
 
