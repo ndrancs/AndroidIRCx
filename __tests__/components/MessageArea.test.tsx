@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 let mockNickContextMenuProps: any = null;
 let mockKickBanModalProps: any = null;
@@ -1226,12 +1227,25 @@ describe('MessageArea', () => {
   // ── message format tests ──────────────────────────────────────────────────
   it('renders with custom message formats from theme', async () => {
     const { useTheme } = require('../../src/hooks/useTheme');
-    useTheme.mockReturnValue({
-      theme: { id: 'custom' },
-      colors: { background: '#fff', text: '#000' },
-      messageFormats: {
-        message: '{nick}: {text}',
-        join: '→ {nick} joined {channel}',
+    const defaultTheme = useTheme();
+    useTheme.mockReturnValueOnce({
+      ...defaultTheme,
+      theme: {
+        ...defaultTheme.theme,
+        id: 'custom',
+        messageFormats: {
+          message: [
+            { type: 'token', value: 'nick' },
+            { type: 'text', value: ': ' },
+            { type: 'token', value: 'message' },
+          ],
+          join: [
+            { type: 'text', value: '-> ' },
+            { type: 'token', value: 'nick' },
+            { type: 'text', value: ' joined ' },
+            { type: 'token', value: 'channel' },
+          ],
+        },
       },
     });
 
@@ -1243,6 +1257,49 @@ describe('MessageArea', () => {
       <MessageArea {...baseProps} messages={messages} />,
     );
     expect(toJSON()).toBeTruthy();
+  });
+
+  it('keeps formatted nicks on the interactive nick theme color by default', async () => {
+    const { useTheme } = require('../../src/hooks/useTheme');
+    const defaultTheme = useTheme();
+    useTheme.mockReturnValueOnce({
+      ...defaultTheme,
+      theme: {
+        ...defaultTheme.theme,
+        id: 'custom',
+        messageFormats: {
+          message: [
+            { type: 'token', value: 'nick' },
+            { type: 'text', value: ': ' },
+            { type: 'token', value: 'message' },
+          ],
+        },
+      },
+    });
+
+    const messages = [
+      makeMsg({
+        id: 'formatted-nick',
+        type: 'message',
+        text: 'Hello',
+        from: 'Alice',
+      }),
+    ];
+    const { getByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} />,
+    );
+
+    const nick = getByText('Alice');
+    expect(StyleSheet.flatten(nick.props.style)?.color).toBe('#1976D2');
+    expect(nick.props.onLongPress).toEqual(expect.any(Function));
+
+    await act(async () => {
+      nick.props.onLongPress();
+    });
+    await waitFor(() => {
+      expect(mockNickContextMenuProps?.visible).toBe(true);
+    });
+    expect(mockNickContextMenuProps?.nick).toBe('Alice');
   });
 
   it('enters selection mode via long press and handles copy/cancel actions', async () => {

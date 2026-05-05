@@ -1,0 +1,29 @@
+diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/ReactExoplayerView.java b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/ReactExoplayerView.java
+index e16ac96..bd992a6 100644
+--- a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/ReactExoplayerView.java
++++ b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/ReactExoplayerView.java
+@@ -2502,9 +2502,11 @@ public class ReactExoplayerView extends FrameLayout implements
+         } else {
+             rootView.removeView(exoPlayerView);
+             if (!rootViewChildrenOriginalVisibility.isEmpty()) {
+-                for (int i = 0; i < rootView.getChildCount(); i++) {
++                int visibilityCount = rootViewChildrenOriginalVisibility.size();
++                for (int i = 0; i < rootView.getChildCount() && i < visibilityCount; i++) {
+                     rootView.getChildAt(i).setVisibility(rootViewChildrenOriginalVisibility.get(i));
+                 }
++                rootViewChildrenOriginalVisibility.clear();
+                 addView(exoPlayerView, 0, layoutParams);
+                 reLayoutControls();
+             }
+@@ -2532,8 +2534,9 @@ public class ReactExoplayerView extends FrameLayout implements
+         ViewGroup rootView = decorView.findViewById(android.R.id.content);
+ 
+         if (!rootViewChildrenOriginalVisibility.isEmpty()) {
+-            if (exoPlayerView.getParent().equals(rootView)) rootView.removeView(exoPlayerView);
+-            for (int i = 0; i < rootView.getChildCount(); i++) {
++            if (rootView.equals(exoPlayerView.getParent())) rootView.removeView(exoPlayerView);
++            int visibilityCount = rootViewChildrenOriginalVisibility.size();
++            for (int i = 0; i < rootView.getChildCount() && i < visibilityCount; i++) {
+                 rootView.getChildAt(i).setVisibility(rootViewChildrenOriginalVisibility.get(i));
+             }
+             rootViewChildrenOriginalVisibility.clear();
