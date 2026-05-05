@@ -187,6 +187,12 @@ describe('Themes - IRcapTheme', () => {
       expect(IRCAP_THEME.messageFormats?.raw).toBeDefined();
     });
 
+    it('should have dedicated raw response formats', () => {
+      expect(IRCAP_THEME.messageFormats?.whois).toBeDefined();
+      expect(IRCAP_THEME.messageFormats?.who).toBeDefined();
+      expect(IRCAP_THEME.messageFormats?.names).toBeDefined();
+    });
+
     it('should have error format', () => {
       expect(IRCAP_THEME.messageFormats?.error).toBeDefined();
     });

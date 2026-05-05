@@ -50,6 +50,7 @@ describe('StatefulChannelNumerics', () => {
       getNamesBuffer: jest.fn(() => namesBuffer),
       getSilentWhoCallback: jest.fn(() => undefined),
       hasCapability: jest.fn((cap: string) => cap === 'chathistory'),
+      isUserRequestedNames: jest.fn(() => false),
       isSilentWhoNick: jest.fn(() => false),
       maybeEmitChannelIntro: jest.fn(),
       parseUserWithPrefixes: jest.fn((user: string) => {
@@ -58,6 +59,7 @@ describe('StatefulChannelNumerics', () => {
       }),
       removeSilentWhoCallback: jest.fn(),
       removeSilentWhoNick: jest.fn(),
+      clearUserRequestedNames: jest.fn(),
       requestChatHistory: jest.fn(),
       setChannelTopicInfo: jest.fn((channel: string, info: any) => {
         topicInfo[channel] = info;
@@ -91,6 +93,13 @@ describe('StatefulChannelNumerics', () => {
       timestamp: 601,
       isRaw: true,
       rawCategory: 'server',
+      rawFormatType: 'who',
+      rawFormatData: {
+        channel: '#chat',
+        message: 'End of WHO list for #chat',
+        numeric: '315',
+        command: 'WHO',
+      },
     });
   });
 
@@ -157,6 +166,25 @@ describe('StatefulChannelNumerics', () => {
       timestamp: 607,
       isRaw: true,
       rawCategory: 'server',
+      from: 'Alice',
+      username: 'user',
+      hostname: 'host',
+      channel: '#chat',
+      rawFormatType: 'who',
+      rawFormatData: {
+        channel: '#chat',
+        nick: 'Alice',
+        username: 'user',
+        hostname: 'host',
+        userhost: 'user@host',
+        hostmask: 'Alice!user@host',
+        server: 'irc.example.org',
+        realname: 'Real',
+        status: 'G*',
+        message: 'Real (away) (IRCop)',
+        numeric: '352',
+        command: 'WHO',
+      },
     });
   });
 
@@ -185,5 +213,38 @@ describe('StatefulChannelNumerics', () => {
     ]);
     expect(ctx.maybeEmitChannelIntro).toHaveBeenCalledWith('#chat', 609);
     expect(ctx.requestChatHistory).toHaveBeenCalledWith('#chat', 50);
+    expect(ctx.addMessage).not.toHaveBeenCalled();
+  });
+
+  it('emits themeable NAMES output for user-requested /names', () => {
+    ctx.isUserRequestedNames.mockReturnValue(true);
+
+    handle353(ctx, 'server', ['nick', '=', '#chat', ':@Alice +Bob Carol'], 610);
+    handle366(ctx, 'server', ['nick', '#chat'], 611);
+
+    expect(ctx.addMessage).toHaveBeenCalledWith({
+      type: 'raw',
+      text: '*** Nicks on #chat: @Alice +Bob Carol',
+      timestamp: 611,
+      isRaw: true,
+      rawCategory: 'server',
+      channel: '#chat',
+      rawFormatType: 'names',
+      rawFormatData: {
+        channel: '#chat',
+        count: 3,
+        names: '@Alice +Bob Carol',
+        owners: '',
+        admins: '',
+        ops: '@Alice',
+        halfops: '',
+        voices: '+Bob',
+        normal: 'Carol',
+        message: 'Nicks on #chat',
+        numeric: '353',
+        command: 'NAMES',
+      },
+    });
+    expect(ctx.clearUserRequestedNames).toHaveBeenCalledWith('#chat');
   });
 });

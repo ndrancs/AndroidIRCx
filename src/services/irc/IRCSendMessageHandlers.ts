@@ -44,6 +44,7 @@ interface IRCServiceSendInterface {
   detectClones: (channel: string) => Promise<Map<string, string[]>>;
   parseServerCommand: (args: string[]) => any;
   getUserManagementService: () => any;
+  markUserRequestedNames?: (channel: string) => void;
   // Capability check
   capEnabledSet: Set<string>;
   // WHOWAS state
@@ -94,6 +95,8 @@ export class IRCSendMessageHandlers {
         require('../ChannelEncryptionService').channelEncryptionService,
       getUserManagementService: () => svc.getUserManagementService(),
       hasCapability: (cap: string) => svc.capEnabledSet.has(cap),
+      markUserRequestedNames: (channel: string) =>
+        svc.markUserRequestedNames?.(channel),
     };
   }
 

@@ -170,6 +170,14 @@ describe('Themes - DarkTheme', () => {
     });
   });
 
+  describe('Message formats', () => {
+    it('should include dark raw response formats', () => {
+      expect(DARK_THEME.messageFormats?.whois).toBeDefined();
+      expect(DARK_THEME.messageFormats?.who).toBeDefined();
+      expect(DARK_THEME.messageFormats?.names).toBeDefined();
+    });
+  });
+
   describe('Color validation', () => {
     it('should have all required color properties', () => {
       const requiredColors = [

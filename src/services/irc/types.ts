@@ -107,6 +107,8 @@ export interface NumericHandlerContext {
   getNamesBuffer: () => Map<string, Set<string>>;
   clearNamesBuffer: (channel: string) => void;
   addToNamesBuffer: (channel: string, names: string[]) => void;
+  isUserRequestedNames?: (channel: string) => boolean;
+  clearUserRequestedNames?: (channel: string) => void;
 
   // SASL state
   getSaslMechanism: () => string | null;

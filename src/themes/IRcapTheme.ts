@@ -1223,6 +1223,255 @@ export const IRCAP_THEME: Theme = {
         value: 'message',
       },
     ],
+    whois: [
+      {
+        type: 'text',
+        value: '[',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'time',
+        style: {
+          color: '#000000',
+        },
+      },
+      {
+        type: 'text',
+        value: '] ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'text',
+        value: '|--> ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'nick',
+        style: {
+          color: '#000074',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'username',
+        style: {
+          color: '#5C5C5C',
+        },
+      },
+      {
+        type: 'text',
+        value: '@',
+        style: {
+          color: '#5C5C5C',
+        },
+      },
+      {
+        type: 'token',
+        value: 'hostname',
+        style: {
+          color: '#5C5C5C',
+        },
+      },
+      {
+        type: 'text',
+        value: ' : ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'message',
+        style: {},
+      },
+    ],
+    who: [
+      {
+        type: 'text',
+        value: '[',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'time',
+        style: {
+          color: '#000000',
+        },
+      },
+      {
+        type: 'text',
+        value: '] ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'text',
+        value: '|--> ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'nick',
+        style: {
+          color: '#000074',
+        },
+      },
+      {
+        type: 'text',
+        value: ' [',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'userhost',
+        style: {
+          color: '#5C5C5C',
+        },
+      },
+      {
+        type: 'text',
+        value: '] ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'message',
+        style: {},
+      },
+    ],
+    names: [
+      {
+        type: 'text',
+        value: '[',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'time',
+        style: {
+          color: '#000000',
+        },
+      },
+      {
+        type: 'text',
+        value: '] ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'text',
+        value: '-> Nicks on ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'channel',
+        style: {
+          color: '#000074',
+        },
+      },
+      {
+        type: 'text',
+        value: ': ',
+        style: {
+          color: '#0063b5',
+        },
+      },
+      {
+        type: 'token',
+        value: 'owners',
+        style: {
+          color: '#B91C1C',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'admins',
+        style: {
+          color: '#B91C1C',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'ops',
+        style: {
+          color: '#B91C1C',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'halfops',
+        style: {
+          color: '#B91C1C',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'voices',
+        style: {
+          color: '#212121',
+        },
+      },
+      {
+        type: 'text',
+        value: ' ',
+        style: {},
+      },
+      {
+        type: 'token',
+        value: 'normal',
+        style: {
+          color: '#212121',
+        },
+      },
+    ],
     error: [
       {
         type: 'text',

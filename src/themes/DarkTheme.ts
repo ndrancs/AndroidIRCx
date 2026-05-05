@@ -4,7 +4,11 @@
  */
 
 import { tx } from '../i18n/transifex';
-import { Theme } from '../services/ThemeService';
+import type { Theme } from '../services/ThemeService';
+import {
+  getDefaultMessageFormats,
+  RAW_RESPONSE_FORMAT_PRESETS,
+} from '../utils/MessageFormatDefaults';
 
 const t = (key: string) => tx.t(key);
 
@@ -98,5 +102,9 @@ export const DARK_THEME: Theme = {
     highlightBackground: 'rgba(33, 150, 243, 0.2)',
     highlightText: '#FFEB3B', // Yellow text for mentions
     selectionBackground: 'rgba(33, 150, 243, 0.12)',
+  },
+  messageFormats: {
+    ...getDefaultMessageFormats(),
+    ...RAW_RESPONSE_FORMAT_PRESETS[0].formats,
   },
 };

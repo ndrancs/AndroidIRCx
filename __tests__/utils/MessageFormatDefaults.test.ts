@@ -34,6 +34,9 @@ describe('MessageFormatDefaults', () => {
         'mode',
         'topic',
         'raw',
+        'whois',
+        'who',
+        'names',
         'error',
         'ctcp',
       ];
@@ -168,6 +171,39 @@ describe('MessageFormatDefaults', () => {
       ]);
     });
 
+    it('should have dedicated formats for raw response families', () => {
+      expect(DEFAULT_MESSAGE_FORMATS.whois).toEqual([
+        { type: 'text', value: '[' },
+        { type: 'token', value: 'time' },
+        { type: 'text', value: '] [WHOIS] ' },
+        { type: 'token', value: 'nick' },
+        { type: 'text', value: ' ' },
+        { type: 'token', value: 'message' },
+      ]);
+      expect(DEFAULT_MESSAGE_FORMATS.who).toEqual([
+        { type: 'text', value: '[' },
+        { type: 'token', value: 'time' },
+        { type: 'text', value: '] [WHO] ' },
+        { type: 'token', value: 'channel' },
+        { type: 'text', value: ' ' },
+        { type: 'token', value: 'nick' },
+        { type: 'text', value: ' ' },
+        { type: 'token', value: 'userhost' },
+        { type: 'text', value: ' ' },
+        { type: 'token', value: 'message' },
+      ]);
+      expect(DEFAULT_MESSAGE_FORMATS.names).toEqual([
+        { type: 'text', value: '[' },
+        { type: 'token', value: 'time' },
+        { type: 'text', value: '] [NAMES] ' },
+        { type: 'token', value: 'channel' },
+        { type: 'text', value: ' (' },
+        { type: 'token', value: 'count' },
+        { type: 'text', value: ') ' },
+        { type: 'token', value: 'names' },
+      ]);
+    });
+
     it('should have correct format for error messages', () => {
       const errorFormat = DEFAULT_MESSAGE_FORMATS.error;
 
@@ -246,9 +282,9 @@ describe('MessageFormatDefaults', () => {
       );
     });
 
-    it('should have exactly 18 format types', () => {
+    it('should have exactly 21 format types', () => {
       const formatKeys = Object.keys(DEFAULT_MESSAGE_FORMATS);
-      expect(formatKeys).toHaveLength(18);
+      expect(formatKeys).toHaveLength(21);
     });
   });
 
@@ -270,11 +306,26 @@ describe('MessageFormatDefaults', () => {
         'account',
         'username',
         'hostname',
+        'userhost',
         'hostmask',
+        'server',
         'target',
         'mode',
         'topic',
         'reason',
+        'realname',
+        'channels',
+        'names',
+        'owners',
+        'admins',
+        'ops',
+        'halfops',
+        'voices',
+        'normal',
+        'count',
+        'idle',
+        'date',
+        'status',
         'numeric',
         'command',
       ];
@@ -292,8 +343,8 @@ describe('MessageFormatDefaults', () => {
       });
     });
 
-    it('should have exactly 17 available tokens', () => {
-      expect(AVAILABLE_MESSAGE_FORMAT_TOKENS).toHaveLength(17);
+    it('should have exactly 32 available tokens', () => {
+      expect(AVAILABLE_MESSAGE_FORMAT_TOKENS).toHaveLength(32);
     });
 
     it('should contain time token as first element', () => {
