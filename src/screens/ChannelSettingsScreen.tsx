@@ -26,7 +26,10 @@ import { channelEncryptionSettingsService } from '../services/ChannelEncryptionS
 import { settingsService } from '../services/SettingsService';
 import { useT } from '../i18n/transifex';
 import { getChannelModeDescription } from '../utils/modeDescriptions';
-import { formatIRCTextAsComponent } from '../utils/IRCFormatter';
+import {
+  formatIRCTextAsComponent,
+  stripIRCFormatting,
+} from '../utils/IRCFormatter';
 import { repairMojibake } from '../utils/EncodingUtils';
 import { ColorPickerModal } from '../components/ColorPickerModal';
 import { useTheme } from '../hooks/useTheme';
@@ -237,7 +240,9 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
     const replaced = styleText
       ? styleText.replace(/<TOPIC>/gi, sampleText)
       : sampleText;
-    return formatIRCTextAsComponent(replaced, baseStyle);
+    const plain = stripIRCFormatting(replaced).trim();
+    const fallback = plain.length > 0 ? plain : replaced;
+    return formatIRCTextAsComponent(replaced, baseStyle) || fallback;
   };
 
   const handleInsertColor = (code: string) => {
@@ -450,7 +455,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
 
   const handleGenerateKey = async () => {
     try {
-      ircService.sendCommand(`chankey generate`);
+      ircService.sendMessage(channel, `/chankey generate`);
       // Refresh key status after a short delay
       setTimeout(async () => {
         const hasKey = await channelEncryptionService.hasChannelKey(
@@ -481,7 +486,10 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Request'),
           onPress: (nick: string | undefined) => {
             if (nick && nick.trim()) {
-              ircService.sendCommand(`chankey request ${nick.trim()}`);
+              ircService.sendMessage(
+                channel,
+                `/chankey request ${nick.trim()}`,
+              );
               Alert.alert(
                 t('Success'),
                 t('Key request sent to {nick}').replace('{nick}', nick.trim()),
@@ -504,7 +512,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Share'),
           onPress: (nick: string | undefined) => {
             if (nick && nick.trim()) {
-              ircService.sendCommand(`chankey share ${nick.trim()}`);
+              ircService.sendMessage(channel, `/chankey share ${nick.trim()}`);
               Alert.alert(
                 t('Success'),
                 t('Key shared with {nick}').replace('{nick}', nick.trim()),
@@ -529,7 +537,7 @@ export const ChannelSettingsScreen: React.FC<ChannelSettingsScreenProps> = ({
           text: t('Remove'),
           style: 'destructive',
           onPress: async () => {
-            ircService.sendCommand(`chankey remove`);
+            ircService.sendMessage(channel, `/chankey remove`);
             setTimeout(async () => {
               const hasKey = await channelEncryptionService.hasChannelKey(
                 channel,

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Alert } from 'react-native';
+import { Alert, type AlertButton } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 const mockChannelInfo = {
@@ -48,6 +48,7 @@ const mockChannelManagementService = {
 
 const mockIrcService = {
   sendCommand: jest.fn(),
+  sendMessage: jest.fn(),
 };
 
 const mockSettingsService = {
@@ -126,15 +127,47 @@ const {
   ChannelSettingsScreen,
 } = require('../../src/screens/ChannelSettingsScreen');
 
+const submitPromptWithTargetNick: typeof Alert.prompt = (
+  _title,
+  _message,
+  callbackOrButtons,
+) => {
+  if (Array.isArray(callbackOrButtons)) {
+    const actionButton = callbackOrButtons.find(
+      button => button.text === 'Request' || button.text === 'Share',
+    );
+    actionButton?.onPress?.('targetNick');
+    return;
+  }
+
+  callbackOrButtons?.('targetNick');
+};
+
+const getLastAlertButton = (buttonText: string): AlertButton => {
+  const alertMock = Alert.alert as jest.MockedFunction<typeof Alert.alert>;
+  const lastAlertCall = alertMock.mock.calls.at(-1);
+  if (!lastAlertCall) {
+    throw new Error('Expected Alert.alert to have been called');
+  }
+
+  const alertButtons = lastAlertCall[2];
+  if (!Array.isArray(alertButtons)) {
+    throw new Error('Expected the last alert to include buttons');
+  }
+
+  const button = alertButtons.find(candidate => candidate.text === buttonText);
+  if (!button) {
+    throw new Error(`Alert button "${buttonText}" not found`);
+  }
+
+  return button;
+};
+
 describe('ChannelSettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
-    jest
-      .spyOn(Alert, 'prompt')
-      .mockImplementation((_: any, __: any, buttons?: any) => {
-        buttons?.[1]?.onPress?.('targetNick');
-      });
+    jest.spyOn(Alert, 'prompt').mockImplementation(submitPromptWithTargetNick);
     mockChannelManagementService.getChannelInfo.mockReturnValue(
       mockChannelInfo,
     );
@@ -160,13 +193,8 @@ describe('ChannelSettingsScreen', () => {
     mockChannelEncryptionService.hasChannelKey.mockResolvedValue(true);
   });
 
-  it('loads settings, applies topic style, and handles list management actions', async () => {
-    const {
-      findByDisplayValue,
-      findByPlaceholderText,
-      findAllByText,
-      getByText,
-    } = render(
+  it('loads settings and requests channel state/lists', async () => {
+    const { findByDisplayValue } = render(
       <ChannelSettingsScreen
         channel="#chat"
         network="net1"
@@ -190,6 +218,24 @@ describe('ChannelSettingsScreen', () => {
         mockChannelManagementService.requestInviteList,
       ).toHaveBeenCalledWith('#chat');
     });
+  });
+
+  it('applies topic style and handles list management actions', async () => {
+    const {
+      findByDisplayValue,
+      findByPlaceholderText,
+      findAllByText,
+      getByText,
+    } = render(
+      <ChannelSettingsScreen
+        channel="#chat"
+        network="net1"
+        visible
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(await findByDisplayValue('Current topic')).toBeTruthy();
 
     fireEvent.changeText(
       await findByDisplayValue('Current topic'),
@@ -295,7 +341,7 @@ describe('ChannelSettingsScreen', () => {
     expect(mockChannelManagementService.addInvite).toHaveBeenCalledTimes(1);
   });
 
-  it('manages topic styles and encryption actions', async () => {
+  it('manages topic styles', async () => {
     mockChannelEncryptionService.hasChannelKey.mockResolvedValue(false);
     const { findByText, findAllByText, findByPlaceholderText, getByText } =
       render(
@@ -352,19 +398,11 @@ describe('ChannelSettingsScreen', () => {
         '',
       );
     });
+  });
 
-    fireEvent.press(getByText('Generate Key'));
-    expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      'chankey generate',
-    );
-
-    fireEvent.press(getByText('Request Key from...'));
-    expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      'chankey request targetNick',
-    );
-
-    mockChannelEncryptionService.hasChannelKey.mockResolvedValue(true);
-    const secondRender = render(
+  it('manages encryption actions without an existing key', async () => {
+    mockChannelEncryptionService.hasChannelKey.mockResolvedValue(false);
+    const { findByText, getByText } = render(
       <ChannelSettingsScreen
         channel="#chat"
         network="net1"
@@ -372,19 +410,53 @@ describe('ChannelSettingsScreen', () => {
         onClose={jest.fn()}
       />,
     );
-    fireEvent.press(await secondRender.findByText('Share Key with...'));
-    expect(mockIrcService.sendCommand).toHaveBeenCalledWith(
-      'chankey share targetNick',
+
+    await findByText('Generate Key');
+    fireEvent.press(getByText('Generate Key'));
+    expect(mockIrcService.sendMessage).toHaveBeenCalledWith(
+      '#chat',
+      '/chankey generate',
     );
 
-    fireEvent.press(
-      (await secondRender.findAllByText('Remove Key')).at(-1) as any,
+    fireEvent.press(getByText('Request Key from...'));
+    expect(mockIrcService.sendMessage).toHaveBeenCalledWith(
+      '#chat',
+      '/chankey request targetNick',
     );
-    const removeButtons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
+  });
+
+  it('manages encryption actions with an existing key', async () => {
+    mockChannelEncryptionService.hasChannelKey.mockResolvedValue(true);
+    const { findByText, findAllByText } = render(
+      <ChannelSettingsScreen
+        channel="#chat"
+        network="net1"
+        visible
+        onClose={jest.fn()}
+      />,
+    );
+
+    fireEvent.press(await findByText('Share Key with...'));
+    expect(mockIrcService.sendMessage).toHaveBeenCalledWith(
+      '#chat',
+      '/chankey share targetNick',
+    );
+
+    const removeKeyButtons = await findAllByText('Remove Key');
+    const lastRemoveKeyButton = removeKeyButtons.at(-1);
+    if (!lastRemoveKeyButton) {
+      throw new Error('Remove Key button not found');
+    }
+
+    fireEvent.press(lastRemoveKeyButton);
+    const removeButton = getLastAlertButton('Remove');
     await act(async () => {
-      await removeButtons?.[1]?.onPress?.();
+      await removeButton.onPress?.();
     });
-    expect(mockIrcService.sendCommand).toHaveBeenCalledWith('chankey remove');
+    expect(mockIrcService.sendMessage).toHaveBeenCalledWith(
+      '#chat',
+      '/chankey remove',
+    );
   });
 
   it('shows empty-style and mode toggle branches', async () => {

@@ -895,7 +895,10 @@ export const useTabContextMenu = (params: UseTabContextMenuParams) => {
                           const svc =
                             connectionManager.getConnection(tab.networkId)
                               ?.ircService || ircService;
-                          svc.sendCommand(`/chankey request ${nick.trim()}`);
+                          svc.sendMessage(
+                            tab.name,
+                            `/chankey request ${nick.trim()}`,
+                          );
                           svc.addMessage({
                             id: `sys-${Date.now()}`,
                             from: '*',
@@ -930,7 +933,10 @@ export const useTabContextMenu = (params: UseTabContextMenuParams) => {
                           const svc =
                             connectionManager.getConnection(tab.networkId)
                               ?.ircService || ircService;
-                          svc.sendCommand(`/chankey share ${nick.trim()}`);
+                          svc.sendMessage(
+                            tab.name,
+                            `/chankey share ${nick.trim()}`,
+                          );
                           svc.addMessage({
                             id: `sys-${Date.now()}`,
                             from: '*',

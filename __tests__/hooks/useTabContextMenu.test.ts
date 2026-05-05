@@ -148,6 +148,7 @@ describe('useTabContextMenu', () => {
   const mockGetActiveIRCService = jest.fn().mockReturnValue({
     getCurrentNick: jest.fn().mockReturnValue('TestNick'),
     sendCommand: jest.fn(),
+    sendMessage: jest.fn(),
     sendRaw: jest.fn(),
     addMessage: jest.fn(),
   });
@@ -186,6 +187,7 @@ describe('useTabContextMenu', () => {
         getConnectionStatus: jest.fn().mockReturnValue(true),
         getCurrentNick: jest.fn().mockReturnValue('TestNick'),
         sendCommand: jest.fn(),
+        sendMessage: jest.fn(),
         sendRaw: jest.fn(),
         sendSilentMode: jest.fn(),
         addMessage: jest.fn(),
@@ -762,12 +764,14 @@ describe('useTabContextMenu', () => {
       partChannel: jest.fn(),
       addMessage: jest.fn(),
       sendCommand: jest.fn(),
+      sendMessage: jest.fn(),
       sendRaw: jest.fn(),
     };
     const connIrc = {
       getConnectionStatus: jest.fn().mockReturnValue(true),
       getCurrentNick: jest.fn().mockReturnValue('TestNick'),
       sendCommand: jest.fn(),
+      sendMessage: jest.fn(),
       sendRaw: jest.fn(),
       sendSilentMode: jest.fn(),
       addMessage: jest.fn(),
@@ -837,7 +841,10 @@ describe('useTabContextMenu', () => {
       byText('IRC Services').onPress();
     });
     expect((Alert as any).alert).toHaveBeenCalled();
-    expect(connIrc.sendCommand).toHaveBeenCalledWith('/chankey request Alice');
+    expect(connIrc.sendMessage).toHaveBeenCalledWith(
+      '#test',
+      '/chankey request Alice',
+    );
     expect(channelFavoritesService.addFavorite).toHaveBeenCalledWith(
       'freenode',
       '#test',
@@ -873,7 +880,10 @@ describe('useTabContextMenu', () => {
         .find((o: any) => String(o.text).includes('Remove from Favorites'))
         .onPress();
     });
-    expect(connIrc.sendCommand).toHaveBeenCalledWith('/chankey share Alice');
+    expect(connIrc.sendMessage).toHaveBeenCalledWith(
+      '#test',
+      '/chankey share Alice',
+    );
     expect(channelFavoritesService.removeFavorite).toHaveBeenCalledWith(
       'freenode',
       '#test',
