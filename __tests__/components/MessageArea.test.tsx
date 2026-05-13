@@ -1812,6 +1812,7 @@ describe('MessageArea', () => {
     await waitFor(() => {
       expect(getByText('User Note')).toBeTruthy();
     });
+    expect(mockNickContextMenuProps.visible).toBe(false);
 
     const noteInput = getByPlaceholderText('Enter note about this user');
     await act(async () => {

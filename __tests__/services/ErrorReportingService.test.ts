@@ -377,6 +377,69 @@ describe('ErrorReportingService', () => {
           extras: { circular },
         }),
       ).resolves.not.toThrow();
+      expect(mockCrashlytics.log).toHaveBeenCalledWith(
+        expect.stringContaining('"self":"[Circular]"'),
+      );
+      expect(mockCrashlytics.recordError).toHaveBeenCalledWith(error);
+    });
+
+    it('should limit deep and large extras before logging', async () => {
+      const deep = {
+        level1: { level2: { level3: { level4: { level5: {} } } } },
+      };
+      const largeArray = Array.from({ length: 40 }, (_, index) => index);
+
+      await errorReportingService.report(new Error('Fatal error'), {
+        fatal: true,
+        extras: {
+          deep,
+          largeArray,
+          longText: 'x'.repeat(3000),
+        },
+      });
+
+      expect(mockCrashlytics.log).toHaveBeenCalledWith(
+        expect.stringContaining('[TRUNCATED]'),
+      );
+      expect(mockCrashlytics.recordError).toHaveBeenCalled();
+    });
+
+    it('should sanitize tags, source, log messages, and object errors', async () => {
+      await errorReportingService.report(
+        { message: 'boom', token: 'secret-token' },
+        {
+          fatal: true,
+          source: 'api token=abc123',
+          tags: {
+            authToken: 'secret',
+            route: 'oauth=abc123',
+          },
+        },
+      );
+      errorReportingService.log('Bearer secret-token');
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'api [REDACTED]',
+        expect.any(String),
+      );
+      expect(mockCrashlytics.setAttribute).toHaveBeenCalledWith(
+        'authToken',
+        '[REDACTED]',
+      );
+      expect(mockCrashlytics.setAttribute).toHaveBeenCalledWith(
+        'route',
+        '[REDACTED]',
+      );
+      expect(mockCrashlytics.setAttribute).toHaveBeenCalledWith(
+        'source',
+        'api [REDACTED]',
+      );
+      expect(mockCrashlytics.log).toHaveBeenCalledWith('[REDACTED]');
+      expect(mockCrashlytics.recordError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('"token":"[REDACTED]"'),
+        }),
+      );
     });
 
     it('should continue reporting when setAttribute throws for tags and source', async () => {

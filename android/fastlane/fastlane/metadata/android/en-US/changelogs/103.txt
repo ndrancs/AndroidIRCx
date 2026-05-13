@@ -1,2 +1,0 @@
-New in v1.9.01:
-- Dependency updated

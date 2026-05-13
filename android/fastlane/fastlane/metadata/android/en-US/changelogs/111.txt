@@ -1,2 +1,0 @@
-What's new in 1.9.8:
-- Updated dependencies
