@@ -84,6 +84,35 @@ interface AppModalsProps {
   colors: any;
 }
 
+type AppModalKey =
+  | 'appUnlock'
+  | 'firstRunSetup'
+  | 'purchase'
+  | 'ignoreList'
+  | 'blacklist'
+  | 'userLists'
+  | 'whois'
+  | 'queryEncryption'
+  | 'channelList'
+  | 'channelNote'
+  | 'channelLog'
+  | 'rename'
+  | 'tabOptions'
+  | 'dccSend'
+  | 'channelSettings'
+  | 'dccTransfers'
+  | 'helpTroubleshooting'
+  | 'helpConnection'
+  | 'helpCommands'
+  | 'helpEncryption'
+  | 'helpMedia'
+  | 'helpChannelManagement'
+  | 'settings'
+  | 'networksList'
+  | 'channel'
+  | 'optionsMenu'
+  | null;
+
 export function AppModals({
   activeTab,
   isConnected,
@@ -188,12 +217,92 @@ export function AppModals({
     setShowHelpTroubleshooting,
   } = setters;
 
+  const activeModalKey = React.useMemo<AppModalKey>(() => {
+    const orderedStates: Array<[Exclude<AppModalKey, null>, boolean]> = [
+      ['appUnlock', appUnlockModalVisible && appLockEnabled],
+      ['firstRunSetup', showFirstRunSetup],
+      ['purchase', showPurchaseScreen],
+      ['ignoreList', showIgnoreList],
+      ['blacklist', showBlacklist],
+      ['userLists', showUserLists],
+      ['whois', showWHOIS],
+      [
+        'queryEncryption',
+        showQueryEncryptionMenu && activeTab?.type === 'query',
+      ],
+      ['channelList', showChannelList],
+      ['channelNote', showChannelNoteModal && Boolean(channelNoteTarget)],
+      ['channelLog', showChannelLogModal],
+      ['rename', showRenameModal && Boolean(renameTargetTabId)],
+      ['tabOptions', showTabOptionsModal],
+      ['dccSend', showDccSendModal && Boolean(dccSendTarget)],
+      [
+        'channelSettings',
+        showChannelSettings &&
+          Boolean(channelSettingsTarget) &&
+          Boolean(channelSettingsNetwork),
+      ],
+      ['dccTransfers', showDccTransfers],
+      ['helpTroubleshooting', showHelpTroubleshooting],
+      ['helpConnection', showHelpConnection],
+      ['helpCommands', showHelpCommands],
+      ['helpEncryption', showHelpEncryption],
+      ['helpMedia', showHelpMedia],
+      ['helpChannelManagement', showHelpChannelManagement],
+      ['settings', showSettings],
+      ['networksList', showNetworksList],
+      ['channel', showChannelModal],
+      ['optionsMenu', showOptionsMenu],
+    ];
+
+    return orderedStates.find(([, active]) => active)?.[0] ?? null;
+  }, [
+    activeTab?.type,
+    appLockEnabled,
+    appUnlockModalVisible,
+    channelNoteTarget,
+    channelSettingsNetwork,
+    channelSettingsTarget,
+    dccSendTarget,
+    renameTargetTabId,
+    showBlacklist,
+    showChannelList,
+    showChannelLogModal,
+    showChannelModal,
+    showChannelNoteModal,
+    showChannelSettings,
+    showDccSendModal,
+    showDccTransfers,
+    showFirstRunSetup,
+    showHelpChannelManagement,
+    showHelpCommands,
+    showHelpConnection,
+    showHelpEncryption,
+    showHelpMedia,
+    showHelpTroubleshooting,
+    showIgnoreList,
+    showNetworksList,
+    showOptionsMenu,
+    showPurchaseScreen,
+    showQueryEncryptionMenu,
+    showRenameModal,
+    showSettings,
+    showTabOptionsModal,
+    showUserLists,
+    showWHOIS,
+  ]);
+
+  const isModalVisible = React.useCallback(
+    (key: Exclude<AppModalKey, null>) => activeModalKey === key,
+    [activeModalKey],
+  );
+
   return (
     <>
       {/* First Run Setup Modal */}
       {showFirstRunSetup && (
         <Modal
-          visible={showFirstRunSetup}
+          visible={isModalVisible('firstRunSetup')}
           animationType="slide"
           onRequestClose={() => {
             setShowFirstRunSetup(false);
@@ -210,7 +319,7 @@ export function AppModals({
 
       {/* Always render OptionsMenu, control visibility with visible prop */}
       <OptionsMenu
-        visible={showOptionsMenu}
+        visible={isModalVisible('optionsMenu')}
         onClose={() => {
           console.log('🔍 OptionsMenu onClose called');
           setShowOptionsMenu(false);
@@ -228,7 +337,7 @@ export function AppModals({
         styles={styles}
       />
       <JoinChannelModal
-        visible={showChannelModal}
+        visible={isModalVisible('channel')}
         onClose={() => useUIStore.getState().setShowChannelModal(false)}
         channelName={channelName}
         onChangeChannelName={setChannelName}
@@ -243,7 +352,7 @@ export function AppModals({
         }}
         styles={styles}
       />
-      {showNetworksList && (
+      {showNetworksList && isModalVisible('networksList') && (
         <NetworksListScreen
           onSelectNetwork={(network, serverId) =>
             handleConnect(network, serverId)
@@ -253,7 +362,7 @@ export function AppModals({
       )}
       {/* Always render SettingsScreen, control visibility with visible prop */}
       <SettingsScreen
-        visible={showSettings}
+        visible={isModalVisible('settings')}
         onClose={() => {
           console.log('🔍 SettingsScreen onClose called');
           setShowSettings(false);
@@ -267,38 +376,43 @@ export function AppModals({
         onShowEncryptionIndicatorsChange={persistentSetShowEncryptionIndicators}
         showTypingIndicators={showTypingIndicators}
         onShowTypingIndicatorsChange={persistentSetShowTypingIndicators}
-        onShowBlacklist={() => useUIStore.getState().setShowBlacklist(true)}
+        onShowBlacklist={() => {
+          setShowSettings(false);
+          useUIStore.getState().setShowBlacklist(true);
+        }}
         onShowUserLists={() => {
+          setShowSettings(false);
           useUIStore.getState().setUserListsInitialTab('notify');
           useUIStore.getState().setShowUserLists(true);
         }}
-        onShowPurchaseScreen={() =>
-          useUIStore.getState().setShowPurchaseScreen(true)
-        }
+        onShowPurchaseScreen={() => {
+          setShowSettings(false);
+          useUIStore.getState().setShowPurchaseScreen(true);
+        }}
       />
       {showPurchaseScreen && (
         <PurchaseScreen
-          visible={showPurchaseScreen}
+          visible={isModalVisible('purchase')}
           onClose={() => useUIStore.getState().setShowPurchaseScreen(false)}
         />
       )}
       {showIgnoreList && (
         <IgnoreListScreen
-          visible={showIgnoreList}
+          visible={isModalVisible('ignoreList')}
           network={activeTab?.networkId}
           onClose={() => useUIStore.getState().setShowIgnoreList(false)}
         />
       )}
       {showBlacklist && (
         <BlacklistScreen
-          visible={showBlacklist}
+          visible={isModalVisible('blacklist')}
           network={activeTab?.networkId}
           onClose={() => useUIStore.getState().setShowBlacklist(false)}
         />
       )}
       {showUserLists && (
         <UserListsScreen
-          visible={showUserLists}
+          visible={isModalVisible('userLists')}
           network={activeTab?.networkId}
           initialTab={
             userListsInitialTab === 'blacklist' ? 'other' : userListsInitialTab
@@ -308,7 +422,7 @@ export function AppModals({
       )}
       {showWHOIS && (
         <WHOISDisplay
-          visible={showWHOIS}
+          visible={isModalVisible('whois')}
           nick={whoisNick}
           network={activeTab?.networkId}
           onClose={() => {
@@ -358,7 +472,7 @@ export function AppModals({
       )}
       {showQueryEncryptionMenu && activeTab && activeTab.type === 'query' && (
         <QueryEncryptionMenu
-          visible={showQueryEncryptionMenu}
+          visible={isModalVisible('queryEncryption')}
           onClose={() =>
             useUIStore.getState().setShowQueryEncryptionMenu(false)
           }
@@ -368,7 +482,7 @@ export function AppModals({
       )}
       {showChannelList && (
         <ChannelListScreen
-          visible={showChannelList}
+          visible={isModalVisible('channelList')}
           network={activeTab?.networkId}
           onClose={() => useUIStore.getState().setShowChannelList(false)}
           onJoinChannel={handleJoinChannel}
@@ -376,7 +490,7 @@ export function AppModals({
       )}
       {showChannelNoteModal && channelNoteTarget && (
         <ChannelNoteModal
-          visible={showChannelNoteModal}
+          visible={isModalVisible('channelNote')}
           onClose={() => useUIStore.getState().setShowChannelNoteModal(false)}
           channelName={channelNoteTarget.channel}
           value={channelNoteValue}
@@ -393,7 +507,7 @@ export function AppModals({
       )}
       {showChannelLogModal && (
         <ChannelLogModal
-          visible={showChannelLogModal}
+          visible={isModalVisible('channelLog')}
           onClose={() => useUIStore.getState().setShowChannelLogModal(false)}
           logEntries={channelLogEntries}
           onClearLog={async () => {
@@ -410,7 +524,7 @@ export function AppModals({
       )}
       {showRenameModal && renameTargetTabId && (
         <RenameModal
-          visible={showRenameModal}
+          visible={isModalVisible('rename')}
           onClose={() => useUIStore.getState().setShowRenameModal(false)}
           value={renameValue}
           onChangeValue={setRenameValue}
@@ -427,7 +541,7 @@ export function AppModals({
         />
       )}
       <TabOptionsModal
-        visible={showTabOptionsModal}
+        visible={isModalVisible('tabOptions')}
         onClose={() => useUIStore.getState().setShowTabOptionsModal(false)}
         title={tabOptionsTitle || 'Options'}
         options={tabOptions}
@@ -438,7 +552,7 @@ export function AppModals({
         channelSettingsTarget &&
         channelSettingsNetwork && (
           <ChannelSettingsScreen
-            visible={showChannelSettings}
+            visible={isModalVisible('channelSettings')}
             channel={channelSettingsTarget}
             network={channelSettingsNetwork}
             onClose={() => useUIStore.getState().setShowChannelSettings(false)}
@@ -446,7 +560,7 @@ export function AppModals({
         )}
       {showDccTransfers && (
         <DccTransfersModal
-          visible={showDccTransfers}
+          visible={isModalVisible('dccTransfers')}
           onClose={() => useUIStore.getState().setShowDccTransfers(false)}
           onMinimize={() => {
             useUIStore.getState().setShowDccTransfers(false);
@@ -463,7 +577,7 @@ export function AppModals({
       )}
       {showDccSendModal && dccSendTarget && (
         <DccSendModal
-          visible={showDccSendModal}
+          visible={isModalVisible('dccSend')}
           onClose={() => useUIStore.getState().setShowDccSendModal(false)}
           targetNick={dccSendTarget.nick}
           filePath={dccSendPath}
@@ -495,7 +609,7 @@ export function AppModals({
         />
       )}
       <AppUnlockModal
-        visible={appUnlockModalVisible && appLockEnabled}
+        visible={isModalVisible('appUnlock')}
         useBiometric={appLockUseBiometric}
         usePin={appLockUsePin}
         pinEntry={appPinEntry}
@@ -514,37 +628,37 @@ export function AppModals({
       {/* Help Screens - Only render when state is true to prevent auto-opening */}
       {showHelpTroubleshooting && (
         <HelpTroubleshootingScreen
-          visible={showHelpTroubleshooting}
+          visible={isModalVisible('helpTroubleshooting')}
           onClose={() => setShowHelpTroubleshooting(false)}
         />
       )}
       {showHelpConnection && (
         <HelpConnectionScreen
-          visible={showHelpConnection}
+          visible={isModalVisible('helpConnection')}
           onClose={() => setShowHelpConnection(false)}
         />
       )}
       {showHelpCommands && (
         <HelpCommandsScreen
-          visible={showHelpCommands}
+          visible={isModalVisible('helpCommands')}
           onClose={() => setShowHelpCommands(false)}
         />
       )}
       {showHelpEncryption && (
         <HelpEncryptionScreen
-          visible={showHelpEncryption}
+          visible={isModalVisible('helpEncryption')}
           onClose={() => setShowHelpEncryption(false)}
         />
       )}
       {showHelpMedia && (
         <HelpMediaScreen
-          visible={showHelpMedia}
+          visible={isModalVisible('helpMedia')}
           onClose={() => setShowHelpMedia(false)}
         />
       )}
       {showHelpChannelManagement && (
         <HelpChannelManagementScreen
-          visible={showHelpChannelManagement}
+          visible={isModalVisible('helpChannelManagement')}
           onClose={() => setShowHelpChannelManagement(false)}
         />
       )}

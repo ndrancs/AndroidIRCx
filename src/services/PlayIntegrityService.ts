@@ -75,7 +75,6 @@ export interface PlayIntegrityToken {
  */
 class PlayIntegrityService {
   private isAvailable: boolean = false;
-  private hasWarnedMissingCrypto = false;
 
   /**
    * Check if Play Integrity API is available on this device
@@ -177,18 +176,7 @@ class PlayIntegrityService {
       return bytes;
     }
 
-    if (!this.hasWarnedMissingCrypto) {
-      this.hasWarnedMissingCrypto = true;
-      console.warn(
-        'crypto.getRandomValues is unavailable; falling back to Math.random for Play Integrity nonce generation.',
-      );
-    }
-
-    for (let i = 0; i < bytes.length; i += 1) {
-      bytes[i] = Math.floor(Math.random() * 256);
-    }
-
-    return bytes;
+    throw new Error('Secure random generator is unavailable');
   }
 
   /**

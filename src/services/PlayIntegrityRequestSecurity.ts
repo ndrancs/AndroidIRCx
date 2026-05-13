@@ -14,8 +14,6 @@ export interface PlayIntegrityRequestSecurity {
   issuedAtEpochSeconds: number;
 }
 
-let warnedMissingCryptoApi = false;
-
 function randomBytes(length: number): Uint8Array {
   const bytes = new Uint8Array(length);
   const cryptoApi = (globalThis as any)?.crypto;
@@ -24,19 +22,7 @@ function randomBytes(length: number): Uint8Array {
     return bytes;
   }
 
-  if (!warnedMissingCryptoApi) {
-    warnedMissingCryptoApi = true;
-    logger.warn(
-      'play-integrity',
-      'crypto.getRandomValues is unavailable; falling back to Math.random for request hash generation.',
-    );
-  }
-
-  for (let i = 0; i < bytes.length; i += 1) {
-    bytes[i] = Math.floor(Math.random() * 256);
-  }
-
-  return bytes;
+  throw new Error('Secure random generator is unavailable');
 }
 
 function generateNonceBase64(): string {
@@ -55,7 +41,17 @@ export async function createPlayIntegrityRequestSecurity(
     return null;
   }
 
-  const requestHash = generateNonceBase64();
+  let requestHash: string;
+  try {
+    requestHash = generateNonceBase64();
+  } catch {
+    logger.warn(
+      'play-integrity',
+      `${tag}: secure random generator unavailable; request security disabled.`,
+    );
+    return null;
+  }
+
   const issuedAtEpochSeconds = Math.floor(Date.now() / 1000);
   const tokenResult =
     await playIntegrityService.requestIntegrityToken(requestHash);

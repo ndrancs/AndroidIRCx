@@ -13,7 +13,6 @@ import React, {
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   FlatList,
   StyleSheet,
@@ -133,6 +132,17 @@ type NickContextSource = {
   sourceMessageType?: IRCMessage['type'];
   command?: string;
 };
+
+type MessageAreaModalKey =
+  | 'keyScan'
+  | 'keyQr'
+  | 'kickBan'
+  | 'blacklistMaskPicker'
+  | 'blacklistActionPicker'
+  | 'note'
+  | 'blacklist'
+  | 'context'
+  | null;
 
 interface MessageItemProps {
   message: IRCMessage;
@@ -3150,11 +3160,54 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     return Math.max(8, Math.min(perfConfig.messageLoadChunk, 16));
   }, [perfConfig.enableVirtualization, perfConfig.messageLoadChunk]);
 
+  const blacklistBanMaskOptions = useMemo(
+    () =>
+      showBlacklistMaskPicker
+        ? getBlacklistBanMaskOptions(contextUser, contextNick)
+        : [],
+    [
+      contextNick,
+      contextUser,
+      getBlacklistBanMaskOptions,
+      showBlacklistMaskPicker,
+    ],
+  );
+
+  const activeMessageModalKey = useMemo<MessageAreaModalKey>(() => {
+    const orderedStates: Array<[Exclude<MessageAreaModalKey, null>, boolean]> =
+      [
+        ['keyScan', showKeyScan],
+        ['keyQr', showKeyQr],
+        ['kickBan', showKickBanModal],
+        ['blacklistMaskPicker', showBlacklistMaskPicker],
+        ['blacklistActionPicker', showBlacklistActionPicker],
+        ['note', showNoteModal],
+        ['blacklist', showBlacklistModal],
+        ['context', showContextMenu],
+      ];
+
+    return orderedStates.find(([, active]) => active)?.[0] ?? null;
+  }, [
+    showBlacklistActionPicker,
+    showBlacklistMaskPicker,
+    showBlacklistModal,
+    showContextMenu,
+    showKeyQr,
+    showKeyScan,
+    showKickBanModal,
+    showNoteModal,
+  ]);
+
+  const isMessageModalVisible = useCallback(
+    (key: Exclude<MessageAreaModalKey, null>) => activeMessageModalKey === key,
+    [activeMessageModalKey],
+  );
+
   const blacklistModals = (
     <>
       {showNoteModal && (
         <Modal
-          visible={showNoteModal}
+          visible={isMessageModalVisible('note')}
           transparent
           animationType="slide"
           onRequestClose={() => setShowNoteModal(false)}
@@ -3215,7 +3268,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       )}
       {showBlacklistModal && (
         <Modal
-          visible={showBlacklistModal}
+          visible={isMessageModalVisible('blacklist')}
           transparent
           animationType="slide"
           onRequestClose={() => setShowBlacklistModal(false)}
@@ -3336,7 +3389,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       )}
       {showBlacklistMaskPicker && (
         <Modal
-          visible={showBlacklistMaskPicker}
+          visible={isMessageModalVisible('blacklistMaskPicker')}
           transparent
           animationType="fade"
           onRequestClose={() => setShowBlacklistMaskPicker(false)}
@@ -3346,34 +3399,35 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
               <Text style={styles.blacklistTitle}>
                 {t('Select Ban Mask Type')}
               </Text>
-              <ScrollView style={styles.blacklistOptionsScroll}>
-                {getBlacklistBanMaskOptions(contextUser, contextNick).map(
-                  option => (
-                    <TouchableOpacity
-                      key={`banmask-${option.id}`}
-                      style={styles.blacklistOption}
-                      onPress={() => {
-                        setSelectedBanMaskTypeId(option.id);
-                        setBlacklistMaskChoice(`banmask_${option.id}`);
-                        setShowBlacklistMaskPicker(false);
-                      }}
+              <FlatList
+                data={blacklistBanMaskOptions}
+                keyExtractor={option => `banmask-${option.id}`}
+                style={styles.blacklistOptionsScroll}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item: option }) => (
+                  <TouchableOpacity
+                    style={styles.blacklistOption}
+                    onPress={() => {
+                      setSelectedBanMaskTypeId(option.id);
+                      setBlacklistMaskChoice(`banmask_${option.id}`);
+                      setShowBlacklistMaskPicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.blacklistOptionText,
+                        selectedBanMaskTypeId === option.id &&
+                          styles.blacklistOptionTextSelected,
+                      ]}
                     >
-                      <Text
-                        style={[
-                          styles.blacklistOptionText,
-                          selectedBanMaskTypeId === option.id &&
-                            styles.blacklistOptionTextSelected,
-                        ]}
-                      >
-                        {option.label} {option.mask}
-                      </Text>
-                      <Text style={styles.blacklistOptionSubtext}>
-                        {option.description}
-                      </Text>
-                    </TouchableOpacity>
-                  ),
+                      {option.label} {option.mask}
+                    </Text>
+                    <Text style={styles.blacklistOptionSubtext}>
+                      {option.description}
+                    </Text>
+                  </TouchableOpacity>
                 )}
-              </ScrollView>
+              />
               <TouchableOpacity
                 style={[styles.blacklistButton, styles.blacklistButtonPrimary]}
                 onPress={() => setShowBlacklistMaskPicker(false)}
@@ -3393,7 +3447,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       )}
       {showBlacklistActionPicker && (
         <Modal
-          visible={showBlacklistActionPicker}
+          visible={isMessageModalVisible('blacklistActionPicker')}
           transparent
           animationType="fade"
           onRequestClose={() => setShowBlacklistActionPicker(false)}
@@ -3401,10 +3455,13 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           <View style={styles.blacklistOverlay}>
             <View style={styles.blacklistModal}>
               <Text style={styles.blacklistTitle}>{t('Select Action')}</Text>
-              <ScrollView style={styles.blacklistPickerScroll}>
-                {blacklistActionOptions.map(option => (
+              <FlatList
+                data={blacklistActionOptions}
+                keyExtractor={option => option.id}
+                style={styles.blacklistPickerScroll}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item: option }) => (
                   <TouchableOpacity
-                    key={option.id}
                     style={styles.blacklistOption}
                     onPress={() => {
                       setBlacklistAction(option.id);
@@ -3424,8 +3481,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
                       {option.label}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                )}
+              />
               <TouchableOpacity
                 style={[styles.blacklistButton, styles.blacklistButtonPrimary]}
                 onPress={() => setShowBlacklistActionPicker(false)}
@@ -3445,7 +3502,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       )}
       {showKeyQr && (
         <Modal
-          visible={showKeyQr}
+          visible={isMessageModalVisible('keyQr')}
           transparent
           animationType="fade"
           onRequestClose={() => setShowKeyQr(false)}
@@ -3496,7 +3553,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
       )}
       {showKeyScan && (
         <Modal
-          visible={showKeyScan}
+          visible={isMessageModalVisible('keyScan')}
           transparent
           animationType="fade"
           onRequestClose={() => setShowKeyScan(false)}
@@ -3520,7 +3577,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
                 <Camera
                   style={styles.cameraFlex}
                   device={device}
-                  isActive={showKeyScan}
+                  isActive={isMessageModalVisible('keyScan')}
                   codeScanner={codeScanner}
                 />
               ) : (
@@ -3607,7 +3664,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           </TouchableOpacity>
         )}
         <NickContextMenu
-          visible={showContextMenu}
+          visible={isMessageModalVisible('context')}
           nick={contextNick}
           onClose={() => setShowContextMenu(false)}
           onAction={(action, actionContext) =>
@@ -3626,6 +3683,25 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           ignoreActionId="ignore_toggle"
           initialUserHostInfo={contextHostInfo}
           sourceMessageType={contextSourceMessageType}
+        />
+        <KickBanModal
+          visible={isMessageModalVisible('kickBan')}
+          onClose={() => setShowKickBanModal(false)}
+          onConfirm={handleKickBanConfirm}
+          nick={kickBanTarget?.nick || ''}
+          userHost={
+            kickBanTarget?.user && kickBanTarget?.host
+              ? `${kickBanTarget.user}@${kickBanTarget.host}`
+              : undefined
+          }
+          mode={kickBanMode}
+          colors={{
+            background: colors.surface,
+            text: colors.text,
+            accent: colors.primary,
+            border: colors.border,
+            inputBackground: colors.messageBackground,
+          }}
         />
         {blacklistModals}
         {selectionMode && (
@@ -3674,7 +3750,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     );
   }
 
-  // Fallback to ScrollView for small message lists
+  // Fallback FlatList path for small/non-virtualized message lists.
   return (
     <View style={styles.wrapper} onLayout={handleContainerLayout}>
       {/* Message Search Bar */}
@@ -3715,7 +3791,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         </TouchableOpacity>
       )}
       <NickContextMenu
-        visible={showContextMenu}
+        visible={isMessageModalVisible('context')}
         nick={contextNick}
         onClose={() => setShowContextMenu(false)}
         onAction={(action, actionContext) =>
@@ -3736,7 +3812,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         sourceMessageType={contextSourceMessageType}
       />
       <KickBanModal
-        visible={showKickBanModal}
+        visible={isMessageModalVisible('kickBan')}
         onClose={() => setShowKickBanModal(false)}
         onConfirm={handleKickBanConfirm}
         nick={kickBanTarget?.nick || ''}

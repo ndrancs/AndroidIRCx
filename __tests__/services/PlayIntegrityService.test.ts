@@ -44,7 +44,7 @@ jest.mock(
 // Mock crypto for nonce generation
 const mockCryptoGetRandomValues = jest.fn((array: Uint8Array) => {
   for (let i = 0; i < array.length; i++) {
-    array[i] = Math.floor(Math.random() * 256);
+    array[i] = (i + 1) % 256;
   }
   return array;
 });
@@ -234,6 +234,28 @@ describe('PlayIntegrityService', () => {
         });
       } finally {
         global.crypto.getRandomValues = originalGetRandomValues;
+        consoleSpy.mockRestore();
+      }
+    });
+
+    it('should fail closed when secure random generator is unavailable', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const mathRandomSpy = jest.spyOn(Math, 'random');
+      const originalCrypto = global.crypto;
+      (global as any).crypto = undefined;
+
+      try {
+        const result = await playIntegrityService.requestIntegrityToken();
+
+        expect(result).toEqual({
+          token: '',
+          error: 'Secure random generator is unavailable',
+        });
+        expect(mockRequestIntegrityToken).not.toHaveBeenCalled();
+        expect(mathRandomSpy).not.toHaveBeenCalled();
+      } finally {
+        global.crypto = originalCrypto;
+        mathRandomSpy.mockRestore();
         consoleSpy.mockRestore();
       }
     });

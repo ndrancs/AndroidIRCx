@@ -336,6 +336,28 @@ describe('AppModals', () => {
     expect(mockDccTransfersMinimizedIndicator).toHaveBeenCalledTimes(1);
   });
 
+  it('presents only the highest-priority modal when several states are active', () => {
+    mockUseUIStore.mockImplementation((selector: (s: any) => any) =>
+      selector({ showOptionsMenu: true, showSettings: true }),
+    );
+    mockUseUIState.mockReturnValue(
+      createUIState({
+        showPurchaseScreen: true,
+        showChannelModal: true,
+        appUnlockModalVisible: true,
+        appLockEnabled: true,
+      }),
+    );
+
+    render(<AppModals {...baseProps} />);
+
+    expect(mockAppUnlockModal.mock.calls[0][0].visible).toBe(true);
+    expect(mockPurchaseScreen.mock.calls[0][0].visible).toBe(false);
+    expect(mockSettingsScreen.mock.calls[0][0].visible).toBe(false);
+    expect(mockJoinChannelModal.mock.calls[0][0].visible).toBe(false);
+    expect(mockOptionsMenu.mock.calls[0][0].visible).toBe(false);
+  });
+
   it('handles join channel callbacks and resets modal state', () => {
     const uiStoreState = createUIStoreState();
     mockUseUIStore.getState = jest.fn(() => uiStoreState);

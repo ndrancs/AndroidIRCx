@@ -40,37 +40,123 @@ const SENSITIVE_VALUE_PATTERNS = [
   /-----BEGIN[^-]+-----[\s\S]*?-----END[^-]+-----/g,
   /:[A-Za-z0-9+/=]{20,}/g, // Base64 credentials
 ];
+const MAX_SANITIZE_DEPTH = 5;
+const MAX_OBJECT_KEYS = 50;
+const MAX_ARRAY_ITEMS = 25;
+const MAX_STRING_LENGTH = 2048;
+
+const REDACTED = '[REDACTED]';
+const CIRCULAR = '[Circular]';
+const TRUNCATED = '[TRUNCATED]';
+
+function isSensitiveKey(key: string): boolean {
+  const keyLower = key.toLowerCase();
+  return SENSITIVE_KEYS.some(sensitive => keyLower.includes(sensitive));
+}
+
+function sanitizeString(value: string): string {
+  let sanitizedValue = value;
+  for (const pattern of SENSITIVE_VALUE_PATTERNS) {
+    sanitizedValue = sanitizedValue.replace(pattern, REDACTED);
+  }
+  if (sanitizedValue.length > MAX_STRING_LENGTH) {
+    return `${sanitizedValue.slice(0, MAX_STRING_LENGTH)}${TRUNCATED}`;
+  }
+  return sanitizedValue;
+}
+
+function sanitizeValue(
+  value: any,
+  key: string,
+  depth: number,
+  seen: WeakSet<object>,
+): any {
+  if (isSensitiveKey(key)) {
+    return REDACTED;
+  }
+
+  if (typeof value === 'string') {
+    return sanitizeString(value);
+  }
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    value === null ||
+    value === undefined
+  ) {
+    return value;
+  }
+  if (typeof value === 'bigint') {
+    return value.toString();
+  }
+  if (typeof value === 'function' || typeof value === 'symbol') {
+    return `[${typeof value}]`;
+  }
+
+  if (depth >= MAX_SANITIZE_DEPTH) {
+    return TRUNCATED;
+  }
+
+  if (value instanceof Error) {
+    return {
+      name: sanitizeString(value.name),
+      message: sanitizeString(value.message),
+      stack: value.stack ? sanitizeString(value.stack) : undefined,
+    };
+  }
+
+  if (typeof value !== 'object') {
+    return value;
+  }
+
+  if (seen.has(value)) {
+    return CIRCULAR;
+  }
+
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      const sanitizedArray = value
+        .slice(0, MAX_ARRAY_ITEMS)
+        .map(item => sanitizeValue(item, '', depth + 1, seen));
+      if (value.length > MAX_ARRAY_ITEMS) {
+        sanitizedArray.push(TRUNCATED);
+      }
+      return sanitizedArray;
+    }
+
+    const sanitized: Record<string, any> = {};
+    const entries = Object.entries(value).slice(0, MAX_OBJECT_KEYS);
+    for (const [entryKey, entryValue] of entries) {
+      sanitized[entryKey] = sanitizeValue(
+        entryValue,
+        entryKey,
+        depth + 1,
+        seen,
+      );
+    }
+    if (Object.keys(value).length > MAX_OBJECT_KEYS) {
+      sanitized.__truncatedKeys = Object.keys(value).length - MAX_OBJECT_KEYS;
+    }
+    return sanitized;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+function safeStringify(value: any): string {
+  try {
+    return JSON.stringify(value) ?? JSON.stringify(TRUNCATED);
+  } catch {
+    return JSON.stringify(TRUNCATED);
+  }
+}
 
 /**
  * Sanitize extras object to remove sensitive data before sending to Crashlytics
  */
 function sanitizeExtras(extras: Record<string, any>): Record<string, any> {
-  const sanitized: Record<string, any> = {};
-
-  for (const [key, value] of Object.entries(extras)) {
-    // Check if key contains sensitive words
-    const keyLower = key.toLowerCase();
-    if (SENSITIVE_KEYS.some(sensitive => keyLower.includes(sensitive))) {
-      sanitized[key] = '[REDACTED]';
-      continue;
-    }
-
-    // Sanitize string values
-    if (typeof value === 'string') {
-      let sanitizedValue = value;
-      for (const pattern of SENSITIVE_VALUE_PATTERNS) {
-        sanitizedValue = sanitizedValue.replace(pattern, '[REDACTED]');
-      }
-      sanitized[key] = sanitizedValue;
-    } else if (typeof value === 'object' && value !== null) {
-      // Recursively sanitize nested objects
-      sanitized[key] = sanitizeExtras(value);
-    } else {
-      sanitized[key] = value;
-    }
-  }
-
-  return sanitized;
+  return sanitizeValue(extras, '', 0, new WeakSet<object>());
 }
 
 export interface ErrorContext {
@@ -101,9 +187,13 @@ class ErrorReportingService {
   async report(error: any, context?: ErrorContext): Promise<void> {
     const normalizedError = this.normalizeError(error);
     const { fatal = false, source, tags, extras } = context || {};
+    const sanitizedSource = source ? sanitizeString(source) : undefined;
 
     // Always keep a console log if logger is enabled
-    logger.error(source || 'error', normalizedError.message);
+    logger.error(
+      sanitizedSource || 'error',
+      sanitizeString(normalizedError.message),
+    );
 
     // Only push fatal crashes to Crashlytics; non-fatals stay local
     if (!fatal) return;
@@ -112,7 +202,10 @@ class ErrorReportingService {
       if (tags) {
         Object.entries(tags).forEach(([key, value]) => {
           try {
-            crashlytics().setAttribute(key, String(value));
+            crashlytics().setAttribute(
+              key,
+              isSensitiveKey(key) ? REDACTED : sanitizeString(String(value)),
+            );
           } catch {
             // ignore
           }
@@ -124,16 +217,16 @@ class ErrorReportingService {
         const sanitizedExtras = sanitizeExtras(extras);
         Object.entries(sanitizedExtras).forEach(([key, value]) => {
           try {
-            crashlytics().log(`${key}: ${JSON.stringify(value)}`);
+            crashlytics().log(`${key}: ${safeStringify(value)}`);
           } catch {
             // ignore
           }
         });
       }
 
-      if (source) {
+      if (sanitizedSource) {
         try {
-          crashlytics().setAttribute('source', source);
+          crashlytics().setAttribute('source', sanitizedSource);
         } catch {
           // ignore
         }
@@ -145,14 +238,17 @@ class ErrorReportingService {
         'ErrorReportingService: Crashlytics failed, using mail fallback',
         err,
       );
-      this.tryMailFallback(normalizedError, context);
+      this.tryMailFallback(normalizedError, {
+        ...(context || {}),
+        source: sanitizedSource,
+      });
     }
   }
 
   log(message: string): void {
     if (!this.enabled) return;
     try {
-      crashlytics().log(message);
+      crashlytics().log(sanitizeString(message));
     } catch {
       // ignore
     }
@@ -162,7 +258,8 @@ class ErrorReportingService {
     if (error instanceof Error) return error;
     if (typeof error === 'string') return new Error(error);
     if (error && typeof error === 'object') {
-      return new Error(JSON.stringify(error));
+      const sanitized = sanitizeValue(error, '', 0, new WeakSet<object>());
+      return new Error(safeStringify(sanitized));
     }
     return new Error(t('Unknown error'));
   }
@@ -172,14 +269,16 @@ class ErrorReportingService {
     context?: ErrorContext,
   ): Promise<void> {
     const fatalValue = context?.fatal ? t('Yes') : t('No');
+    const safeMessage = sanitizeString(error.message);
+    const safeStack = error.stack ? sanitizeString(error.stack) : t('n/a');
     const body = [
       t('Crash report fallback'),
       t('Platform: {platform}', { platform: Platform.OS }),
       t('Fatal: {value}', { value: fatalValue }),
       context?.source ? t('Source: {source}', { source: context.source }) : '',
       '',
-      t('Message: {message}', { message: error.message }),
-      t('Stack: {stack}', { stack: error.stack || t('n/a') }),
+      t('Message: {message}', { message: safeMessage }),
+      t('Stack: {stack}', { stack: safeStack }),
     ]
       .filter(Boolean)
       .join('\n');

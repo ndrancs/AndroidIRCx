@@ -198,14 +198,14 @@ reply, react, channel-context, rename
 
 |                   |                                                   |
 | ----------------- | ------------------------------------------------- |
-| **Framework**     | React Native 0.84.1, React 19.2.3                 |
+| **Framework**     | React Native 0.85.3, React 19.2.3                 |
 | **Language**      | TypeScript 5.9.3                                  |
-| **State**         | Zustand 5.0.11                                    |
+| **State**         | Zustand 5.0.13                                    |
 | **Networking**    | react-native-tcp-socket (raw TCP/TLS)             |
 | **Encryption**    | libsodium, node-forge, @noble/curves              |
 | **Storage**       | AsyncStorage + Keychain (react-native-keychain)   |
 | **UI/Lists**      | FlashList, Reanimated, react-native-vector-icons  |
-| **Testing**       | Jest 30.3, Testing Library                        |
+| **Testing**       | Jest 29.7, Testing Library                        |
 | **CI/CD**         | GitHub Actions, Docker                            |
 | **Notifications** | @notifee/react-native                             |
 | **Media**         | vision-camera, react-native-video, audio-recorder |
