@@ -356,9 +356,11 @@ class AutoReconnectService {
         console.log(
           `AutoReconnectService: Smart reconnect - waiting ${waitTime}ms to avoid flood`,
         );
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+          this.reconnectTimers.delete(network);
           this.attemptReconnect(network);
         }, waitTime);
+        this.reconnectTimers.set(network, timer);
         return;
       }
     }

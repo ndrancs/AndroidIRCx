@@ -425,10 +425,21 @@ describe('AutoReconnectService', () => {
 
       await (autoReconnectService as any).handleDisconnected('freenode');
 
-      // Should wait before reconnecting
+      // Should wait before reconnecting, and the flood-delay timer must be cancelable.
       expect((autoReconnectService as any).isReconnecting.get('freenode')).toBe(
         true,
       );
+      expect(
+        (autoReconnectService as any).reconnectTimers.has('freenode'),
+      ).toBe(true);
+
+      autoReconnectService.cancelReconnect('freenode');
+      jest.advanceTimersByTime(5000);
+
+      expect(connectionManager.connect).not.toHaveBeenCalled();
+      expect(
+        (autoReconnectService as any).reconnectTimers.has('freenode'),
+      ).toBe(false);
     });
   });
 

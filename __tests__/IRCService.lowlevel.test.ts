@@ -309,6 +309,36 @@ describe('IRCService low-level branches', () => {
     expect(labeledSpy).toHaveBeenCalled();
   });
 
+  it('cleans connection-scoped timers on disconnect before delayed registration fires', () => {
+    const sendRegistration = jest.fn();
+    (irc as any)._sendRegistration = sendRegistration;
+    (irc as any).capNegotiating = true;
+    (irc as any).capEnabledSet = new Set();
+
+    (irc as any).endCAPNegotiation();
+    expect(sendRegistration).not.toHaveBeenCalled();
+
+    irc.disconnect('bye');
+    jest.advanceTimersByTime(60);
+
+    expect(sendRegistration).not.toHaveBeenCalled();
+    expect((irc as any).pendingRegistrationTimer).toBeNull();
+    expect((irc as any).capTimeout).toBeNull();
+  });
+
+  it('clears channel users only after emitting per-channel clear events', () => {
+    const clearSpy = jest.fn();
+    irc.on('clear-channel', clearSpy);
+    (irc as any).channelUsers.set('#one', new Map());
+    (irc as any).channelUsers.set('#two', new Map());
+
+    irc.disconnect('bye');
+
+    expect(clearSpy).toHaveBeenCalledWith('#one');
+    expect(clearSpy).toHaveBeenCalledWith('#two');
+    expect((irc as any).channelUsers.size).toBe(0);
+  });
+
   it('drives CAP and SASL helper branches', async () => {
     const sendRawSpy = jest.spyOn(irc, 'sendRaw');
     (irc as any).capAvailable = new Set(['server-time', 'sasl', 'typing']);

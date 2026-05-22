@@ -288,6 +288,13 @@ export class IRCService {
   private multilineHandler: MultilineHandler = new MultilineHandler();
   private whoisUseDoubleNick: boolean = false;
   private keepAliveTimer: NodeJS.Timeout | null = null;
+  private connectionTimeout: NodeJS.Timeout | null = null;
+  private capTimeout: NodeJS.Timeout | null = null;
+  private registrationTimeout: NodeJS.Timeout | null = null;
+  private registrationCheckInterval: NodeJS.Timeout | null = null;
+  private registrationCheckStopTimeout: NodeJS.Timeout | null = null;
+  private pendingRegistrationTimer: NodeJS.Timeout | null = null;
+  private delayedDestroyTimer: NodeJS.Timeout | null = null;
   private lastInboundActivityAt: number = 0;
   private keepAliveMissedPongs: number = 0;
   private readonly KEEPALIVE_IDLE_MS = 120000;
@@ -663,6 +670,38 @@ export class IRCService {
     this.keepAliveMissedPongs = 0;
   }
 
+  private cleanupConnectionTimers(): void {
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
+    }
+    if (this.capTimeout) {
+      clearTimeout(this.capTimeout);
+      this.capTimeout = null;
+    }
+    if (this.registrationTimeout) {
+      clearTimeout(this.registrationTimeout);
+      this.registrationTimeout = null;
+    }
+    if (this.registrationCheckInterval) {
+      clearInterval(this.registrationCheckInterval);
+      this.registrationCheckInterval = null;
+    }
+    if (this.registrationCheckStopTimeout) {
+      clearTimeout(this.registrationCheckStopTimeout);
+      this.registrationCheckStopTimeout = null;
+    }
+    if (this.pendingRegistrationTimer) {
+      clearTimeout(this.pendingRegistrationTimer);
+      this.pendingRegistrationTimer = null;
+    }
+    if (this.delayedDestroyTimer) {
+      clearTimeout(this.delayedDestroyTimer);
+      this.delayedDestroyTimer = null;
+    }
+    (this as any)._capTimeout = null;
+  }
+
   connect(config: IRCConnectionConfig): Promise<void> {
     return new Promise(async (resolve, reject) => {
       try {
@@ -673,6 +712,9 @@ export class IRCService {
             resolve();
           }
         };
+
+        // Reset stale per-connection timers from previous attempts before opening a new socket.
+        this.cleanupConnectionTimers();
 
         // Reset manual disconnect flag for new attempts
         this.manualDisconnect = false;
@@ -884,6 +926,7 @@ export class IRCService {
           });
 
           this.socket.on('close', () => {
+            this.cleanupConnectionTimers();
             if (this.manualDisconnect) {
               this.manualDisconnect = false;
               this.socketTextDecoder = null;
@@ -1018,7 +1061,7 @@ export class IRCService {
           });
         }
 
-        const connectionTimeout = setTimeout(() => {
+        this.connectionTimeout = setTimeout(() => {
           if (!this.isConnected) {
             this.disconnect();
             reject(new Error(t('Connection timeout')));
@@ -1026,10 +1069,13 @@ export class IRCService {
         }, 10000);
 
         this.socket.once('connect', () => {
-          clearTimeout(connectionTimeout);
+          if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = null;
+          }
         });
 
-        const capTimeout = setTimeout(() => {
+        this.capTimeout = setTimeout(() => {
           if (this.capNegotiating) {
             this.logRaw(
               'IRCService: CAP negotiation timeout, ending negotiation and sending registration',
@@ -1043,9 +1089,9 @@ export class IRCService {
           }
         }, 5000);
 
-        (this as any)._capTimeout = capTimeout;
+        (this as any)._capTimeout = this.capTimeout;
 
-        const registrationTimeout = setTimeout(() => {
+        this.registrationTimeout = setTimeout(() => {
           if (!this.registered) {
             this.addRawMessage(
               t('*** Waiting for server registration...'),
@@ -1056,14 +1102,25 @@ export class IRCService {
 
         const checkRegistration = () => {
           if (this.registered) {
-            clearTimeout(registrationTimeout);
+            if (this.registrationTimeout) {
+              clearTimeout(this.registrationTimeout);
+              this.registrationTimeout = null;
+            }
+            if (this.registrationCheckInterval) {
+              clearInterval(this.registrationCheckInterval);
+              this.registrationCheckInterval = null;
+            }
           }
         };
 
-        const registrationCheckInterval = setInterval(checkRegistration, 1000);
+        this.registrationCheckInterval = setInterval(checkRegistration, 1000);
 
-        setTimeout(() => {
-          clearInterval(registrationCheckInterval);
+        this.registrationCheckStopTimeout = setTimeout(() => {
+          if (this.registrationCheckInterval) {
+            clearInterval(this.registrationCheckInterval);
+            this.registrationCheckInterval = null;
+          }
+          this.registrationCheckStopTimeout = null;
         }, 15000);
       } catch (error: any) {
         const errorMessage =
@@ -1820,9 +1877,10 @@ export class IRCService {
     this.capNegotiating = false;
     this.capEnabled = this.capEnabledSet.size > 0;
 
-    const capTimeout = (this as any)._capTimeout;
+    const capTimeout = this.capTimeout || (this as any)._capTimeout;
     if (capTimeout) {
       clearTimeout(capTimeout);
+      this.capTimeout = null;
       (this as any)._capTimeout = null;
     }
 
@@ -1830,7 +1888,10 @@ export class IRCService {
 
     const sendRegistration = (this as any)._sendRegistration;
     if (sendRegistration && typeof sendRegistration === 'function') {
-      setTimeout(() => sendRegistration(), 50);
+      this.pendingRegistrationTimer = setTimeout(() => {
+        this.pendingRegistrationTimer = null;
+        sendRegistration();
+      }, 50);
     }
   }
 
@@ -2304,6 +2365,7 @@ export class IRCService {
     this.manualDisconnect = true;
     this.socketTextDecoder = null;
     this.stopKeepAlive();
+    this.cleanupConnectionTimers();
     if (this.socket) {
       const socketRef = this.socket;
 
@@ -2341,7 +2403,8 @@ export class IRCService {
 
       // Use a small delay before destroy to allow graceful shutdown
       // This helps prevent native crashes from abrupt socket termination
-      setTimeout(() => {
+      this.delayedDestroyTimer = setTimeout(() => {
+        this.delayedDestroyTimer = null;
         try {
           socketRef.destroy();
         } catch (error: any) {
@@ -2358,12 +2421,12 @@ export class IRCService {
       this.emitConnection(false);
       this.addRawMessage(t('*** Disconnected from server'), 'connection');
     }
-    this.channelUsers.clear();
-    this.namesBuffer.clear();
-    this.userRequestedNamesChannels.clear();
     this.channelUsers.forEach((_, channel) =>
       this.emit('clear-channel', channel),
     );
+    this.channelUsers.clear();
+    this.namesBuffer.clear();
+    this.userRequestedNamesChannels.clear();
     this.selfUserModes.clear();
     this.cleanupLabels(); // Clean up pending labeled-response commands
     this.seenMessageIds.clear(); // Clear message ID cache for deduplication
