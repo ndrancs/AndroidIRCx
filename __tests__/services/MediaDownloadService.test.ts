@@ -8,6 +8,9 @@ jest.mock('react-native-fs', () => ({
   exists: jest.fn(),
   mkdir: jest.fn().mockResolvedValue(undefined),
   writeFile: jest.fn().mockResolvedValue(undefined),
+  downloadFile: jest.fn(),
+  stopDownload: jest.fn(),
+  stat: jest.fn(),
   unlink: jest.fn().mockResolvedValue(undefined),
   readDir: jest.fn().mockResolvedValue([]),
 }));
@@ -35,6 +38,9 @@ const mockRNFS = RNFS as unknown as {
   exists: jest.Mock;
   mkdir: jest.Mock;
   writeFile: jest.Mock;
+  downloadFile: jest.Mock;
+  stopDownload: jest.Mock;
+  stat: jest.Mock;
   unlink: jest.Mock;
   readDir: jest.Mock;
 };
@@ -66,20 +72,16 @@ describe('MediaDownloadService', () => {
       mimeType: 'image/jpeg',
     });
 
-    (global as any).fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      blob: jest.fn().mockResolvedValue({ size: 3 }),
+    (global as any).fetch = jest.fn();
+    mockRNFS.downloadFile.mockImplementation(options => {
+      options.begin?.({ statusCode: 200, contentLength: 3 });
+      options.progress?.({ bytesWritten: 3, contentLength: 3 });
+      return {
+        jobId: 123,
+        promise: Promise.resolve({ statusCode: 200, bytesWritten: 3 }),
+      };
     });
-
-    (global as any).FileReader = class {
-      public result: string | null = null;
-      public onloadend: null | (() => void) = null;
-      public onerror: null | (() => void) = null;
-      readAsDataURL() {
-        this.result = 'data:application/octet-stream;base64,QUJD';
-        this.onloadend?.();
-      }
-    };
+    mockRNFS.stat.mockResolvedValue({ size: 3 });
   });
 
   it('returns cached file when media is already cached', async () => {
@@ -116,10 +118,14 @@ describe('MediaDownloadService', () => {
       onProgress,
     );
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://www.androidircx.com/api/media/download/media-2',
+    expect(mockRNFS.downloadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromUrl: 'https://www.androidircx.com/api/media/download/media-2',
+        toFile: '/mock/cache/temp_media/encrypted_media-2',
+      }),
     );
-    expect(mockRNFS.writeFile).toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockRNFS.writeFile).not.toHaveBeenCalled();
     expect(mockEncryption.decryptMediaFile).toHaveBeenCalledWith(
       '/mock/cache/temp_media/encrypted_media-2',
       'net',
@@ -140,9 +146,9 @@ describe('MediaDownloadService', () => {
   });
 
   it('handles fetch failure and cleans up temp file', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 404,
+    mockRNFS.downloadFile.mockReturnValueOnce({
+      jobId: 124,
+      promise: Promise.resolve({ statusCode: 404, bytesWritten: 0 }),
     });
     mockRNFS.exists.mockResolvedValue(true);
 

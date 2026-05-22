@@ -417,7 +417,9 @@ export const ChannelTabs: React.FC<ChannelTabsProps> = React.memo(
             }}
             scrollEventThrottle={16}
             contentContainerStyle={contentContainerStyle}
-            removeClippedSubviews={tabs.length > 20}
+            // Fabric/ReactClippingViewManager can crash on rapid tab reordering
+            // with addViewAt index mismatches when clipping is enabled.
+            removeClippedSubviews={false}
             initialNumToRender={Math.min(tabs.length, isVertical ? 20 : 16)}
             maxToRenderPerBatch={12}
             windowSize={5}

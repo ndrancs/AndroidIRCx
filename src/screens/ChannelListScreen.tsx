@@ -405,7 +405,7 @@ export const ChannelListScreen: React.FC<ChannelListScreenProps> = ({
           <FlatList
             data={filteredChannels}
             renderItem={renderChannelItem}
-            keyExtractor={(item, index) => `${item.name}-${index}`}
+            keyExtractor={item => item.name}
             style={styles.list}
             contentContainerStyle={styles.listContent}
             getItemLayout={getItemLayout}
@@ -413,7 +413,9 @@ export const ChannelListScreen: React.FC<ChannelListScreenProps> = ({
             maxToRenderPerBatch={10}
             updateCellsBatchingPeriod={50}
             windowSize={10}
-            removeClippedSubviews={true}
+            // Prefer stability over a small perf win: clipping has caused Fabric
+            // addViewAt index crashes on dynamic lists.
+            removeClippedSubviews={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text
