@@ -114,10 +114,14 @@ describe('MediaPickerService', () => {
       size: 55,
     });
     mockRNFS.copyFile.mockRejectedValueOnce(new Error('copy failed'));
+    mockRNFS.downloadFile.mockReturnValueOnce({
+      promise: Promise.reject(new Error('download failed')),
+    });
 
     const result = await mediaPickerService.pickImage();
 
     expect(mockRNFS.copyFile).toHaveBeenCalled();
+    expect(mockRNFS.downloadFile).toHaveBeenCalled();
     expect(mockRNFS.readFile).toHaveBeenCalledWith(
       'content://media/123',
       'base64',
@@ -268,7 +272,7 @@ describe('MediaPickerService', () => {
     const result = await mediaPickerService.pickImage();
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Download failed');
+    expect(result.error).toContain('read failed');
   });
 
   it('returns no file selected on pickVideo when picker returns null', async () => {
@@ -505,6 +509,9 @@ describe('MediaPickerService', () => {
       size: 42,
     });
     mockRNFS.copyFile.mockRejectedValueOnce(new Error('copy fail'));
+    mockRNFS.downloadFile.mockReturnValueOnce({
+      promise: Promise.reject(new Error('download fail')),
+    });
     mockRNFS.readFile.mockResolvedValueOnce('QUJD');
 
     const result = await mediaPickerService.pickVideo();
@@ -518,6 +525,7 @@ describe('MediaPickerService', () => {
       uri: 'content://video/2',
       name: 'clip.mp4',
       type: 'video/mp4',
+      size: 5,
     });
     mockRNFS.copyFile.mockRejectedValueOnce(new Error('copy fail'));
     mockRNFS.readFile.mockRejectedValueOnce(new Error('read fail'));
@@ -528,7 +536,7 @@ describe('MediaPickerService', () => {
     const result = await mediaPickerService.pickVideo();
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Download failed');
+    expect(result.error).toContain('read fail');
   });
 
   it('handles content uri fallback path for pickFile', async () => {
@@ -539,6 +547,9 @@ describe('MediaPickerService', () => {
       size: 42,
     });
     mockRNFS.copyFile.mockRejectedValueOnce(new Error('copy fail'));
+    mockRNFS.downloadFile.mockReturnValueOnce({
+      promise: Promise.reject(new Error('download fail')),
+    });
     mockRNFS.readFile.mockResolvedValueOnce('QUJD');
 
     const result = await mediaPickerService.pickFile();
@@ -562,7 +573,7 @@ describe('MediaPickerService', () => {
     const result = await mediaPickerService.pickFile();
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Download failed');
+    expect(result.error).toContain('read fail');
   });
 
   it('returns failed capture message when internal permission method throws', async () => {

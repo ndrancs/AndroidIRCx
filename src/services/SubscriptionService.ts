@@ -37,6 +37,7 @@ import {
 } from '../types/znc';
 
 const API_BASE_URL = 'https://www.androidircx.com/api';
+const MAX_API_RESPONSE_BYTES = 128 * 1024;
 const ZNC_PASSWORD_PREFIX = '@AndroidIRCX:zncPassword:';
 const ZNC_TOKEN_PREFIX = '@AndroidIRCX:zncPurchaseToken:';
 
@@ -959,22 +960,49 @@ class SubscriptionService {
       const response = await fetch(url, options);
       logger.info('znc', `API response status: ${response.status}`);
 
+      const contentLengthHeader = response.headers?.get?.('content-length');
+      const contentLength = contentLengthHeader
+        ? Number.parseInt(contentLengthHeader, 10)
+        : NaN;
+      if (
+        Number.isFinite(contentLength) &&
+        contentLength > MAX_API_RESPONSE_BYTES
+      ) {
+        throw new Error('Subscription backend response is too large');
+      }
+
       if (!response.ok) {
-        const errorText = await response
-          .text()
-          .catch(() => `Request failed with status ${response.status}`);
-        let errorMessage = errorText;
-        try {
-          // Try to parse as JSON to get structured error
-          const errorJson = JSON.parse(errorText);
-          errorMessage =
-            typeof errorJson?.error === 'string' ? errorJson.error : errorText;
-        } catch {
-          // If not JSON, use the raw text
-          logger.warn('znc', `Non-JSON error response: ${errorText}`);
+        let errorMessage = `Request failed with status ${response.status}`;
+        if (
+          Number.isFinite(contentLength) &&
+          contentLength <= MAX_API_RESPONSE_BYTES
+        ) {
+          const errorText = await response.text().catch(() => '');
+          try {
+            // Try to parse as JSON to get structured error
+            const errorJson = JSON.parse(errorText);
+            errorMessage =
+              typeof errorJson?.error === 'string'
+                ? errorJson.error
+                : errorMessage;
+          } catch {
+            // Avoid logging raw backend pages or oversized response bodies.
+            logger.warn(
+              'znc',
+              'Non-JSON error response from subscription backend',
+            );
+          }
         }
         logger.error('znc', `API call failed: ${errorMessage}`);
         throw new Error(errorMessage);
+      }
+
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (
+        contentType &&
+        !contentType.toLowerCase().includes('application/json')
+      ) {
+        throw new Error('Subscription backend returned a non-JSON response');
       }
 
       const data = await response.json().catch(err => {

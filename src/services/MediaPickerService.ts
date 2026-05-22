@@ -43,6 +43,8 @@ const isDocumentPickerAvailable = () => {
   );
 };
 
+const MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES = 8 * 1024 * 1024;
+
 export type MediaType = 'image' | 'video' | 'voice' | 'gif' | 'file';
 
 export interface MediaPickResult {
@@ -98,36 +100,11 @@ class MediaPickerService {
           `photo_${Date.now()}.${this.getFileExtension(pickedFile.type || 'image/jpeg')}`;
         localFilePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
 
-        try {
-          // Use RNFS to copy file from content URI to local path
-          await RNFS.copyFile(pickedFile.uri, localFilePath);
-        } catch (copyError) {
-          console.warn(
-            '[MediaPickerService] Could not copy content URI, trying readFile/writeFile:',
-            copyError,
-          );
-          try {
-            // Alternative method: read file content and write to local file
-            const fileContent = await RNFS.readFile(pickedFile.uri, 'base64');
-            await RNFS.writeFile(localFilePath, fileContent, 'base64');
-          } catch (readWriteError) {
-            console.warn(
-              '[MediaPickerService] Could not read/write file, trying downloadFile:',
-              readWriteError,
-            );
-            // Last resort: try to treat content URI as URL
-            const downloadResult = await RNFS.downloadFile({
-              fromUrl: pickedFile.uri,
-              toFile: localFilePath,
-            }).promise;
-
-            if (downloadResult.statusCode !== 200) {
-              throw new Error(
-                `Download failed with status ${downloadResult.statusCode}`,
-              );
-            }
-          }
-        }
+        await this.copyContentUriToLocalFile(
+          pickedFile.uri,
+          localFilePath,
+          pickedFile.size,
+        );
       } else {
         // For file URIs, use as is
         localFilePath = pickedFile.fileCopyUri || pickedFile.uri;
@@ -275,36 +252,11 @@ class MediaPickerService {
           `video_${Date.now()}.${this.getFileExtension(pickedFile.type || 'video/mp4')}`;
         localFilePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
 
-        try {
-          // Use RNFS to copy file from content URI to local path
-          await RNFS.copyFile(pickedFile.uri, localFilePath);
-        } catch (copyError) {
-          console.warn(
-            '[MediaPickerService] Could not copy content URI, trying readFile/writeFile:',
-            copyError,
-          );
-          try {
-            // Alternative method: read file content and write to local file
-            const fileContent = await RNFS.readFile(pickedFile.uri, 'base64');
-            await RNFS.writeFile(localFilePath, fileContent, 'base64');
-          } catch (readWriteError) {
-            console.warn(
-              '[MediaPickerService] Could not read/write file, trying downloadFile:',
-              readWriteError,
-            );
-            // Last resort: try to treat content URI as URL
-            const downloadResult = await RNFS.downloadFile({
-              fromUrl: pickedFile.uri,
-              toFile: localFilePath,
-            }).promise;
-
-            if (downloadResult.statusCode !== 200) {
-              throw new Error(
-                `Download failed with status ${downloadResult.statusCode}`,
-              );
-            }
-          }
-        }
+        await this.copyContentUriToLocalFile(
+          pickedFile.uri,
+          localFilePath,
+          pickedFile.size,
+        );
       } else {
         // For file URIs, use as is
         localFilePath = pickedFile.fileCopyUri || pickedFile.uri;
@@ -480,36 +432,11 @@ class MediaPickerService {
           `file_${Date.now()}.${this.getFileExtension(pickedFile.type || 'application/octet-stream')}`;
         localFilePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
 
-        try {
-          // Use RNFS to copy file from content URI to local path
-          await RNFS.copyFile(pickedFile.uri, localFilePath);
-        } catch (copyError) {
-          console.warn(
-            '[MediaPickerService] Could not copy content URI, trying readFile/writeFile:',
-            copyError,
-          );
-          try {
-            // Alternative method: read file content and write to local file
-            const fileContent = await RNFS.readFile(pickedFile.uri, 'base64');
-            await RNFS.writeFile(localFilePath, fileContent, 'base64');
-          } catch (readWriteError) {
-            console.warn(
-              '[MediaPickerService] Could not read/write file, trying downloadFile:',
-              readWriteError,
-            );
-            // Last resort: try to treat content URI as URL
-            const downloadResult = await RNFS.downloadFile({
-              fromUrl: pickedFile.uri,
-              toFile: localFilePath,
-            }).promise;
-
-            if (downloadResult.statusCode !== 200) {
-              throw new Error(
-                `Download failed with status ${downloadResult.statusCode}`,
-              );
-            }
-          }
-        }
+        await this.copyContentUriToLocalFile(
+          pickedFile.uri,
+          localFilePath,
+          pickedFile.size,
+        );
       } else {
         // For file URIs, use as is
         localFilePath = pickedFile.fileCopyUri || pickedFile.uri;
@@ -580,6 +507,57 @@ class MediaPickerService {
         success: false,
         error: error?.message || error?.toString() || 'Failed to pick file',
       };
+    }
+  }
+
+  private async copyContentUriToLocalFile(
+    sourceUri: string,
+    localFilePath: string,
+    declaredSize?: number | null,
+  ): Promise<void> {
+    try {
+      await RNFS.copyFile(sourceUri, localFilePath);
+      return;
+    } catch (copyError) {
+      console.warn(
+        '[MediaPickerService] Could not copy content URI, trying safer fallbacks:',
+        copyError,
+      );
+    }
+
+    try {
+      const downloadResult = await RNFS.downloadFile({
+        fromUrl: sourceUri,
+        toFile: localFilePath,
+      }).promise;
+
+      if (downloadResult.statusCode === 200) {
+        return;
+      }
+    } catch (downloadError) {
+      console.warn(
+        '[MediaPickerService] Could not download content URI fallback:',
+        downloadError,
+      );
+    }
+
+    if (declaredSize && declaredSize > MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES) {
+      throw new Error(
+        `Selected file is too large to copy safely (${(declaredSize / 1024 / 1024).toFixed(2)}MB)`,
+      );
+    }
+
+    const fileContent = await RNFS.readFile(sourceUri, 'base64');
+    try {
+      const estimatedBytes = Math.ceil((fileContent.length * 3) / 4);
+      if (estimatedBytes > MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES) {
+        throw new Error(
+          `Selected file is too large to copy safely (${(estimatedBytes / 1024 / 1024).toFixed(2)}MB)`,
+        );
+      }
+      await RNFS.writeFile(localFilePath, fileContent, 'base64');
+    } finally {
+      // Drop the large base64 string as soon as possible on low-memory devices.
     }
   }
 

@@ -32,6 +32,7 @@ const API_BASE_URL = 'https://www.androidircx.com/api';
 
 // Maximum file size: 50MB (configurable)
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+const MAX_UPLOAD_API_RESPONSE_BYTES = 128 * 1024; // API responses should be tiny JSON payloads
 
 export type MediaType =
   | 'image'
@@ -99,7 +100,9 @@ class MediaUploadService {
       console.log('[MediaUploadService] Requesting upload token:', {
         url,
         method: 'POST',
-        body: requestBody,
+        type,
+        mimeType,
+        bodyBytes: requestBody.length,
       });
 
       // Use native module for reliable POST requests
@@ -117,7 +120,17 @@ class MediaUploadService {
         ),
       });
 
-      console.log('[MediaUploadService] Raw response body:', responseBody);
+      if (typeof responseBody !== 'string') {
+        throw new Error('Invalid upload token response');
+      }
+
+      if (responseBody.length > MAX_UPLOAD_API_RESPONSE_BYTES) {
+        throw new Error('Upload token response is too large');
+      }
+
+      console.log('[MediaUploadService] Upload token response received:', {
+        bytes: responseBody.length,
+      });
 
       // Check if response is HTML (error page) instead of JSON
       if (
@@ -247,6 +260,12 @@ class MediaUploadService {
       this.activeUploads.delete(mediaId);
 
       // Parse response
+      if (typeof responseBody !== 'string') {
+        throw new Error('Invalid upload response');
+      }
+      if (responseBody.length > MAX_UPLOAD_API_RESPONSE_BYTES) {
+        throw new Error('Upload response is too large');
+      }
       const responseData = JSON.parse(responseBody);
 
       return {

@@ -1,7 +1,8 @@
 What's new in v1.9.20:
-- Improved overall app stability based on recent crash reports
-- Fixed a video playback crash caused by AndroidX Media3 dependency conflicts
-- Improved media download handling to reduce memory usage and prevent crashes with large files
-- Added safer foreground service and notification broadcast handling on newer Android versions
-- Improved stability of channel tabs, channel lists and user lists on the new React Native architecture
-- Updated dependencies and internal stability safeguards
+- Stability fixes based on recent crash reports
+- Fixed Android video playback crash caused by Media3 conflicts
+- Reduced memory use in media download/upload and DCC file flows
+- Safer API error handling for oversized/invalid responses
+- Improved channel tab/list stability on the new RN architecture
+- Safer notification/broadcast handling on newer Android versions
+- Reduced sensitive logging around media and Privacy Relay
