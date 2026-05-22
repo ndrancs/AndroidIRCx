@@ -2260,10 +2260,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.1.tgz#eaee5900122c110a3dbcb728c0597014a2621774"
   integrity sha512-oOAWABowe8EAbMyWKM0tYDKi8Yaox52D+HWZhAIJqQXbqe0xI/GV7FhLWqlEKreMkfDjshR5FKgi3mnle0h6Eg==
 
-"@react-native-async-storage/async-storage@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-3.0.3.tgz#56b2f96323088c1ca89df3276e660b00ce18a248"
-  integrity sha512-YDe/BLYns3Q9YL0DHGStDA2uH0imxC65v3XdID6dQNlelR/d5W/u3CHxJqoHNA/0HJKbmwDFQYlBWMHlyir0FA==
+"@react-native-async-storage/async-storage@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-3.1.0.tgz#0e11a3e35d9dc3d5e91e7a505d19f6082ace1e48"
+  integrity sha512-ENwbn3kj/dOapdR3GVgfX5x9f9/rxHnsqol1bUkt26lrv0aAq6UoXnTlv7y2dT7RH0AShh9B1+KAPDVjJXnk0w==
   dependencies:
     idb "8.0.3"
 
@@ -7486,10 +7486,10 @@ react-native-nitro-modules@0.35.7:
   resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.35.7.tgz#0983103d7a7803e71aeaabee9d8e3db147a6a74e"
   integrity sha512-3EiU27EmnxTlD3pAXR2OBWeDg7+9tdjKrNQOPX08rFX5hJPNIT/h1i2PjvTUieOypCGTEi9nW/SNBtK3F+4HYg==
 
-react-native-nitro-sound@^0.2.14:
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.14.tgz#cf992628297a20054a7d39bdbd20a619f6ba4ffe"
-  integrity sha512-1yToz4Ug0lj+9zwFO+cRBI1ygQCJyDgR5kK68/7n7ZUgiLqwELZcNU/yxt8bH30fwkYKKD0lfkrrB8Xaq3qnSg==
+react-native-nitro-sound@^0.2.15:
+  version "0.2.15"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.15.tgz#593c7e255f3a7a4595fdff99fca42c6d8811b3f5"
+  integrity sha512-l2EGPSPB/BJUaq8tEmvIUh8VkfEIl23ol/5zAZmseTRRkVMfDQSuTw2Wu/9+RmcTlJLUjARN5gHR7P5OwdHSDA==
   dependencies:
     "@react-native-community/slider" "^5.2.0"
 
