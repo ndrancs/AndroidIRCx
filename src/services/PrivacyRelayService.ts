@@ -27,6 +27,7 @@ type PrivacyRelayListener = (
 const API_BASE_URL = 'https://www.androidircx.com/api';
 const DEVICE_ID_STORAGE_KEY = '@AndroidIRCX:privacyRelayDeviceId';
 const API_TIMEOUT_MS = 15000;
+const MAX_API_RESPONSE_BYTES = 128 * 1024;
 
 interface ActivatePrivacyRelayInput {
   purchaseToken: string;
@@ -60,7 +61,9 @@ class PrivacyRelayService {
       `privacy-relay:POST:${endpoint}`,
     );
     const requestBody = withPlayIntegrityBody({ ...body }, playIntegrity);
-    console.log('[PrivacyRelay] API request start:', endpoint, body);
+    console.log('[PrivacyRelay] API request start:', endpoint, {
+      bodyKeys: Object.keys(body),
+    });
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -94,25 +97,50 @@ class PrivacyRelayService {
         response.status,
       );
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        let message =
-          errorText || `Request failed with status ${response.status}`;
+      const contentLengthHeader = response.headers?.get?.('content-length');
+      const contentLength = contentLengthHeader
+        ? Number.parseInt(contentLengthHeader, 10)
+        : NaN;
+      if (
+        Number.isFinite(contentLength) &&
+        contentLength > MAX_API_RESPONSE_BYTES
+      ) {
+        throw new Error('Privacy Relay backend response is too large.');
+      }
 
-        try {
-          const parsed = JSON.parse(errorText);
-          if (typeof parsed?.error === 'string') {
-            message = parsed.error;
+      if (!response.ok) {
+        let message = `Request failed with status ${response.status}`;
+        if (
+          Number.isFinite(contentLength) &&
+          contentLength <= MAX_API_RESPONSE_BYTES
+        ) {
+          const errorText = await response.text().catch(() => '');
+          try {
+            const parsed = JSON.parse(errorText);
+            if (typeof parsed?.error === 'string') {
+              message = parsed.error;
+            }
+          } catch {
+            // Avoid surfacing or logging raw server pages; keep a bounded generic error.
           }
-        } catch {
-          // Keep the raw text if the backend did not return structured JSON.
         }
 
         throw new Error(message);
       }
 
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (
+        contentType &&
+        !contentType.toLowerCase().includes('application/json')
+      ) {
+        throw new Error('Privacy Relay backend returned a non-JSON response.');
+      }
+
       const data = (await response.json()) as T;
-      console.log('[PrivacyRelay] API response ok:', endpoint, data);
+      console.log('[PrivacyRelay] API response ok:', endpoint, {
+        responseKeys:
+          data && typeof data === 'object' ? Object.keys(data as object) : [],
+      });
       return data;
     } catch (error: any) {
       console.log(

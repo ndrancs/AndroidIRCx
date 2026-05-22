@@ -81,6 +81,31 @@ describe('MediaUploadService', () => {
     );
   });
 
+  it('rejects oversized token responses before parsing', async () => {
+    mockHttpPost.postRequest.mockResolvedValueOnce('x'.repeat(129 * 1024));
+
+    await expect(mediaUploadService.requestUploadToken('file')).rejects.toThrow(
+      'Upload token response is too large',
+    );
+  });
+
+  it('does not log raw upload token request bodies or response bodies', async () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    await mediaUploadService.requestUploadToken('image', 'image/png');
+
+    expect(logSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ body: expect.any(String) }),
+    );
+    expect(logSpy).not.toHaveBeenCalledWith(
+      '[MediaUploadService] Raw response body:',
+      expect.any(String),
+    );
+
+    logSpy.mockRestore();
+  });
+
   it('fails validateFile when target is not a file', async () => {
     mockRNFS.stat.mockResolvedValueOnce({ size: 100, isFile: () => false });
 

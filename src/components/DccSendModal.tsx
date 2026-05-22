@@ -20,6 +20,8 @@ import {
 } from '@react-native-documents/picker';
 import RNFS from 'react-native-fs';
 
+const MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES = 8 * 1024 * 1024;
+
 interface DccSendModalProps {
   visible: boolean;
   onClose: () => void;
@@ -53,10 +55,13 @@ export const DccSendModal: React.FC<DccSendModalProps> = ({
       })) as any[];
 
       if (result?.uri) {
-        console.log(
-          '[DccSendModal] Pick result:',
-          JSON.stringify(result, null, 2),
-        );
+        console.log('[DccSendModal] Pick result:', {
+          hasUri: Boolean(result.uri),
+          hasFileCopyUri: Boolean(result.fileCopyUri),
+          name: result.name,
+          size: result.size,
+          type: result.type,
+        });
 
         let localFilePath: string;
         const pickerFileName = result.name || `file_${Date.now()}`;
@@ -80,24 +85,69 @@ export const DccSendModal: React.FC<DccSendModalProps> = ({
             console.log('[DccSendModal] File copied via copyFile');
           } catch (copyError) {
             console.warn(
-              '[DccSendModal] copyFile failed, trying readFile/writeFile:',
+              '[DccSendModal] copyFile failed, trying safer fallbacks:',
               copyError,
             );
             try {
-              // Alternative: read as base64 and write
-              const content = await RNFS.readFile(result.uri, 'base64');
-              await RNFS.writeFile(localFilePath, content, 'base64');
-              console.log('[DccSendModal] File copied via readFile/writeFile');
-            } catch (rwError) {
-              console.error(
-                '[DccSendModal] Failed to copy content URI:',
-                rwError,
+              const downloadResult = await RNFS.downloadFile({
+                fromUrl: result.uri,
+                toFile: localFilePath,
+              }).promise;
+
+              if (downloadResult.statusCode === 200) {
+                console.log('[DccSendModal] File copied via downloadFile');
+              } else {
+                throw new Error(
+                  `Download failed with status ${downloadResult.statusCode}`,
+                );
+              }
+            } catch (downloadError) {
+              console.warn(
+                '[DccSendModal] downloadFile fallback failed:',
+                downloadError,
               );
-              Alert.alert(
-                'Error',
-                'Could not access the selected file. Please try a different file.',
-              );
-              return;
+
+              try {
+                if (
+                  result.size &&
+                  result.size > MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES
+                ) {
+                  throw new Error(
+                    `Selected file is too large to copy safely (${(
+                      result.size /
+                      1024 /
+                      1024
+                    ).toFixed(2)}MB)`,
+                  );
+                }
+
+                // Last resort: read as base64 only for small content URIs.
+                const content = await RNFS.readFile(result.uri, 'base64');
+                const estimatedBytes = Math.ceil((content.length * 3) / 4);
+                if (estimatedBytes > MAX_IN_MEMORY_CONTENT_URI_COPY_BYTES) {
+                  throw new Error(
+                    `Selected file is too large to copy safely (${(
+                      estimatedBytes /
+                      1024 /
+                      1024
+                    ).toFixed(2)}MB)`,
+                  );
+                }
+                await RNFS.writeFile(localFilePath, content, 'base64');
+                console.log(
+                  '[DccSendModal] File copied via readFile/writeFile',
+                );
+              } catch (rwError) {
+                console.error(
+                  '[DccSendModal] Failed to copy content URI:',
+                  rwError,
+                );
+                Alert.alert(
+                  'Error',
+                  'Could not access the selected file. Please try a different file.',
+                );
+                return;
+              }
             }
           }
         } else {
