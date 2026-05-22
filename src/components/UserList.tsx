@@ -1641,12 +1641,12 @@ export const UserList: React.FC<UserListProps> = ({
           style={styles.scrollView}
           data={chunkedUsers}
           renderItem={({ item }) => renderUserRow(item)}
-          keyExtractor={(item, index) => `${item.nick}-${index}`}
+          keyExtractor={item => item.nick}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={emptyState}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          removeClippedSubviews={true}
+          removeClippedSubviews={false}
         />
       ) : userListType === 'flatlist' ? (
         // FlatList - virtualized fallback
@@ -1654,7 +1654,7 @@ export const UserList: React.FC<UserListProps> = ({
           style={styles.scrollView}
           data={chunkedUsers}
           renderItem={({ item }) => renderUserRow(item)}
-          keyExtractor={(item, index) => `${item.nick}-${index}`}
+          keyExtractor={item => item.nick}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={emptyState}
           initialNumToRender={
@@ -1662,7 +1662,7 @@ export const UserList: React.FC<UserListProps> = ({
           }
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          removeClippedSubviews={true}
+          removeClippedSubviews={false}
         />
       ) : (
         // Simple ScrollView

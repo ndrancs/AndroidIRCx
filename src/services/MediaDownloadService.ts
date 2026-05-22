@@ -38,6 +38,18 @@ type ProgressCallback = (progress: DownloadProgress) => void;
 
 const API_BASE_URL = 'https://www.androidircx.com/api';
 const TEMP_DIR = `${RNFS.CachesDirectoryPath}/temp_media`;
+const MAX_ENCRYPTED_MEDIA_DOWNLOAD_BYTES = 64 * 1024 * 1024;
+
+const parseContentLength = (value?: string | number | null): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+};
 
 /**
  * MediaDownloadService - Download and decrypt encrypted media
@@ -153,45 +165,74 @@ class MediaDownloadService {
         `media-download:GET:/media/download/${mediaId}`,
       );
       const integrityHeaders = withPlayIntegrityHeaders({}, playIntegrity);
-      const requestInit =
-        Object.keys(integrityHeaders).length > 0
-          ? { method: 'GET', headers: integrityHeaders }
-          : undefined;
+      const headers =
+        Object.keys(integrityHeaders).length > 0 ? integrityHeaders : undefined;
 
-      // Use fetch to download binary file directly (avoids multipart issues)
-      const response = requestInit
-        ? await fetch(downloadUrl, requestInit)
-        : await fetch(downloadUrl);
+      // Download directly to disk instead of fetch -> blob -> FileReader -> base64.
+      // The old path duplicated large media in JS/native memory and produced OOM
+      // crashes when Android tried to materialize huge response bodies as strings.
+      let rejectedForSize = false;
+      const download = RNFS.downloadFile({
+        fromUrl: downloadUrl,
+        toFile: tempPath,
+        headers,
+        connectionTimeout: 15000,
+        readTimeout: 60000,
+        progressInterval: 250,
+        begin: info => {
+          const contentLength = parseContentLength(info.contentLength);
+          if (
+            contentLength !== null &&
+            contentLength > MAX_ENCRYPTED_MEDIA_DOWNLOAD_BYTES
+          ) {
+            rejectedForSize = true;
+            RNFS.stopDownload(download.jobId);
+            return;
+          }
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Download failed`);
-      }
+          if (onProgress) {
+            onProgress({
+              bytesWritten: 0,
+              contentLength: contentLength ?? 0,
+              percentage: 0,
+            });
+          }
+        },
+        progress: info => {
+          const contentLength = parseContentLength(info.contentLength) ?? 0;
+          if (info.bytesWritten > MAX_ENCRYPTED_MEDIA_DOWNLOAD_BYTES) {
+            rejectedForSize = true;
+            RNFS.stopDownload(download.jobId);
+            return;
+          }
 
-      // Get response as blob and convert to base64 for RNFS
-      const blob = await response.blob();
-      const reader = new FileReader();
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          // Remove data URL prefix (data:application/octet-stream;base64,)
-          const base64 = result.split(',')[1] || result;
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
+          if (onProgress) {
+            onProgress({
+              bytesWritten: info.bytesWritten,
+              contentLength,
+              percentage:
+                contentLength > 0
+                  ? Math.min(100, (info.bytesWritten / contentLength) * 100)
+                  : 0,
+            });
+          }
+        },
       });
 
-      // Write binary file to temp path
-      await RNFS.writeFile(tempPath, base64Data, 'base64');
+      const downloadResult = await download.promise;
 
-      // Report progress if callback provided
-      if (onProgress) {
-        const contentLength = blob.size;
-        onProgress({
-          bytesWritten: contentLength,
-          contentLength: contentLength,
-          percentage: 100,
-        });
+      if (rejectedForSize) {
+        throw new Error('Media file is too large to download safely');
+      }
+
+      if (downloadResult.statusCode < 200 || downloadResult.statusCode >= 300) {
+        throw new Error(`HTTP ${downloadResult.statusCode}: Download failed`);
+      }
+
+      const downloadedStat = await RNFS.stat(tempPath);
+      const downloadedSize = parseContentLength(downloadedStat.size) ?? 0;
+      if (downloadedSize > MAX_ENCRYPTED_MEDIA_DOWNLOAD_BYTES) {
+        throw new Error('Media file is too large to decrypt safely');
       }
 
       // Step 2: Decrypt media

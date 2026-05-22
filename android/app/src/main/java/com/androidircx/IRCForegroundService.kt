@@ -233,7 +233,15 @@ class IRCForegroundService : Service() {
         val intent = Intent(ACTION_DISCONNECT_QUIT_BROADCAST).apply {
             setPackage(packageName)
         }
-        sendBroadcast(intent)
+        try {
+            sendBroadcast(intent)
+        } catch (e: Exception) {
+            android.util.Log.w(
+                "IRCForegroundService",
+                "Unable to send disconnect broadcast: ${e.message}",
+                e
+            )
+        }
     }
 
     private fun stopForegroundService() {
@@ -276,7 +284,15 @@ class IRCForegroundService : Service() {
         val intent = Intent("com.androidircx.action.SERVICE_TIMEOUT").apply {
             setPackage(packageName)
         }
-        sendBroadcast(intent)
+        try {
+            sendBroadcast(intent)
+        } catch (e: Exception) {
+            android.util.Log.w(
+                "IRCForegroundService",
+                "Unable to send disconnect broadcast: ${e.message}",
+                e
+            )
+        }
 
         // Stop the service gracefully
         stopForegroundService()

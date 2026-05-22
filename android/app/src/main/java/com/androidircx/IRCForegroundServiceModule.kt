@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.Promise
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class IRCForegroundServiceModule(reactContext: ReactApplicationContext) :
@@ -20,9 +20,24 @@ class IRCForegroundServiceModule(reactContext: ReactApplicationContext) :
             if (intent?.action != IRCForegroundService.ACTION_DISCONNECT_QUIT_BROADCAST) {
                 return
             }
-            reactApplicationContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("IRCForegroundServiceDisconnectQuit", null)
+            if (!reactApplicationContext.hasActiveReactInstance()) {
+                android.util.Log.w(
+                    "IRCForegroundService",
+                    "Disconnect action received but React bridge is not active; ignoring event emit"
+                )
+                return
+            }
+            try {
+                reactApplicationContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("IRCForegroundServiceDisconnectQuit", null)
+            } catch (e: Exception) {
+                android.util.Log.w(
+                    "IRCForegroundService",
+                    "Unable to emit disconnect event to React Native: ${e.message}",
+                    e
+                )
+            }
         }
     }
 
