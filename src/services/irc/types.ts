@@ -137,6 +137,7 @@ export interface NumericHandlerContext {
 
   // Capabilities
   hasCapability: (cap: string) => boolean;
+  processISupport: (tokens: string[]) => void;
 
   // Config
   getConfig: () => any;

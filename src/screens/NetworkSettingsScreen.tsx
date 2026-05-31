@@ -16,7 +16,11 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
-import { IRCNetworkConfig, settingsService } from '../services/SettingsService';
+import {
+  IRCNetworkConfig,
+  IRCWebSocketSubprotocol,
+  settingsService,
+} from '../services/SettingsService';
 import { useT } from '../i18n/transifex';
 import { CertificateGeneratorModal } from '../components/modals/CertificateGeneratorModal';
 import { CertificateSelectorModal } from '../components/modals/CertificateSelectorModal';
@@ -32,6 +36,22 @@ interface NetworkSettingsScreenProps {
   onCancel: () => void;
   onShowIdentityProfiles?: () => void;
 }
+
+const isIRCWebSocketSubprotocol = (
+  value: string,
+): value is IRCWebSocketSubprotocol =>
+  value === 'binary.ircv3.net' || value === 'text.ircv3.net';
+
+const parseWebSocketSubprotocols = (
+  value: string,
+): IRCWebSocketSubprotocol[] | undefined => {
+  const protocols = value
+    .split(',')
+    .map(protocol => protocol.trim())
+    .filter(isIRCWebSocketSubprotocol)
+    .slice(0, 2);
+  return protocols.length > 0 ? protocols : undefined;
+};
 
 export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
   networkId,
@@ -60,6 +80,17 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
   const [proxyPort, setProxyPort] = useState('9050');
   const [proxyUsername, setProxyUsername] = useState('');
   const [proxyPassword, setProxyPassword] = useState('');
+  const [webSocketEnabled, setWebSocketEnabled] = useState(false);
+  const [webSocketUrl, setWebSocketUrl] = useState('');
+  const [webSocketSubprotocols, setWebSocketSubprotocols] = useState(
+    'binary.ircv3.net, text.ircv3.net',
+  );
+  const [webircEnabled, setWebircEnabled] = useState(false);
+  const [webircPassword, setWebircPassword] = useState('');
+  const [webircGateway, setWebircGateway] = useState('');
+  const [webircHostname, setWebircHostname] = useState('');
+  const [webircIp, setWebircIp] = useState('');
+  const [webircOptions, setWebircOptions] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +142,18 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
         );
         setProxyUsername(network.proxy?.username || '');
         setProxyPassword(network.proxy?.password || '');
+        setWebSocketEnabled(network.transport === 'websocket');
+        setWebSocketUrl(network.webSocketUrl || '');
+        setWebSocketSubprotocols(
+          network.webSocketSubprotocols?.join(', ') ||
+            'binary.ircv3.net, text.ircv3.net',
+        );
+        setWebircEnabled(Boolean(network.webirc?.enabled));
+        setWebircPassword(network.webirc?.password || '');
+        setWebircGateway(network.webirc?.gateway || '');
+        setWebircHostname(network.webirc?.hostname || '');
+        setWebircIp(network.webirc?.ip || '');
+        setWebircOptions(network.webirc?.options?.join(', ') || '');
       } else {
         setError(t('Network not found'));
       }
@@ -137,6 +180,15 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
       setProxyPort('9050');
       setProxyUsername('');
       setProxyPassword('');
+      setWebSocketEnabled(false);
+      setWebSocketUrl('');
+      setWebSocketSubprotocols('binary.ircv3.net, text.ircv3.net');
+      setWebircEnabled(false);
+      setWebircPassword('');
+      setWebircGateway('');
+      setWebircHostname('');
+      setWebircIp('');
+      setWebircOptions('');
     }
   }, [networkId, loadNetwork]);
 
@@ -189,6 +241,21 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
       );
       return;
     }
+    if (
+      webircEnabled &&
+      (!webircPassword.trim() ||
+        !webircGateway.trim() ||
+        !webircHostname.trim() ||
+        !webircIp.trim())
+    ) {
+      Alert.alert(
+        t('Error'),
+        t(
+          'WEBIRC requires password, gateway, hostname, and IP before it can be enabled.',
+        ),
+      );
+      return;
+    }
 
     const existingNetwork = networkId
       ? await settingsService.getNetwork(networkId)
@@ -230,6 +297,27 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
           : undefined,
       clientCert: clientCert.trim() || undefined,
       clientKey: clientKey.trim() || undefined,
+      transport: webSocketEnabled ? 'websocket' : 'tcp',
+      webSocketUrl:
+        webSocketEnabled && webSocketUrl.trim()
+          ? webSocketUrl.trim()
+          : undefined,
+      webSocketSubprotocols: webSocketEnabled
+        ? parseWebSocketSubprotocols(webSocketSubprotocols)
+        : undefined,
+      webirc: webircEnabled
+        ? {
+            enabled: true,
+            password: webircPassword.trim(),
+            gateway: webircGateway.trim(),
+            hostname: webircHostname.trim(),
+            ip: webircIp.trim(),
+            options: webircOptions
+              .split(',')
+              .map(option => option.trim())
+              .filter(Boolean),
+          }
+        : undefined,
       connectOnStartup: false,
     };
 
@@ -525,6 +613,136 @@ export const NetworkSettingsScreen: React.FC<NetworkSettingsScreenProps> = ({
                   placeholder={t('optional')}
                   placeholderTextColor={colors.inputPlaceholder}
                   secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {t('IRCv3 Transport and Gateway')}
+              </Text>
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>{t('Use IRCv3 WebSocket')}</Text>
+                <Switch
+                  value={webSocketEnabled}
+                  onValueChange={setWebSocketEnabled}
+                  trackColor={{ false: colors.border, true: colors.accent }}
+                  thumbColor={
+                    webSocketEnabled ? colors.onAccent : colors.surfaceVariant
+                  }
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WebSocket URL')}</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    !webSocketEnabled && styles.inputDisabled,
+                  ]}
+                  value={webSocketUrl}
+                  editable={webSocketEnabled}
+                  onChangeText={setWebSocketUrl}
+                  placeholder={t('wss://irc.example.net:6697/')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  autoCapitalize="none"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WebSocket Subprotocols')}</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    !webSocketEnabled && styles.inputDisabled,
+                  ]}
+                  value={webSocketSubprotocols}
+                  editable={webSocketEnabled}
+                  onChangeText={setWebSocketSubprotocols}
+                  placeholder={t('binary.ircv3.net, text.ircv3.net')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  autoCapitalize="none"
+                />
+              </View>
+              <Text style={styles.helpText}>
+                {t(
+                  'Leave URL blank to use ws/wss with the network host and port.',
+                )}
+              </Text>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>{t('Enable WEBIRC')}</Text>
+                <Switch
+                  value={webircEnabled}
+                  onValueChange={setWebircEnabled}
+                  trackColor={{ false: colors.border, true: colors.accent }}
+                  thumbColor={
+                    webircEnabled ? colors.onAccent : colors.surfaceVariant
+                  }
+                />
+              </View>
+              <Text style={styles.helpText}>
+                {t(
+                  'WEBIRC is only for trusted gateway/browser-style deployments where the IRC server has configured this password.',
+                )}
+              </Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WEBIRC Password')}</Text>
+                <TextInput
+                  style={[styles.input, !webircEnabled && styles.inputDisabled]}
+                  value={webircPassword}
+                  editable={webircEnabled}
+                  onChangeText={setWebircPassword}
+                  placeholder={t('shared WEBIRC password')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WEBIRC Gateway')}</Text>
+                <TextInput
+                  style={[styles.input, !webircEnabled && styles.inputDisabled]}
+                  value={webircGateway}
+                  editable={webircEnabled}
+                  onChangeText={setWebircGateway}
+                  placeholder={t('AndroidIRCX')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  autoCapitalize="none"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WEBIRC Hostname')}</Text>
+                <TextInput
+                  style={[styles.input, !webircEnabled && styles.inputDisabled]}
+                  value={webircHostname}
+                  editable={webircEnabled}
+                  onChangeText={setWebircHostname}
+                  placeholder={t('client.example.net')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  autoCapitalize="none"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WEBIRC IP')}</Text>
+                <TextInput
+                  style={[styles.input, !webircEnabled && styles.inputDisabled]}
+                  value={webircIp}
+                  editable={webircEnabled}
+                  onChangeText={setWebircIp}
+                  placeholder={t('203.0.113.10')}
+                  placeholderTextColor={colors.inputPlaceholder}
+                  autoCapitalize="none"
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('WEBIRC Options')}</Text>
+                <TextInput
+                  style={[styles.input, !webircEnabled && styles.inputDisabled]}
+                  value={webircOptions}
+                  editable={webircEnabled}
+                  onChangeText={setWebircOptions}
+                  placeholder={t('secure, tls')}
+                  placeholderTextColor={colors.inputPlaceholder}
                   autoCapitalize="none"
                 />
               </View>

@@ -1,0 +1,4 @@
+What's new in v1.9.22:
+- Expanded IRCv3 compatibility with WebSocket/WebIRC, CAP/ISUPPORT diagnostics, message tags, CHATHISTORY navigation, read markers, and metadata support.
+- Improved IRCv3 network settings and secure WebIRC password storage.
+- Stability and test coverage improvements.

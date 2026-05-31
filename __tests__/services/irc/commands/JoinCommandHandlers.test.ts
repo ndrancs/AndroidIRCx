@@ -62,6 +62,17 @@ describe('JoinCommandHandlers', () => {
       expect(ctx.ensureChannelUsersMap).toHaveBeenCalledWith('#general');
     });
 
+    it('requests NAMES after own join when no-implicit-names is enabled', () => {
+      ctx.getCurrentNick = jest.fn().mockReturnValue('TestUser');
+      ctx.extractNick = jest.fn().mockReturnValue('TestUser');
+      ctx.getUser = jest.fn().mockReturnValue(undefined);
+      ctx.isNoImplicitNamesEnabled = jest.fn().mockReturnValue(true);
+
+      handleJOIN(ctx, 'TestUser!~user@host.com', ['#general'], Date.now());
+
+      expect(ctx.sendRaw).toHaveBeenCalledWith('NAMES #general');
+    });
+
     it('should handle other user joining channel', () => {
       ctx.getCurrentNick = jest.fn().mockReturnValue('TestUser');
       ctx.extractNick = jest.fn().mockReturnValue('OtherUser');

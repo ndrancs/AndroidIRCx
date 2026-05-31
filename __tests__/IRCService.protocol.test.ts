@@ -301,6 +301,7 @@ describe('CAPHandlers', () => {
       capAvailable: new Set<string>(),
       capEnabledSet: new Set<string>(),
       capRequested: new Set<string>(),
+      capValues: new Map<string, string>(),
       config: null as any,
       getCapLSReceived: jest.fn(() => false),
       setCapLSReceived: jest.fn(),
@@ -355,6 +356,7 @@ describe('CAPHandlers', () => {
 
       expect(ctx.capAvailable.has('sasl')).toBe(true);
       expect(ctx.capAvailable.has('sts')).toBe(true);
+      expect(ctx.capValues.get('sts')).toBe('port=6697');
     });
 
     it('emits capabilities event', () => {
@@ -420,13 +422,12 @@ describe('CAPHandlers', () => {
       });
       const handler = new CAPHandlers(ctx);
 
-      // STS ACK with simple key=value (split at first = gives capName=sts, capValue=duration...)
-      handler.handleCAPCommand(['ACK', ':sts=duration']);
+      handler.handleCAPCommand(['ACK', ':sts=duration=60']);
 
       expect(ctx.emit).toHaveBeenCalledWith(
         'sts-policy',
         'irc.example.com',
-        'duration',
+        'duration=60',
       );
     });
   });

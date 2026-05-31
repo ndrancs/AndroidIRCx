@@ -294,6 +294,7 @@ describe('ConnectionNetworkSection', () => {
       );
       expect(mockCapturedItems.has('connection-auto-reconnect')).toBe(true);
       expect(mockCapturedItems.has('connection-quality')).toBe(true);
+      expect(mockCapturedItems.has('connection-ircv3-diagnostics')).toBe(true);
       expect(mockCapturedItems.has('identity-profiles')).toBe(true);
       expect(mockCapturedItems.has('connection-global-proxy')).toBe(true);
       expect(mockCapturedItems.has('channel-favorites')).toBe(true);
@@ -302,6 +303,53 @@ describe('ConnectionNetworkSection', () => {
       expect(mockCapturedItems.has('channel-auto-voice')).toBe(true);
       expect(mockCapturedItems.has('connection-dcc')).toBe(true);
     });
+  });
+
+  it('shows IRCv3 diagnostics for the active network', async () => {
+    mockConnectionGet.mockReturnValue({
+      ircService: {
+        getAvailableCapabilities: jest.fn(() => [
+          'server-time',
+          'message-tags',
+        ]),
+        getEnabledCapabilities: jest.fn(() => ['server-time']),
+        getCapabilityValues: jest.fn(() => ({ sasl: 'PLAIN' })),
+        getISupportValues: jest.fn(() => ({
+          NETWORK: 'ExampleNet',
+          CHATHISTORY: true,
+        })),
+        getTransportInfo: jest.fn(() => ({
+          transport: 'websocket',
+          webSocketProtocol: 'text.ircv3.net',
+        })),
+      },
+    });
+
+    render(
+      <ConnectionNetworkSection
+        colors={colors}
+        styles={styles as any}
+        settingIcons={{}}
+        currentNetwork="net1"
+      />,
+    );
+
+    await waitFor(() =>
+      expect(mockCapturedItems.has('connection-ircv3-diagnostics')).toBe(true),
+    );
+
+    mockCapturedItems.get('connection-ircv3-diagnostics').onPress();
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'IRCv3 Diagnostics',
+      expect.stringContaining('Transport: websocket (text.ircv3.net)'),
+      [{ text: 'OK' }],
+    );
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'IRCv3 Diagnostics',
+      expect.stringContaining('Advertised CAPs (2): server-time, message-tags'),
+      [{ text: 'OK' }],
+    );
   });
 
   it('triggers callback props correctly', async () => {

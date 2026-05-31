@@ -84,6 +84,7 @@ export interface CommandHandlerContext {
     channel?: string,
   ) => void;
   isExtendedJoinEnabled: () => boolean;
+  isNoImplicitNamesEnabled?: () => boolean;
   emitJoinedChannel: (channel: string) => void;
   addPendingChannelIntro: (channel: string) => void;
   emitPart: (channel: string, nick: string) => void;
@@ -171,6 +172,7 @@ export type CommandHandler = (
     typingTag?: string;
     multilineConcatTag?: string;
     intentTag?: string;
+    tags?: Record<string, string>;
   },
 ) => void;
 

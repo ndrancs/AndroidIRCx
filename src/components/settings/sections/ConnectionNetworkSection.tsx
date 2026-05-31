@@ -63,6 +63,7 @@ import { biometricAuthService } from '../../../services/BiometricAuthService';
 import { secureStorageService } from '../../../services/SecureStorageService';
 import { connectionManager } from '../../../services/ConnectionManager';
 import { serviceDetectionService } from '../../../services/ServiceDetectionService';
+import { IRCV3_CAPABILITY_DEFINITIONS } from '../../../services/irc/IRCv3CapabilityRegistry';
 
 interface ConnectionNetworkSectionProps {
   colors: {
@@ -114,6 +115,32 @@ type GlobalProxySettings = {
 };
 
 const PIN_STORAGE_KEY = '@AndroidIRCX:pin-lock';
+
+const formatDiagnosticList = (values: string[], maxItems = 24): string => {
+  if (values.length === 0) return 'none';
+  const visible = values.slice(0, maxItems);
+  const suffix =
+    values.length > visible.length
+      ? `, +${values.length - visible.length} more`
+      : '';
+  return `${visible.join(', ')}${suffix}`;
+};
+
+const formatDiagnosticRecord = (
+  record: Record<string, string | true>,
+  maxItems = 18,
+): string => {
+  const entries = Object.entries(record).sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length === 0) return 'none';
+  const visible = entries
+    .slice(0, maxItems)
+    .map(([key, value]) => (value === true ? key : `${key}=${value}`));
+  const suffix =
+    entries.length > visible.length
+      ? `, +${entries.length - visible.length} more`
+      : '';
+  return `${visible.join(', ')}${suffix}`;
+};
 
 export const ConnectionNetworkSection: React.FC<
   ConnectionNetworkSectionProps
@@ -1280,6 +1307,88 @@ export const ConnectionNetworkSection: React.FC<
     return getDefaultAutoReconnectConfig();
   }, [currentNetwork, getDefaultAutoReconnectConfig]);
 
+  const showIRCv3Diagnostics = useCallback(() => {
+    const title = t('IRCv3 Diagnostics', { _tags: tags });
+    if (!currentNetwork) {
+      Alert.alert(
+        title,
+        t('Select or connect a network before opening IRCv3 diagnostics.', {
+          _tags: tags,
+        }),
+        [{ text: t('OK', { _tags: tags }) }],
+      );
+      return;
+    }
+
+    const connection = connectionManager.getConnection(currentNetwork);
+    if (!connection) {
+      Alert.alert(
+        title,
+        t('No active IRC connection for this network.', { _tags: tags }),
+        [{ text: t('OK', { _tags: tags }) }],
+      );
+      return;
+    }
+
+    const ircService = connection.ircService as any;
+    const availableCaps: string[] =
+      ircService.getAvailableCapabilities?.() || [];
+    const enabledCaps: string[] = ircService.getEnabledCapabilities?.() || [];
+    const capValues: Record<string, string> =
+      ircService.getCapabilityValues?.() || {};
+    const isupportValues: Record<string, string | true> =
+      ircService.getISupportValues?.() || {};
+    const transportInfo =
+      ircService.getTransportInfo?.() || ({ transport: 'tcp' } as const);
+
+    const availableSet = new Set(availableCaps);
+    const enabledSet = new Set(enabledCaps);
+    const capReasons = IRCV3_CAPABILITY_DEFINITIONS.filter(
+      definition => definition.status !== 'deprecated',
+    )
+      .map(definition => {
+        if (!availableSet.has(definition.name)) {
+          return `${definition.name}: not advertised`;
+        }
+        if (!enabledSet.has(definition.name)) {
+          return `${definition.name}: advertised but not enabled`;
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+    const requiredISupportTokens = [
+      'CHATHISTORY',
+      'MSGREFTYPES',
+      'MONITOR',
+      'PREFIX',
+      'WHOX',
+      'UTF8ONLY',
+      'ACCOUNTEXTBAN',
+      'NETWORK',
+      'draft/ICON',
+    ];
+    const isupportReasons = requiredISupportTokens
+      .filter(token => isupportValues[token] === undefined)
+      .map(token => `${token}: ISUPPORT token not advertised`);
+    const unavailableReasons = [...capReasons, ...isupportReasons];
+    const protocol = transportInfo.webSocketProtocol
+      ? ` (${transportInfo.webSocketProtocol})`
+      : '';
+
+    Alert.alert(
+      title,
+      [
+        `Transport: ${transportInfo.transport}${protocol}`,
+        `Advertised CAPs (${availableCaps.length}): ${formatDiagnosticList(availableCaps)}`,
+        `Enabled CAPs (${enabledCaps.length}): ${formatDiagnosticList(enabledCaps)}`,
+        `CAP values: ${formatDiagnosticRecord(capValues)}`,
+        `ISUPPORT: ${formatDiagnosticRecord(isupportValues)}`,
+        `Unavailable: ${formatDiagnosticList(unavailableReasons, 18)}`,
+      ].join('\n\n'),
+      [{ text: t('OK', { _tags: tags }) }],
+    );
+  }, [currentNetwork, t, tags]);
+
   const sectionData: SettingItemType[] = useMemo(() => {
     const items: SettingItemType[] = [
       {
@@ -1804,6 +1913,31 @@ export const ConnectionNetworkSection: React.FC<
             },
           },
         ],
+      },
+      {
+        id: 'connection-ircv3-diagnostics',
+        title: t('IRCv3 Diagnostics', { _tags: tags }),
+        description: currentNetwork
+          ? t(
+              'View CAP, ISUPPORT, transport, and unavailable feature details',
+              {
+                _tags: tags,
+              },
+            )
+          : t('Connect a network to inspect IRCv3 details', { _tags: tags }),
+        type: 'button',
+        disabled: !currentNetwork,
+        searchKeywords: [
+          'ircv3',
+          'cap',
+          'capabilities',
+          'isupport',
+          'diagnostics',
+          'transport',
+          'websocket',
+          'webirc',
+        ],
+        onPress: showIRCv3Diagnostics,
       },
       {
         id: 'identity-profiles',
@@ -2388,6 +2522,7 @@ export const ConnectionNetworkSection: React.FC<
     updateFloodProtectionConfig,
     updateLagMonitoringConfig,
     openQuickConnectModal,
+    showIRCv3Diagnostics,
     unlockPasswords,
     handleBiometricLockToggle,
     handlePinLockToggle,

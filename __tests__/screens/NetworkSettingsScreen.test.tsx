@@ -235,7 +235,7 @@ describe('NetworkSettingsScreen', () => {
 
   it('saves proxy and sasl configuration', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
-    const { UNSAFE_getByType, findByPlaceholderText, findByText } = render(
+    const { UNSAFE_getAllByType, findByPlaceholderText, findByText } = render(
       <NetworkSettingsScreen onSave={onSave} onCancel={jest.fn()} />,
     );
 
@@ -252,8 +252,8 @@ describe('NetworkSettingsScreen', () => {
       'Real',
     );
 
-    const switchNode = await waitFor(() =>
-      UNSAFE_getByType(require('react-native').Switch),
+    const switchNode = await waitFor(
+      () => UNSAFE_getAllByType(require('react-native').Switch)[0],
     );
     fireEvent(switchNode, 'valueChange', true);
 
@@ -282,6 +282,61 @@ describe('NetworkSettingsScreen', () => {
             password: 'pwd',
             mechanism: 'SCRAM-SHA-256',
           }),
+        }),
+      );
+    });
+  });
+
+  it('saves IRCv3 WebSocket and WEBIRC configuration', async () => {
+    settingsService.getNetwork.mockResolvedValue({
+      id: 'net-1',
+      name: 'GatewayNet',
+      nick: 'nick',
+      altNick: 'nick_',
+      realname: 'Real',
+      ident: 'ident',
+      servers: [{ id: 'srv-1' }],
+      transport: 'websocket',
+      webSocketUrl: 'wss://gateway.example.net/irc',
+      webSocketSubprotocols: ['text.ircv3.net'],
+      webirc: {
+        enabled: true,
+        password: 'webirc-secret',
+        gateway: 'gateway-name',
+        hostname: 'client.example.net',
+        ip: '203.0.113.10',
+        options: ['secure'],
+      },
+    });
+    const onSave = jest.fn().mockResolvedValue(undefined);
+    const { findByDisplayValue, findByText } = render(
+      <NetworkSettingsScreen
+        networkId="net-1"
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />,
+    );
+
+    expect(
+      await findByDisplayValue('wss://gateway.example.net/irc'),
+    ).toBeTruthy();
+    expect(await findByDisplayValue('gateway-name')).toBeTruthy();
+    fireEvent.press(await findByText('Save'));
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transport: 'websocket',
+          webSocketUrl: 'wss://gateway.example.net/irc',
+          webSocketSubprotocols: ['text.ircv3.net'],
+          webirc: {
+            enabled: true,
+            password: 'webirc-secret',
+            gateway: 'gateway-name',
+            hostname: 'client.example.net',
+            ip: '203.0.113.10',
+            options: ['secure'],
+          },
         }),
       );
     });

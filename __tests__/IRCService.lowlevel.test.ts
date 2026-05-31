@@ -516,6 +516,71 @@ describe('IRCService low-level branches', () => {
     tlsSocket.emit('error', { message: 'oops', code: 'EPIPE' });
   });
 
+  it('connects with IRCv3 WebSocket transport and sends WebIRC before CAP', async () => {
+    const originalWebSocket = (globalThis as any).WebSocket;
+    const sockets: any[] = [];
+    class MockWebSocket {
+      public onopen: (() => void) | null = null;
+      public onmessage: ((event: { data: unknown }) => void) | null = null;
+      public onerror: ((event: unknown) => void) | null = null;
+      public onclose: (() => void) | null = null;
+      public sent: string[] = [];
+      public protocol = 'text.ircv3.net';
+
+      constructor(
+        public url: string,
+        public protocols: string[],
+      ) {
+        sockets.push(this);
+      }
+
+      send(data: string) {
+        this.sent.push(data);
+      }
+
+      close() {}
+    }
+    (globalThis as any).WebSocket = MockWebSocket;
+
+    const wsIrc = new IRCService();
+    const promise = wsIrc.connect({
+      host: 'irc.example',
+      port: 443,
+      nick: 'tester',
+      username: 'tester',
+      realname: 'Tester',
+      transport: 'websocket',
+      webSocketUrl: 'wss://irc.example/webirc',
+      webirc: {
+        enabled: true,
+        password: 'shared',
+        gateway: 'androidircx',
+        hostname: 'user.example',
+        ip: '203.0.113.10',
+      },
+    });
+
+    expect(sockets[0].url).toBe('wss://irc.example/webirc');
+    sockets[0].onopen();
+    await expect(promise).resolves.toBeUndefined();
+
+    expect(sockets[0].sent[0]).toBe(
+      'WEBIRC shared androidircx user.example 203.0.113.10',
+    );
+    expect(sockets[0].sent[1]).toBe('CAP LS 302');
+    expect(wsIrc.getTransportInfo()).toEqual({
+      transport: 'websocket',
+      webSocketProtocol: 'text.ircv3.net',
+    });
+
+    sockets[0].onmessage({
+      data: '@time=2026-05-31T12\\:00\\:00.000Z :s PING :abc',
+    });
+    expect(sockets[0].sent).toContain('PONG :abc');
+
+    (globalThis as any).WebSocket = originalWebSocket;
+  });
+
   it('covers getBatchLabelManager real initializer and wrappers', () => {
     const sendRawSpy = jest.spyOn(irc, 'sendRaw');
     (irc as any).capEnabledSet.add('labeled-response');

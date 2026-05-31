@@ -28,6 +28,8 @@ export interface IRCServerConfig {
 }
 
 export type ProxyType = 'socks5' | 'http' | 'tor';
+export type IRCTransportType = 'tcp' | 'websocket';
+export type IRCWebSocketSubprotocol = 'binary.ircv3.net' | 'text.ircv3.net';
 
 export interface ProxyConfig {
   enabled?: boolean;
@@ -36,6 +38,15 @@ export interface ProxyConfig {
   port?: number;
   username?: string;
   password?: string;
+}
+
+export interface WebIRCConfig {
+  enabled?: boolean;
+  password?: string;
+  gateway: string;
+  hostname: string;
+  ip: string;
+  options?: string[];
 }
 
 export interface IRCNetworkConfig {
@@ -60,6 +71,10 @@ export interface IRCNetworkConfig {
   operPassword?: string;
   identityProfileId?: string;
   connectionType?: 'irc' | 'znc' | 'bnc';
+  transport?: IRCTransportType;
+  webSocketUrl?: string;
+  webSocketSubprotocols?: IRCWebSocketSubprotocol[];
+  webirc?: WebIRCConfig;
   clientCert?: string;
   clientKey?: string;
   connectOnStartup?: boolean;
@@ -697,6 +712,9 @@ class SettingsService {
       proxy: network.proxy
         ? { ...network.proxy, password: undefined }
         : undefined,
+      webirc: network.webirc
+        ? { ...network.webirc, password: undefined }
+        : undefined,
       servers: (network.servers || []).map(s => ({
         ...s,
         password: undefined,
@@ -745,6 +763,12 @@ class SettingsService {
         network.proxy.password,
       );
     }
+    if (network.webirc?.password !== undefined) {
+      await secureStorageService.setSecret(
+        secretKey('webircPassword'),
+        network.webirc.password,
+      );
+    }
     for (const server of network.servers || []) {
       await this.persistServerSecret(network.id, server);
     }
@@ -779,6 +803,7 @@ class SettingsService {
         clientCert,
         clientKey,
         proxyPassword,
+        webircPassword,
       ] = await Promise.all([
         secureStorageService.getSecret(secretKey('nickservPassword')),
         secureStorageService.getSecret(secretKey('operPassword')),
@@ -786,6 +811,7 @@ class SettingsService {
         secureStorageService.getSecret(secretKey('clientCert')),
         secureStorageService.getSecret(secretKey('clientKey')),
         secureStorageService.getSecret(secretKey('proxyPassword')),
+        secureStorageService.getSecret(secretKey('webircPassword')),
       ]);
       const serversWithSecrets = await Promise.all(
         (net.servers || []).map(async s => {
@@ -807,6 +833,9 @@ class SettingsService {
         proxy: net.proxy
           ? { ...net.proxy, password: proxyPassword || undefined }
           : net.proxy,
+        webirc: net.webirc
+          ? { ...net.webirc, password: webircPassword || undefined }
+          : net.webirc,
         servers: serversWithSecrets,
       });
     }

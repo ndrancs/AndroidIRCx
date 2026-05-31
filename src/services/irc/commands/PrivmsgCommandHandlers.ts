@@ -476,6 +476,8 @@ export const handlePRIVMSG: CommandHandler = (
         replyTo: meta?.replyTag,
         reactions: meta?.reactTag,
         typing: meta?.typingTag as 'active' | 'paused' | 'done' | undefined,
+        intent: meta?.intentTag,
+        tags: meta?.tags,
         username,
         hostname,
         target,
