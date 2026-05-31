@@ -179,4 +179,33 @@ describe('MediaMessageDisplay', () => {
       });
     });
   });
+
+  it('renders encrypted audio without mounting native playback automatically', async () => {
+    mockDownload.downloadMediaWithRetry.mockResolvedValueOnce({
+      success: true,
+      uri: '/tmp/song.mp3',
+      mimeType: 'audio/mpeg',
+    });
+
+    const { getByText, UNSAFE_root } = render(
+      <MediaMessageDisplay
+        mediaId="id-audio"
+        network="net"
+        tabId="channel::net::#chan"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getByText('Audio Message')).toBeTruthy();
+      expect(getByText('Play')).toBeTruthy();
+    });
+
+    expect(UNSAFE_root.findAllByType('Video')).toHaveLength(0);
+
+    fireEvent.press(getByText('Play'));
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('Video')).toHaveLength(1);
+    });
+  });
 });

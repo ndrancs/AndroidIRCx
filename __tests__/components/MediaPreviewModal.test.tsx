@@ -23,7 +23,12 @@ jest.mock('../../src/hooks/useTheme', () => ({
 }));
 
 jest.mock('../../src/i18n/transifex', () => ({
-  useT: jest.fn().mockReturnValue((key: string) => key),
+  useT: jest.fn().mockReturnValue((key: string, params?: any) => {
+    if (params) {
+      return key.replace(/{(\w+)}/g, (match, p1) => params[p1] || match);
+    }
+    return key;
+  }),
 }));
 
 jest.mock('react-native-video', () => {
@@ -287,9 +292,11 @@ describe('MediaPreviewModal', () => {
       />,
     );
     expect(getByText('Audio File')).toBeTruthy();
+    expect(() => getByTestId('video-mock')).toThrow();
+    fireEvent.press(getByText('Play'));
     fireEvent.press(getByTestId('video-mock'));
     await waitFor(() => {
-      expect(getByText('Failed to load audio preview')).toBeTruthy();
+      expect(getByText('Audio error: video-error')).toBeTruthy();
     });
   });
 

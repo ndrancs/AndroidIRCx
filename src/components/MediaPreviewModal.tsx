@@ -28,12 +28,14 @@ import {
   Platform,
 } from 'react-native';
 import Video from 'react-native-video';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useTheme } from '../hooks/useTheme';
 import { useT } from '../i18n/transifex';
 import { MediaPickResult } from '../services/MediaPickerService';
 import { mediaEncryptionService } from '../services/MediaEncryptionService';
 import { mediaUploadService } from '../services/MediaUploadService';
 import { mediaSettingsService } from '../services/MediaSettingsService';
+import { AudioPlayer } from './AudioPlayer';
 import RNFS from 'react-native-fs';
 
 interface MediaPreviewModalProps {
@@ -248,20 +250,7 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
             { height: previewHeight },
           ]}
         >
-          <Text style={[styles.audioIcon, { color: colors.text }]}>🎵</Text>
-          <Text style={[styles.audioLabel, { color: colors.text }]}>
-            {t('Audio File')}
-          </Text>
-          <Video
-            source={{ uri: displayUri }}
-            controls
-            paused
-            style={styles.audioPlayer}
-            onError={e => {
-              console.error('[MediaPreviewModal] Audio load error:', e);
-              setError(t('Failed to load audio preview'));
-            }}
-          />
+          <AudioPlayer url={displayUri} label={t('Audio File')} />
         </View>
       );
     }
@@ -269,7 +258,12 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
     // Generic file preview
     return (
       <View style={[styles.previewContainer, styles.fileContainer]}>
-        <Text style={[styles.fileIcon, { color: colors.text }]}>📄</Text>
+        <Icon
+          name="file-alt"
+          size={52}
+          color={colors.text}
+          style={styles.fileIcon}
+        />
         <Text style={[styles.fileLabel, { color: colors.text }]}>
           {mediaResult.fileName || t('File')}
         </Text>
@@ -312,7 +306,12 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
             </Text>
             {hasEncryption && showEncryptionIndicator && (
               <View style={styles.encryptionBadge}>
-                <Text style={styles.encryptionIcon}>🔒</Text>
+                <Icon
+                  name="lock"
+                  size={12}
+                  color={colors.textSecondary}
+                  style={styles.encryptionIcon}
+                />
                 <Text
                   style={[
                     styles.encryptionText,
@@ -516,7 +515,6 @@ const createStyles = (colors: any) =>
       borderRadius: 12,
     },
     encryptionIcon: {
-      fontSize: 14,
       marginRight: 4,
     },
     encryptionText: {
@@ -548,22 +546,8 @@ const createStyles = (colors: any) =>
     },
     audioContainer: {
       justifyContent: 'center',
-      alignItems: 'center',
       padding: 24,
       backgroundColor: colors.surfaceVariant,
-    },
-    audioIcon: {
-      fontSize: 64,
-      marginBottom: 12,
-    },
-    audioLabel: {
-      fontSize: 16,
-      fontWeight: '500',
-      marginBottom: 16,
-    },
-    audioPlayer: {
-      width: '100%',
-      height: 50,
     },
     fileContainer: {
       justifyContent: 'center',
@@ -572,7 +556,6 @@ const createStyles = (colors: any) =>
       backgroundColor: colors.surfaceVariant,
     },
     fileIcon: {
-      fontSize: 72,
       marginBottom: 12,
     },
     fileLabel: {

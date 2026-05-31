@@ -24,11 +24,13 @@ import {
 import Video from 'react-native-video';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useTheme } from '../hooks/useTheme';
 import { useT } from '../i18n/transifex';
 import { mediaSettingsService } from '../services/MediaSettingsService';
 import { mediaDownloadService } from '../services/MediaDownloadService';
 import { ImagePreview } from './ImagePreview';
+import { AudioPlayer } from './AudioPlayer';
 
 interface MediaMessageDisplayProps {
   mediaId: string;
@@ -222,17 +224,8 @@ export const MediaMessageDisplay: React.FC<MediaMessageDisplayProps> = ({
 
       case 'audio':
         return (
-          <View style={[styles.mediaContainer, styles.audioContainer]}>
-            <Text style={[styles.audioIcon, { color: colors.text }]}>🎵</Text>
-            <Text style={[styles.audioLabel, { color: colors.text }]}>
-              {t('Audio Message')}
-            </Text>
-            <Video
-              source={{ uri: mediaInfo.uri }}
-              controls
-              paused
-              style={styles.audioPlayer}
-            />
+          <View style={styles.mediaContainer}>
+            <AudioPlayer url={mediaInfo.uri} label={t('Audio Message')} />
           </View>
         );
 
@@ -262,7 +255,12 @@ export const MediaMessageDisplay: React.FC<MediaMessageDisplayProps> = ({
               }
             }}
           >
-            <Text style={[styles.fileIcon, { color: colors.text }]}>📄</Text>
+            <Icon
+              name="file-alt"
+              size={48}
+              color={colors.text}
+              style={styles.fileIcon}
+            />
             <Text style={[styles.fileLabel, { color: colors.text }]}>
               {t('File')}
             </Text>
@@ -282,7 +280,12 @@ export const MediaMessageDisplay: React.FC<MediaMessageDisplayProps> = ({
       {/* Encryption indicator */}
       {showEncryptionIndicator && (state === 'ready' || state === 'cached') && (
         <View style={styles.encryptionBadge}>
-          <Text style={styles.encryptionIcon}>🔒</Text>
+          <Icon
+            name="lock"
+            size={12}
+            color={colors.textSecondary}
+            style={styles.encryptionIcon}
+          />
           <Text
             style={[styles.encryptionText, { color: colors.textSecondary }]}
           >
@@ -316,7 +319,12 @@ export const MediaMessageDisplay: React.FC<MediaMessageDisplayProps> = ({
             { backgroundColor: colors.error + '20' },
           ]}
         >
-          <Text style={[styles.errorIcon, { color: colors.error }]}>⚠️</Text>
+          <Icon
+            name="exclamation-triangle"
+            size={28}
+            color={colors.error}
+            style={styles.errorIcon}
+          />
           {error?.includes('No tabId provided for decryption') ? (
             <Text style={[styles.errorText, { color: colors.error }]}>
               {t(
@@ -365,7 +373,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   encryptionIcon: {
-    fontSize: 12,
     marginRight: 4,
   },
   encryptionText: {
@@ -385,7 +392,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorIcon: {
-    fontSize: 32,
     marginBottom: 8,
   },
   errorText: {
@@ -418,30 +424,11 @@ const styles = StyleSheet.create({
     height: 200,
     backgroundColor: '#000',
   },
-  audioContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    padding: 16,
-    alignItems: 'center',
-  },
-  audioIcon: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  audioLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 12,
-  },
-  audioPlayer: {
-    width: '100%',
-    height: 50,
-  },
   fileContainer: {
     padding: 20,
     alignItems: 'center',
   },
   fileIcon: {
-    fontSize: 56,
     marginBottom: 8,
   },
   fileLabel: {

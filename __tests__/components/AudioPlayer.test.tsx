@@ -77,36 +77,64 @@ describe('AudioPlayer', () => {
     });
   });
 
-  it('should show loading indicator initially', () => {
-    const { UNSAFE_getByType } = render(<AudioPlayer {...defaultProps} />);
-    // ActivityIndicator should be present while loading
-    const activityIndicator = UNSAFE_getByType('ActivityIndicator');
-    expect(activityIndicator).toBeTruthy();
+  it('should not mount native Video before playback is requested', () => {
+    const { UNSAFE_root } = render(<AudioPlayer {...defaultProps} />);
+    expect(UNSAFE_root.findAllByType('Video')).toHaveLength(0);
+    expect(UNSAFE_root.findAllByType('ActivityIndicator')).toHaveLength(0);
   });
 
-  it('should render Video component with correct source', () => {
-    const { UNSAFE_getByType } = render(<AudioPlayer {...defaultProps} />);
+  it('should render Video component with correct source after Play', () => {
+    const { UNSAFE_getByType, getByText } = render(
+      <AudioPlayer {...defaultProps} />,
+    );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
     expect(video).toBeTruthy();
     expect(video.props.source.uri).toBe(defaultProps.url);
   });
 
+  it('should show loading indicator while starting playback', () => {
+    const { UNSAFE_getByType, getByText } = render(
+      <AudioPlayer {...defaultProps} />,
+    );
+
+    fireEvent.press(getByText('Play'));
+
+    const activityIndicator = UNSAFE_getByType('ActivityIndicator');
+    expect(activityIndicator).toBeTruthy();
+  });
+
   it('should have controls enabled on Video', () => {
-    const { UNSAFE_getByType } = render(<AudioPlayer {...defaultProps} />);
+    const { UNSAFE_getByType, getByText } = render(
+      <AudioPlayer {...defaultProps} />,
+    );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
     expect(video.props.controls).toBe(true);
   });
 
-  it('should be paused initially', () => {
-    const { UNSAFE_getByType } = render(<AudioPlayer {...defaultProps} />);
+  it('should start unpaused after Play is pressed', () => {
+    const { UNSAFE_getByType, getByText } = render(
+      <AudioPlayer {...defaultProps} />,
+    );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
-    expect(video.props.paused).toBe(true);
+    expect(video.props.paused).toBe(false);
   });
 
   it('should handle onLoad callback', () => {
-    const { UNSAFE_getByType, UNSAFE_root } = render(
+    const { UNSAFE_getByType, UNSAFE_root, getByText } = render(
       <AudioPlayer {...defaultProps} />,
     );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
 
     act(() => {
@@ -119,6 +147,9 @@ describe('AudioPlayer', () => {
     const { UNSAFE_getByType, getByText, UNSAFE_root } = render(
       <AudioPlayer {...defaultProps} />,
     );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
 
     act(() => {
@@ -133,6 +164,9 @@ describe('AudioPlayer', () => {
     const { UNSAFE_getByType, getByText } = render(
       <AudioPlayer {...defaultProps} />,
     );
+
+    fireEvent.press(getByText('Play'));
+
     const video = UNSAFE_getByType('Video');
 
     act(() => {
@@ -140,5 +174,15 @@ describe('AudioPlayer', () => {
     });
 
     expect(getByText('Audio error: Failed to load audio')).toBeTruthy();
+  });
+
+  it('should reject unsupported audio sources before mounting Video', () => {
+    const { getByText, UNSAFE_root } = render(
+      <AudioPlayer url="ftp://example.com/audio.mp3" />,
+    );
+
+    expect(getByText('Audio error: Unsupported audio source')).toBeTruthy();
+    expect(getByText('Unavailable')).toBeTruthy();
+    expect(UNSAFE_root.findAllByType('Video')).toHaveLength(0);
   });
 });
