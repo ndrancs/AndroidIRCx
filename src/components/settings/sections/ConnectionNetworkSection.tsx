@@ -63,6 +63,7 @@ import { biometricAuthService } from '../../../services/BiometricAuthService';
 import { secureStorageService } from '../../../services/SecureStorageService';
 import { connectionManager } from '../../../services/ConnectionManager';
 import { serviceDetectionService } from '../../../services/ServiceDetectionService';
+import { useUIStore } from '../../../stores/uiStore';
 
 interface ConnectionNetworkSectionProps {
   colors: {
@@ -1280,6 +1281,31 @@ export const ConnectionNetworkSection: React.FC<
     return getDefaultAutoReconnectConfig();
   }, [currentNetwork, getDefaultAutoReconnectConfig]);
 
+  const showIRCv3Diagnostics = useCallback(() => {
+    if (!currentNetwork) {
+      Alert.alert(
+        t('IRCv3 Diagnostics', { _tags: tags }),
+        t('Select or connect a network before opening IRCv3 diagnostics.', {
+          _tags: tags,
+        }),
+        [{ text: t('OK', { _tags: tags }) }],
+      );
+      return;
+    }
+
+    const connection = connectionManager.getConnection(currentNetwork);
+    if (!connection) {
+      Alert.alert(
+        t('IRCv3 Diagnostics', { _tags: tags }),
+        t('No active IRC connection for this network.', { _tags: tags }),
+        [{ text: t('OK', { _tags: tags }) }],
+      );
+      return;
+    }
+
+    useUIStore.getState().setShowIRCv3Info(true);
+  }, [currentNetwork, t, tags]);
+
   const sectionData: SettingItemType[] = useMemo(() => {
     const items: SettingItemType[] = [
       {
@@ -1804,6 +1830,32 @@ export const ConnectionNetworkSection: React.FC<
             },
           },
         ],
+      },
+      {
+        id: 'connection-ircv3-diagnostics',
+        title: t('IRCv3 Diagnostics', { _tags: tags }),
+        description: currentNetwork
+          ? t(
+              'View CAP, ISUPPORT, transport, and unavailable feature details',
+              {
+                _tags: tags,
+              },
+            )
+          : t('Connect a network to inspect IRCv3 details', { _tags: tags }),
+        type: 'button',
+        icon: { name: 'code', solid: true },
+        disabled: !currentNetwork,
+        searchKeywords: [
+          'ircv3',
+          'cap',
+          'capabilities',
+          'isupport',
+          'diagnostics',
+          'transport',
+          'websocket',
+          'webirc',
+        ],
+        onPress: showIRCv3Diagnostics,
       },
       {
         id: 'identity-profiles',
@@ -2388,6 +2440,7 @@ export const ConnectionNetworkSection: React.FC<
     updateFloodProtectionConfig,
     updateLagMonitoringConfig,
     openQuickConnectModal,
+    showIRCv3Diagnostics,
     unlockPasswords,
     handleBiometricLockToggle,
     handlePinLockToggle,

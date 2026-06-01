@@ -11,6 +11,7 @@ export interface CAPHandlerContext {
   capAvailable: Set<string>;
   capEnabledSet: Set<string>;
   capRequested: Set<string>;
+  capValues: Map<string, string>;
   config: any;
 
   getCapLSReceived: () => boolean;
@@ -26,6 +27,17 @@ export interface CAPHandlerContext {
   endCAPNegotiation: () => void;
   startSASL: () => void;
 }
+
+const parseCapToken = (cap: string): { name: string; value?: string } => {
+  const equalsIndex = cap.indexOf('=');
+  if (equalsIndex === -1) {
+    return { name: cap };
+  }
+  return {
+    name: cap.substring(0, equalsIndex),
+    value: cap.substring(equalsIndex + 1),
+  };
+};
 
 export class CAPHandlers {
   constructor(private ctx: CAPHandlerContext) {}
@@ -58,9 +70,12 @@ export class CAPHandlers {
 
         const capList = capabilities.split(/\s+/).filter(c => c && c !== '*');
         capList.forEach(cap => {
-          const [name, value] = cap.split('=');
+          const { name, value } = parseCapToken(cap);
           if (name) {
             this.ctx.capAvailable.add(name);
+            if (value !== undefined) {
+              this.ctx.capValues.set(name, value);
+            }
             this.ctx.logRaw(
               `IRCService: CAP available: ${name}${value ? '=' + value : ''}`,
             );
@@ -75,13 +90,43 @@ export class CAPHandlers {
         break;
       }
 
+      case 'LIST': {
+        const listedCapsString = actualParams
+          .slice(1)
+          .join(' ')
+          .replace(/^:/, '');
+        const listedCaps = listedCapsString.split(/\s+/).filter(c => c);
+        listedCaps.forEach(cap => {
+          const { name, value } = parseCapToken(cap);
+          if (!name) return;
+          this.ctx.capEnabledSet.add(name);
+          if (value !== undefined) {
+            this.ctx.capValues.set(name, value);
+          }
+        });
+        this.ctx.emit('capabilities-list', Array.from(this.ctx.capEnabledSet));
+        break;
+      }
+
       case 'ACK': {
         const ackCapsString = actualParams.slice(1).join(' ').replace(/^:/, '');
         const ackCaps = ackCapsString.split(/\s+/).filter(c => c);
         ackCaps.forEach(cap => {
-          const [capName, capValue] = cap.split('=');
+          const { name: rawCapName, value: capValue } = parseCapToken(cap);
+          const disabling = rawCapName.startsWith('-');
+          const capName = disabling ? rawCapName.substring(1) : rawCapName;
           if (capName) {
+            if (disabling) {
+              this.ctx.capEnabledSet.delete(capName);
+              this.ctx.capRequested.delete(`-${capName}`);
+              this.ctx.logRaw(`IRCService: CAP disabled: ${capName}`);
+              return;
+            }
             this.ctx.capEnabledSet.add(capName);
+            this.ctx.capRequested.delete(capName);
+            if (capValue !== undefined) {
+              this.ctx.capValues.set(capName, capValue);
+            }
             this.ctx.logRaw(`IRCService: CAP enabled: ${capName}`);
             if (capName === 'sts' && capValue && this.ctx.config) {
               this.ctx.emit('sts-policy', this.ctx.config.host, capValue);
@@ -91,6 +136,9 @@ export class CAPHandlers {
             }
             if (capName === 'extended-join') {
               this.ctx.setExtendedJoin(true);
+            }
+            if (capName === 'draft/extended-isupport') {
+              this.ctx.sendRaw('ISUPPORT');
             }
           }
         });
@@ -117,6 +165,10 @@ export class CAPHandlers {
           return;
         }
 
+        if (this.ctx.capRequested.size > 0) {
+          return;
+        }
+
         this.ctx.endCAPNegotiation();
         break;
       }
@@ -132,6 +184,9 @@ export class CAPHandlers {
           this.ctx.logRaw(`IRCService: CAP rejected: ${cap}`);
           this.ctx.capRequested.delete(cap);
         });
+        if (this.ctx.capRequested.size > 0) {
+          return;
+        }
         this.ctx.endCAPNegotiation();
         break;
       }
@@ -141,9 +196,12 @@ export class CAPHandlers {
         const newCaps = newCapsString.split(/\s+/).filter(c => c);
         const newCapNames: string[] = [];
         newCaps.forEach(cap => {
-          const [capName, capValue] = cap.split('=');
+          const { name: capName, value: capValue } = parseCapToken(cap);
           if (capName) {
             this.ctx.capAvailable.add(capName);
+            if (capValue !== undefined) {
+              this.ctx.capValues.set(capName, capValue);
+            }
             newCapNames.push(capName);
             this.ctx.logRaw(
               `IRCService: CAP NEW: ${capName}${capValue ? '=' + capValue : ''}`,
@@ -175,10 +233,11 @@ export class CAPHandlers {
         const delCapsString = actualParams.slice(1).join(' ').replace(/^:/, '');
         const delCaps = delCapsString.split(/\s+/).filter(c => c);
         delCaps.forEach(cap => {
-          const [capName] = cap.split('=');
+          const { name: capName } = parseCapToken(cap);
           if (capName) {
             this.ctx.capAvailable.delete(capName);
             this.ctx.capEnabledSet.delete(capName);
+            this.ctx.capValues.delete(capName);
             this.ctx.logRaw(`IRCService: CAP DEL: ${capName}`);
           }
         });

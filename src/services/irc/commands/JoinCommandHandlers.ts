@@ -82,6 +82,9 @@ export const handleJOIN: CommandHandler = (ctx, prefix, params, timestamp) => {
   if (nick === ctx.getCurrentNick()) {
     ctx.emitJoinedChannel(channel);
     ctx.addPendingChannelIntro(channel);
+    if (ctx.isNoImplicitNamesEnabled?.() && channel) {
+      ctx.sendRaw(`NAMES ${channel}`);
+    }
   }
 
   ctx.addMessage({

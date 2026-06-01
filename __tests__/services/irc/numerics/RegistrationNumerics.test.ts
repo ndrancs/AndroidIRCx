@@ -38,6 +38,7 @@ describe('RegistrationNumerics', () => {
       getCurrentNick: jest.fn(() => 'CurrentNick'),
       isSilentModeNick: jest.fn(() => false),
       logRaw: jest.fn(),
+      processISupport: jest.fn(),
       sendCommand: jest.fn(),
       setCurrentNick: jest.fn(),
       setRegistered: jest.fn(),
@@ -135,6 +136,11 @@ describe('RegistrationNumerics', () => {
         text: '*** Server supports: CHANTYPES=#& PREFIX=(ov)@+ NAMESX',
       }),
     );
+    expect(ctx.processISupport).toHaveBeenCalledWith([
+      'CHANTYPES=#&',
+      'PREFIX=(ov)@+',
+      'NAMESX',
+    ]);
     expect(ctx.logRaw).toHaveBeenNthCalledWith(
       1,
       'IRCService: Server capability CHANTYPES=#&',

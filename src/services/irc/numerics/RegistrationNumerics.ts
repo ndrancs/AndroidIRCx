@@ -118,6 +118,8 @@ export const handle005: NumericHandler = (ctx, prefix, params, timestamp) => {
     rawCategory: 'server',
   });
 
+  ctx.processISupport(tokens);
+
   // Parse and log capabilities
   tokens.forEach(token => {
     if (token.includes('=')) {

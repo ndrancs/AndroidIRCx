@@ -63,6 +63,20 @@ describe('IRCService command helpers', () => {
     expect(irc.isMonitoring('alice')).toBe(false);
   });
 
+  it('sends extended MONITOR status, list, and clear commands', () => {
+    (irc as any).capEnabledSet.add('monitor');
+
+    irc.monitorNick('alice');
+    irc.requestMonitorStatus();
+    irc.listMonitorEntries();
+    irc.clearMonitorList();
+
+    expect(socket.writes.some(w => w.includes('MONITOR S'))).toBe(true);
+    expect(socket.writes.some(w => w.includes('MONITOR L'))).toBe(true);
+    expect(socket.writes.some(w => w.includes('MONITOR C'))).toBe(true);
+    expect(irc.isMonitoring('alice')).toBe(false);
+  });
+
   it('routes /me to CTCP ACTION and adds sent message', () => {
     const messages: IRCMessage[] = [];
     irc.onMessage(msg => messages.push(msg));
@@ -373,7 +387,7 @@ describe('IRCService command helpers', () => {
     irc.requestChatHistory('#room', 50, 'msgid-1');
     expect(
       socket.writes.some(w =>
-        w.includes('CHATHISTORY LATEST #room msgid-1 50'),
+        w.includes('CHATHISTORY LATEST #room msgid=msgid-1 50'),
       ),
     ).toBe(true);
 
@@ -384,6 +398,176 @@ describe('IRCService command helpers', () => {
     ).toBe(true);
   });
 
+  it('requestChatHistory supports BEFORE, AFTER, AROUND, BETWEEN, and TARGETS', () => {
+    (irc as any).capEnabledSet.add('draft/chathistory');
+
+    irc.requestChatHistory('#room', {
+      subcommand: 'BEFORE',
+      refType: 'timestamp',
+      ref: 123,
+      limit: 25,
+    });
+    irc.requestChatHistory('#room', {
+      subcommand: 'AFTER',
+      refType: 'msgid',
+      ref: 'msg-1',
+      limit: 10,
+    });
+    irc.requestChatHistory('#room', {
+      subcommand: 'AROUND',
+      refType: '*',
+      limit: 5,
+    });
+    irc.requestChatHistory('#room', {
+      subcommand: 'BETWEEN',
+      refType: 'timestamp',
+      ref: 100,
+      secondRefType: 'timestamp',
+      secondRef: 200,
+      limit: 50,
+    });
+    irc.requestChatHistory('*', {
+      subcommand: 'TARGETS',
+      refType: '*',
+      limit: 20,
+    });
+
+    expect(
+      socket.writes.some(w =>
+        w.includes(
+          'CHATHISTORY BEFORE #room timestamp=1970-01-01T00:00:00.123Z 25',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      socket.writes.some(w =>
+        w.includes('CHATHISTORY AFTER #room msgid=msg-1 10'),
+      ),
+    ).toBe(true);
+    expect(
+      socket.writes.some(w => w.includes('CHATHISTORY AROUND #room * 5')),
+    ).toBe(true);
+    expect(
+      socket.writes.some(w =>
+        w.includes(
+          'CHATHISTORY BETWEEN #room timestamp=1970-01-01T00:00:00.100Z timestamp=1970-01-01T00:00:00.200Z 50',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      socket.writes.some(w => w.includes('CHATHISTORY TARGETS * * 20')),
+    ).toBe(true);
+  });
+
+  it('sends pre-away commands only when draft/pre-away is enabled', () => {
+    irc.sendPreAway('busy');
+    expect(socket.writes.length).toBe(0);
+
+    (irc as any).capEnabledSet.add('draft/pre-away');
+    irc.sendPreAway();
+    irc.sendPreAway('');
+    irc.sendPreAway('back later');
+
+    expect(socket.writes.some(w => w.includes('AWAY *'))).toBe(true);
+    expect(socket.writes.some(w => w.trim() === 'AWAY')).toBe(true);
+    expect(socket.writes.some(w => w.includes('AWAY :back later'))).toBe(true);
+  });
+
+  it('sends metadata commands and stores metadata events', () => {
+    const metadataSpy = jest.fn();
+    const deletedSpy = jest.fn();
+    const subscriptionsSpy = jest.fn();
+    const syncLaterSpy = jest.fn();
+    irc.on('metadata', metadataSpy);
+    irc.on('metadata-deleted', deletedSpy);
+    irc.on('metadata-subscriptions', subscriptionsSpy);
+    irc.on('metadata-sync-later', syncLaterSpy);
+    (irc as any).capEnabledSet.add('draft/metadata-2');
+
+    irc.requestMetadata('#room', ['url']);
+    irc.requestMetadata('#room');
+    irc.setMetadata('#room', 'url', 'https://example.test');
+    irc.setMetadata('#room', 'url');
+    irc.clearMetadata('#room');
+    irc.syncMetadata('#room');
+    irc.subscribeMetadata(['url', ' bot ']);
+    irc.unsubscribeMetadata(['bot']);
+    irc.listMetadataSubscriptions();
+
+    expect(socket.writes.some(w => w.includes('METADATA #room GET url'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA #room LIST'))).toBe(
+      true,
+    );
+    expect(
+      socket.writes.some(w =>
+        w.includes('METADATA #room SET url :https://example.test'),
+      ),
+    ).toBe(true);
+    expect(socket.writes.some(w => w.includes('METADATA #room SET url'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA #room CLEAR'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA #room SYNC'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA * SUB url bot'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA * UNSUB bot'))).toBe(
+      true,
+    );
+    expect(socket.writes.some(w => w.includes('METADATA * SUBS'))).toBe(true);
+
+    (irc as any).handleIRCMessage(
+      ':server METADATA #room url * :https://example.test',
+    );
+    expect(irc.getMetadata('#room').url.value).toBe('https://example.test');
+    expect(metadataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: '#room',
+        key: 'url',
+        value: 'https://example.test',
+      }),
+    );
+
+    (irc as any).handleNumericReply(761, 'server', [
+      'tester',
+      '#room',
+      'topic',
+      '*',
+      'Channel topic',
+    ]);
+    expect(irc.getMetadata('#room').topic.value).toBe('Channel topic');
+
+    (irc as any).handleNumericReply(770, 'server', ['tester', 'url', 'bot']);
+    expect(irc.getMetadataSubscriptions()).toEqual(['bot', 'url']);
+    expect(subscriptionsSpy).toHaveBeenCalledWith(['url', 'bot']);
+
+    (irc as any).handleNumericReply(771, 'server', ['tester', 'bot']);
+    expect(irc.getMetadataSubscriptions()).toEqual(['url']);
+
+    (irc as any).handleNumericReply(766, 'server', ['tester', '#room', 'url']);
+    expect(irc.getMetadata('#room').url).toBeUndefined();
+    expect(deletedSpy).toHaveBeenCalledWith('#room', 'url');
+
+    (irc as any).handleNumericReply(774, 'server', ['tester', '#room', '60']);
+    expect(syncLaterSpy).toHaveBeenCalledWith('#room', 60);
+  });
+
+  it('emits network icon when draft/ICON ISUPPORT token is seen', () => {
+    const iconSpy = jest.fn();
+    irc.on('network-icon', iconSpy);
+
+    irc.processISupport(['draft/ICON=https://example.test/icon.png']);
+
+    expect(irc.getNetworkIconUrl()).toBe('https://example.test/icon.png');
+    expect(iconSpy).toHaveBeenCalledWith('https://example.test/icon.png');
+  });
+
   it('sendReadMarker and redactMessage send capability commands and events', () => {
     const emitSpy = jest.spyOn(irc as any, 'emit');
     const messages: IRCMessage[] = [];
@@ -392,7 +576,9 @@ describe('IRCService command helpers', () => {
     (irc as any).capEnabledSet.add('draft/read-marker');
     irc.sendReadMarker('#room', 123);
     expect(
-      socket.writes.some(w => w.includes('MARKREAD #room timestamp=123')),
+      socket.writes.some(w =>
+        w.includes('MARKREAD #room timestamp=1970-01-01T00:00:00.123Z'),
+      ),
     ).toBe(true);
     expect(emitSpy).toHaveBeenCalledWith('read-marker-sent', '#room', 123);
 
@@ -443,7 +629,7 @@ describe('IRCService command helpers', () => {
     irc.sendReaction('#room', 'msgid-9', ':+1:');
     expect(
       socket.writes.some(w =>
-        w.includes('@+draft/react=msgid-9;:+1: TAGMSG #room'),
+        w.includes('@+draft/react=msgid-9\\::+1: TAGMSG #room'),
       ),
     ).toBe(true);
     expect(emitSpy).toHaveBeenCalledWith(
@@ -467,7 +653,7 @@ describe('IRCService command helpers', () => {
     ).toBe(true);
     expect(
       socket.writes.some(w =>
-        w.includes('@draft/multiline-concat= PRIVMSG #room :line2'),
+        w.includes('@draft/multiline-concat PRIVMSG #room :line2'),
       ),
     ).toBe(true);
 

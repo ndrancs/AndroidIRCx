@@ -338,6 +338,8 @@ export class IRCCommandHandlers {
         attemptAutoMode(3);
       },
       isExtendedJoinEnabled: () => Boolean((svc as any).extendedJoin),
+      isNoImplicitNamesEnabled: () =>
+        Boolean((svc as any).capEnabledSet?.has('no-implicit-names')),
       emitJoinedChannel: (channel: string) =>
         (svc as any).emit('joinedChannel', channel),
       addPendingChannelIntro: (channel: string) =>
@@ -482,10 +484,11 @@ export class IRCCommandHandlers {
       typingTag?: string;
       multilineConcatTag?: string;
       intentTag?: string;
+      tags?: Record<string, string>;
     },
   ): boolean {
     const handler = this.handlers.get(command.toUpperCase());
-    if (handler) {
+    if (handler && typeof handler === 'function') {
       handler(this.ctx, prefix, params, timestamp, meta);
       return true;
     }

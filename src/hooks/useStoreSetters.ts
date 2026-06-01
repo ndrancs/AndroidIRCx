@@ -233,6 +233,10 @@ export function useStoreSetters() {
     useUIStore.getState().setShowHelpTroubleshooting(value);
   }, []);
 
+  const setShowIRCv3Info = useCallback((value: boolean) => {
+    useUIStore.getState().setShowIRCv3Info(value);
+  }, []);
+
   return {
     // Connection setters
     setActiveTabId,
@@ -286,5 +290,6 @@ export function useStoreSetters() {
     setShowHelpMedia,
     setShowHelpChannelManagement,
     setShowHelpTroubleshooting,
+    setShowIRCv3Info,
   };
 }

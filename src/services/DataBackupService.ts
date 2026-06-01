@@ -78,6 +78,7 @@ function isNetworkSecureSecret(secretKey: string): boolean {
     secret.endsWith(':nickservpassword') ||
     secret.endsWith(':operpassword') ||
     secret.endsWith(':proxypassword') ||
+    secret.endsWith(':webircpassword') ||
     secret.endsWith(':clientcert') ||
     secret.endsWith(':clientkey')
   );

@@ -159,6 +159,11 @@ export const OptionsMenu: React.FC<OptionsMenuProps> = ({
     uiStore.setShowDccTransfers(true);
   };
 
+  const handleIRCv3Info = () => {
+    onClose();
+    uiStore.setShowIRCv3Info(true);
+  };
+
   const handleToggleRaw = () => {
     onClose();
     persistentSetShowRawCommands(!showRawCommands);
@@ -346,6 +351,34 @@ export const OptionsMenu: React.FC<OptionsMenuProps> = ({
               <View style={localStyles.optionRow}>
                 <Icon name="exchange-alt" size={14} color={iconColor} />
                 <Text style={localStyles.optionText}>{t('DCC Transfers')}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles?.optionItem}
+              onPress={handleIRCv3Info}
+            >
+              <View style={localStyles.optionRow}>
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 6,
+                    backgroundColor: '#6366F1',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: 9,
+                      fontWeight: '800',
+                    }}
+                  >
+                    v3
+                  </Text>
+                </View>
+                <Text style={localStyles.optionText}>{t('IRCv3 Info')}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity

@@ -20,8 +20,14 @@ export const handleMARKREAD: CommandHandler = (
 ) => {
   const target = params[0] || '';
   const tsParam = params[1] || '';
-  const tsMatch = tsParam.match(/timestamp=(\d+)/);
-  const readTimestamp = tsMatch ? parseInt(tsMatch[1], 10) : Date.now();
+  const tsMatch = tsParam.match(/timestamp=(.+)$/);
+  const rawTimestamp = tsMatch ? tsMatch[1] : '';
+  const parsedTimestamp = rawTimestamp
+    ? /^\d+$/.test(rawTimestamp)
+      ? parseInt(rawTimestamp, 10)
+      : Date.parse(rawTimestamp)
+    : NaN;
+  const readTimestamp = !isNaN(parsedTimestamp) ? parsedTimestamp : Date.now();
   const markerNick = ctx.extractNick(prefix);
   ctx.logRaw(
     `IRCService: ${markerNick} marked ${target} as read (timestamp: ${readTimestamp})`,

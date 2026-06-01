@@ -288,6 +288,10 @@ export const useConnectionHandler = (params: UseConnectionHandlerParams) => {
         rejectUnauthorized: serverToUse.rejectUnauthorized,
         proxy: proxyToUse,
         sasl: networkToUse.sasl,
+        transport: networkToUse.transport,
+        webSocketUrl: networkToUse.webSocketUrl,
+        webSocketSubprotocols: networkToUse.webSocketSubprotocols,
+        webirc: networkToUse.webirc,
         clientCert: networkToUse.clientCert,
         clientKey: networkToUse.clientKey,
       };
@@ -308,6 +312,12 @@ export const useConnectionHandler = (params: UseConnectionHandlerParams) => {
                 password: config.proxy.password ? '[redacted]' : undefined,
               }
             : config.proxy,
+          webirc: config.webirc
+            ? {
+                ...config.webirc,
+                password: config.webirc.password ? '[redacted]' : undefined,
+              }
+            : config.webirc,
           clientCert: config.clientCert ? '[present]' : undefined,
           clientKey: config.clientKey ? '[present]' : undefined,
         };

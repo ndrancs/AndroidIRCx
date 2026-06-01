@@ -37,6 +37,7 @@ import { DccTransfersMinimizedIndicator } from './DccTransfersMinimizedIndicator
 import { DccSendModal } from './DccSendModal';
 import { AppUnlockModal } from './AppUnlockModal';
 import { HelpTroubleshootingScreen } from '../screens/help/HelpTroubleshootingScreen';
+import { IRCv3InfoScreen } from '../screens/IRCv3InfoScreen';
 import { HelpConnectionScreen } from '../screens/help/HelpConnectionScreen';
 import { HelpCommandsScreen } from '../screens/help/HelpCommandsScreen';
 import { HelpEncryptionScreen } from '../screens/help/HelpEncryptionScreen';
@@ -197,6 +198,7 @@ export function AppModals({
     showHelpMedia,
     showHelpChannelManagement,
     showHelpTroubleshooting,
+    showIRCv3Info,
   } = uiState;
 
   const {
@@ -215,6 +217,7 @@ export function AppModals({
     setShowHelpMedia,
     setShowHelpChannelManagement,
     setShowHelpTroubleshooting,
+    setShowIRCv3Info,
   } = setters;
 
   const activeModalKey = React.useMemo<AppModalKey>(() => {
@@ -660,6 +663,14 @@ export function AppModals({
         <HelpChannelManagementScreen
           visible={isModalVisible('helpChannelManagement')}
           onClose={() => setShowHelpChannelManagement(false)}
+        />
+      )}
+
+      {showIRCv3Info && (
+        <IRCv3InfoScreen
+          visible={showIRCv3Info}
+          networkId={activeTab?.networkId}
+          onClose={() => setShowIRCv3Info(false)}
         />
       )}
 

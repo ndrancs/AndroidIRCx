@@ -9,6 +9,7 @@ import { StyleSheet } from 'react-native';
 
 let mockNickContextMenuProps: any = null;
 let mockKickBanModalProps: any = null;
+let mockActiveIrc: any = null;
 
 // ── sub-component mocks ────────────────────────────────────────────────────
 jest.mock('../../src/components/LinkPreview', () => ({
@@ -165,7 +166,10 @@ jest.mock('../../src/services/PerformanceService', () => ({
 }));
 
 jest.mock('../../src/services/MessageHistoryService', () => ({
-  messageHistoryService: { getHistory: jest.fn(() => []) },
+  messageHistoryService: {
+    getHistory: jest.fn(() => []),
+    loadMessages: jest.fn(() => Promise.resolve([])),
+  },
 }));
 
 jest.mock('../../src/services/HighlightService', () => ({
@@ -440,22 +444,25 @@ describe('MessageArea', () => {
       Promise.resolve(fallback),
     );
     mockOnSettingChange.mockImplementation(() => jest.fn());
-    mockGetConnection.mockReturnValue({
-      ircService: {
-        getCurrentNick: jest.fn(() => 'TestNick'),
-        getChannelUsers: jest.fn(() => []),
-        getNetworkName: jest.fn(() => 'TestNet'),
-        isServerOper: jest.fn(() => false),
-        sendRaw: jest.fn(),
-        sendCommand: jest.fn(),
-        sendMessage: jest.fn(),
-        sendCTCPRequest: jest.fn(),
-        addMessage: jest.fn(),
-        isMonitoring: jest.fn(() => false),
-        monitorNick: jest.fn(),
-        unmonitorNick: jest.fn(),
-      },
-    });
+    mockActiveIrc = {
+      getCurrentNick: jest.fn(() => 'TestNick'),
+      getChannelUsers: jest.fn(() => []),
+      getNetworkName: jest.fn(() => 'TestNet'),
+      isServerOper: jest.fn(() => false),
+      sendRaw: jest.fn(),
+      sendCommand: jest.fn(),
+      sendMessage: jest.fn(),
+      sendCTCPRequest: jest.fn(),
+      addMessage: jest.fn(),
+      isMonitoring: jest.fn(() => false),
+      monitorNick: jest.fn(),
+      unmonitorNick: jest.fn(),
+      hasCapability: jest.fn(() => false),
+      getEnabledCapabilities: jest.fn(() => []),
+      requestChatHistory: jest.fn(),
+      on: jest.fn(() => jest.fn()),
+    };
+    mockGetConnection.mockReturnValue({ ircService: mockActiveIrc });
   });
 
   // ── basic rendering ──────────────────────────────────────────────────────
@@ -470,6 +477,29 @@ describe('MessageArea', () => {
       <MessageArea {...baseProps} messages={messages} />,
     );
     expect(toJSON()).toBeTruthy();
+  });
+
+  it('requests older IRCv3 chat history from the list control', async () => {
+    mockActiveIrc.hasCapability.mockImplementation(
+      (cap: string) => cap === 'draft/chathistory',
+    );
+    const messages = [
+      makeMsg({ id: 'old', msgid: 'old-msgid', timestamp: 1000 }),
+      makeMsg({ id: 'new', msgid: 'new-msgid', timestamp: 2000 }),
+    ];
+
+    const { getByTestId } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} />,
+    );
+
+    fireEvent.press(getByTestId('load-older-chat-history'));
+
+    expect(mockActiveIrc.requestChatHistory).toHaveBeenCalledWith('#general', {
+      subcommand: 'BEFORE',
+      refType: 'msgid',
+      ref: 'old-msgid',
+      limit: 50,
+    });
   });
 
   it('renders without optional props', async () => {

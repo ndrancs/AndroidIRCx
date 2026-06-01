@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   FlatList,
+  ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   Modal,
@@ -47,6 +48,7 @@ import {
   IRCMessage,
   RawMessageCategory,
   ChannelUser,
+  ChatHistoryRequestOptions,
 } from '../services/IRCService';
 import { ChannelTab } from '../types';
 import { useTheme } from '../hooks/useTheme';
@@ -75,6 +77,7 @@ import {
 import { banService } from '../services/BanService';
 import { dccChatService } from '../services/DCCChatService';
 import { ircService } from '../services/IRCService';
+import { setPendingReply } from '../services/PendingReplyStore';
 import { encryptedDMService } from '../services/EncryptedDMService';
 import { channelEncryptionService } from '../services/ChannelEncryptionService';
 import { formatIRCTextWithLinks } from '../utils/IRCFormatter';
@@ -999,6 +1002,12 @@ const MessageItem = React.memo<MessageItemProps>(
               {formatTimestamp(message.timestamp)}
             </Text>
           )}
+          {message.replyTo && (
+            <View style={styles.replyIndicator}>
+              <Text style={styles.replyIndicatorIcon}>&#8634;</Text>
+              <Text style={styles.replyIndicatorText}>{t('Reply')}</Text>
+            </View>
+          )}
           {message.type === 'raw' && formatParts ? (
             <View style={styles.messageContent}>
               <Text style={styles.messageText}>
@@ -1523,6 +1532,10 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const totalBottomInset = bottomInset + layoutConfig.navigationBarOffset;
   const styles = createStyles(colors, layoutConfig, totalBottomInset);
   const flatListRef = useRef<FlatList>(null);
+  const chatHistoryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const lastChatHistoryRequestRef = useRef<string | null>(null);
   const [contextNick, setContextNick] = useState<string | null>(null);
   const [contextUser, setContextUser] = useState<ChannelUser | null>(null);
   const [contextHostInfo, setContextHostInfo] = useState<UserHostInfo | null>(
@@ -1572,6 +1585,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const selectionMode = selectedMessageIds.size > 0;
   const [showMessageAreaSearchButton, setShowMessageAreaSearchButton] =
     useState(false);
+  const [chatHistoryLoading, setChatHistoryLoading] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const isAtBottomRef = useRef(true);
   const device = useCameraDevice('back');
@@ -1738,6 +1752,15 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const connection = network ? connectionManager.getConnection(network) : null;
   const activeIrc = connection?.ircService || ircService;
   const currentNick = activeIrc.getCurrentNick?.() || '';
+  const supportsServerChatHistory = Boolean(
+    channel &&
+    typeof activeIrc.requestChatHistory === 'function' &&
+    (typeof activeIrc.hasCapability === 'function'
+      ? activeIrc.hasCapability('chathistory') ||
+        activeIrc.hasCapability('draft/chathistory')
+      : activeIrc.getEnabledCapabilities?.().includes('chathistory') ||
+        activeIrc.getEnabledCapabilities?.().includes('draft/chathistory')),
+  );
   const setTabs = useTabStore(state => state.setTabs);
   const setActiveTabId = useTabStore(state => state.setActiveTabId);
   const getTabById = useTabStore(state => state.getTabById);
@@ -1750,6 +1773,38 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         : false;
     setIsServerOper(oper);
   }, [activeIrc]);
+
+  const finishChatHistoryLoading = useCallback(() => {
+    if (chatHistoryTimerRef.current) {
+      clearTimeout(chatHistoryTimerRef.current);
+      chatHistoryTimerRef.current = null;
+    }
+    setChatHistoryLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribeChatHistory = activeIrc.on?.(
+      'chathistory-end',
+      finishChatHistoryLoading,
+    );
+    const unsubscribePlayback = activeIrc.on?.(
+      'event-playback',
+      finishChatHistoryLoading,
+    );
+    return () => {
+      unsubscribeChatHistory?.();
+      unsubscribePlayback?.();
+    };
+  }, [activeIrc, finishChatHistoryLoading]);
+
+  useEffect(() => {
+    return () => {
+      if (chatHistoryTimerRef.current) {
+        clearTimeout(chatHistoryTimerRef.current);
+      }
+    };
+  }, []);
+
   const resolveContextUser = useCallback(
     (nick: string | null) => {
       if (!nick || !channel) return null;
@@ -2909,6 +2964,82 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     }
   }, []);
 
+  const getChatHistoryRequest = useCallback((): ChatHistoryRequestOptions => {
+    const oldestMessage = messages.find(
+      msg => typeof msg.timestamp === 'number' || Boolean(msg.msgid),
+    );
+    if (!oldestMessage) {
+      return {
+        subcommand: 'LATEST',
+        refType: '*',
+        ref: '*',
+        limit: perfConfig.messageLoadChunk || 50,
+      };
+    }
+    if (oldestMessage.msgid) {
+      return {
+        subcommand: 'BEFORE',
+        refType: 'msgid',
+        ref: oldestMessage.msgid,
+        limit: perfConfig.messageLoadChunk || 50,
+      };
+    }
+    return {
+      subcommand: 'BEFORE',
+      refType: 'timestamp',
+      ref: oldestMessage.timestamp,
+      limit: perfConfig.messageLoadChunk || 50,
+    };
+  }, [messages, perfConfig.messageLoadChunk]);
+
+  const requestOlderChatHistory = useCallback(
+    (source: 'scroll' | 'manual' = 'manual') => {
+      if (
+        !channel ||
+        !supportsServerChatHistory ||
+        chatHistoryLoading ||
+        typeof activeIrc.requestChatHistory !== 'function'
+      ) {
+        return false;
+      }
+
+      const request = getChatHistoryRequest();
+      const requestKey = [
+        channel,
+        request.subcommand || 'LATEST',
+        request.refType || '*',
+        String(request.ref || '*'),
+        request.limit || 50,
+      ].join(':');
+      if (
+        source === 'scroll' &&
+        lastChatHistoryRequestRef.current === requestKey
+      ) {
+        return false;
+      }
+
+      lastChatHistoryRequestRef.current = requestKey;
+      setChatHistoryLoading(true);
+      activeIrc.requestChatHistory(channel, request);
+
+      if (chatHistoryTimerRef.current) {
+        clearTimeout(chatHistoryTimerRef.current);
+      }
+      chatHistoryTimerRef.current = setTimeout(() => {
+        chatHistoryTimerRef.current = null;
+        setChatHistoryLoading(false);
+      }, 5000);
+      return true;
+    },
+    [
+      activeIrc,
+      channel,
+      chatHistoryLoading,
+      getChatHistoryRequest,
+      supportsServerChatHistory,
+    ],
+  );
+
   // Handle end reached (top of list) - load more old messages
   const handleEndReached = useCallback(() => {
     if (
@@ -2934,7 +3065,9 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
             console.error('Failed to load message history:', err);
           });
       }
+      return;
     }
+    requestOlderChatHistory('scroll');
   }, [
     perfConfig.enableLazyLoading,
     perfConfig.messageLoadChunk,
@@ -2942,6 +3075,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     displayMessages.length,
     channel,
     network,
+    requestOlderChatHistory,
   ]);
 
   const handleCopySelected = useCallback(() => {
@@ -2977,6 +3111,47 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     setCopyStatus(message);
     setTimeout(() => setCopyStatus(''), 1500);
   }, [selectedMessageIds, displayMessages, layoutState.timestampFormat, t]);
+
+  const chatHistoryFooter = useMemo(() => {
+    if (!supportsServerChatHistory) return null;
+    return (
+      <View style={styles.chatHistoryFooter}>
+        <TouchableOpacity
+          testID="load-older-chat-history"
+          style={[
+            styles.chatHistoryButton,
+            chatHistoryLoading && styles.chatHistoryButtonDisabled,
+          ]}
+          onPress={() => requestOlderChatHistory('manual')}
+          disabled={chatHistoryLoading}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel={t('Load older history')}
+        >
+          {chatHistoryLoading ? (
+            <ActivityIndicator size="small" color={colors.buttonPrimaryText} />
+          ) : (
+            <Icon name="history" size={14} color={colors.buttonPrimaryText} />
+          )}
+          <Text style={styles.chatHistoryButtonText}>
+            {chatHistoryLoading
+              ? t('Loading history...')
+              : t('Load older history')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [
+    chatHistoryLoading,
+    colors.buttonPrimaryText,
+    requestOlderChatHistory,
+    styles.chatHistoryButton,
+    styles.chatHistoryButtonDisabled,
+    styles.chatHistoryButtonText,
+    styles.chatHistoryFooter,
+    supportsServerChatHistory,
+    t,
+  ]);
 
   const openNickContextMenu = useCallback(
     (nick: string, source?: NickContextSource) => {
@@ -3598,6 +3773,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         <View style={styles.container}>
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>{t('No messages yet')}</Text>
+            {chatHistoryFooter}
           </View>
         </View>
         {!searchVisible && showMessageAreaSearchButton && (
@@ -3644,6 +3820,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           }}
           style={styles.container}
           contentContainerStyle={styles.contentContainer}
+          ListFooterComponent={chatHistoryFooter}
         />
         {/* Search Button (Floating) */}
         {!searchVisible && !selectionMode && showMessageAreaSearchButton && (
@@ -3717,6 +3894,30 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
               >
                 <Text style={styles.selectionButtonText}>{t('Copy')}</Text>
               </TouchableOpacity>
+              {selectedMessageIds.size === 1 && (
+                <TouchableOpacity
+                  style={styles.selectionButton}
+                  onPress={() => {
+                    const selectedMsg = displayMessages.find(m =>
+                      selectedMessageIds.has(m.id),
+                    );
+                    if (selectedMsg?.msgid) {
+                      const target =
+                        selectedMsg.channel && selectedMsg.channel !== '*'
+                          ? selectedMsg.channel
+                          : selectedMsg.from || channel || '';
+                      setPendingReply({
+                        msgid: selectedMsg.msgid,
+                        target,
+                        nick: selectedMsg.from || '',
+                      });
+                      clearSelection();
+                    }
+                  }}
+                >
+                  <Text style={styles.selectionButtonText}>{t('Reply')}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.selectionButton, styles.selectionCancelButton]}
                 onPress={clearSelection}
@@ -3771,58 +3972,19 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         removeClippedSubviews={false}
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={chatHistoryFooter}
       />
       {/* Search Button (Floating) */}
       {!searchVisible && !selectionMode && showMessageAreaSearchButton && (
         <TouchableOpacity
           style={styles.searchButton}
           onPress={() => handleSearchVisibleChange(true)}
-          activeOpacity={0.7}
         >
           <Icon name="search" size={20} color={colors.buttonPrimaryText} />
         </TouchableOpacity>
       )}
-      <NickContextMenu
-        visible={isMessageModalVisible('context')}
-        nick={contextNick}
-        onClose={() => setShowContextMenu(false)}
-        onAction={(action, actionContext) =>
-          handleNickAction(action, actionContext)
-        }
-        colors={colors}
-        network={network}
-        channel={channel}
-        activeNick={currentNick}
-        channelUsers={channelUsers}
-        connection={connection}
-        allowQrVerification={allowQrVerification}
-        allowFileExchange={allowFileExchange}
-        allowNfcExchange={allowNfcExchange}
-        isServerOper={isServerOper}
-        ignoreActionId="ignore_toggle"
-        initialUserHostInfo={contextHostInfo}
-        sourceMessageType={contextSourceMessageType}
-      />
-      <KickBanModal
-        visible={isMessageModalVisible('kickBan')}
-        onClose={() => setShowKickBanModal(false)}
-        onConfirm={handleKickBanConfirm}
-        nick={kickBanTarget?.nick || ''}
-        userHost={
-          kickBanTarget?.user && kickBanTarget?.host
-            ? `${kickBanTarget.user}@${kickBanTarget.host}`
-            : undefined
-        }
-        mode={kickBanMode}
-        colors={{
-          background: colors.surface,
-          text: colors.text,
-          accent: colors.primary,
-          border: colors.border,
-          inputBackground: colors.messageBackground,
-        }}
-      />
-      {blacklistModals}
       {selectionMode && (
         <Animated.View
           style={[
@@ -3844,6 +4006,30 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
             >
               <Text style={styles.selectionButtonText}>{t('Copy')}</Text>
             </TouchableOpacity>
+            {selectedMessageIds.size === 1 && (
+              <TouchableOpacity
+                style={styles.selectionButton}
+                onPress={() => {
+                  const selectedMsg = displayMessages.find(m =>
+                    selectedMessageIds.has(m.id),
+                  );
+                  if (selectedMsg?.msgid) {
+                    const target =
+                      selectedMsg.channel && selectedMsg.channel !== '*'
+                        ? selectedMsg.channel
+                        : selectedMsg.from || channel || '';
+                    setPendingReply({
+                      msgid: selectedMsg.msgid,
+                      target,
+                      nick: selectedMsg.from || '',
+                    });
+                    clearSelection();
+                  }
+                }}
+              >
+                <Text style={styles.selectionButtonText}>{t('Reply')}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.selectionButton, styles.selectionCancelButton]}
               onPress={clearSelection}
@@ -3906,6 +4092,33 @@ const createStyles = (
       lineHeight: messageLineHeight,
       writingDirection: layoutConfig.messageTextDirection || 'auto',
     },
+    chatHistoryFooter: {
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    chatHistoryButton: {
+      minHeight: 36,
+      minWidth: 150,
+      maxWidth: 240,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      backgroundColor: colors.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    chatHistoryButtonDisabled: {
+      opacity: 0.72,
+    },
+    chatHistoryButtonText: {
+      color: colors.buttonPrimaryText,
+      fontSize: Math.max(12, messageFontSize - 1),
+      fontWeight: '600',
+      lineHeight: Math.max(16, messageLineHeight - 2),
+      writingDirection: layoutConfig.messageTextDirection || 'auto',
+    },
     messageContainer: {
       flexDirection: 'row',
       marginBottom: layoutConfig.messageSpacing || 4,
@@ -3936,6 +4149,26 @@ const createStyles = (
       marginRight: 8,
       minWidth: 50,
       writingDirection: layoutConfig.messageTextDirection || 'auto',
+    },
+    replyIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+      paddingLeft: 8,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      opacity: 0.85,
+    },
+    replyIndicatorIcon: {
+      color: colors.primary,
+      fontSize: 11,
+      marginRight: 4,
+      fontWeight: '700',
+    },
+    replyIndicatorText: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '600',
     },
     messageWrapper: {
       flex: 1,

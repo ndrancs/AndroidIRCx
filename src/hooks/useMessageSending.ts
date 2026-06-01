@@ -14,6 +14,7 @@ import { encryptedDMService } from '../services/EncryptedDMService';
 import { channelEncryptionService } from '../services/ChannelEncryptionService';
 import { messageHistoryService } from '../services/MessageHistoryService';
 import { settingsService } from '../services/SettingsService';
+import { getAndClearPendingReply } from '../services/PendingReplyStore';
 import { useTabStore } from '../stores/tabStore';
 import { applyDecoration } from '../utils/DecorationFormatter';
 
@@ -632,7 +633,14 @@ export const useMessageSending = (params: UseMessageSendingParams) => {
         }
       }
 
-      activeIRCService.sendMessage(activeTab.name, commandToSend);
+      const pendingReply = getAndClearPendingReply();
+      if (pendingReply) {
+        activeIRCService.sendMessageWithTags(activeTab.name, commandToSend, {
+          replyTo: pendingReply.msgid,
+        });
+      } else {
+        activeIRCService.sendMessage(activeTab.name, commandToSend);
+      }
     },
     [
       isConnected,

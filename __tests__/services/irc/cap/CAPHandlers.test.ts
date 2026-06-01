@@ -18,6 +18,7 @@ describe('CAPHandlers', () => {
       capAvailable: new Set<string>(),
       capEnabledSet: new Set<string>(),
       capRequested: new Set<string>(),
+      capValues: new Map<string, string>(),
       config: {
         host: 'irc.example.org',
         sasl: { account: 'alice', password: 'secret' },
@@ -47,6 +48,7 @@ describe('CAPHandlers', () => {
 
     expect(ctx.capAvailable.has('multi-prefix')).toBe(true);
     expect(ctx.capAvailable.has('sasl')).toBe(true);
+    expect(ctx.capValues.get('sasl')).toBe('PLAIN');
     expect(ctx.setCapLSReceived).toHaveBeenCalledWith(true);
     expect(ctx.emit).toHaveBeenCalledWith(
       'capabilities',
@@ -76,7 +78,7 @@ describe('CAPHandlers', () => {
     expect(ctx.emit).toHaveBeenCalledWith(
       'sts-policy',
       'irc.example.org',
-      'duration',
+      'duration=60',
     );
 
     jest.advanceTimersByTime(51);
@@ -91,6 +93,16 @@ describe('CAPHandlers', () => {
 
     expect(ctx.endCAPNegotiation).toHaveBeenCalled();
     expect(ctx.startSASL).not.toHaveBeenCalled();
+  });
+
+  it('requests ISUPPORT early when draft/extended-isupport is acked', () => {
+    ctx.config = { host: 'irc.example.org' };
+
+    handlers.handleCAPCommand(['ACK', ':draft/extended-isupport']);
+
+    expect(ctx.capEnabledSet.has('draft/extended-isupport')).toBe(true);
+    expect(ctx.sendRaw).toHaveBeenCalledWith('ISUPPORT');
+    expect(ctx.endCAPNegotiation).toHaveBeenCalled();
   });
 
   it('supports forced SASL even when the server did not ack sasl', () => {
@@ -110,7 +122,24 @@ describe('CAPHandlers', () => {
 
     expect(ctx.capRequested.has('sasl')).toBe(false);
     expect(ctx.capRequested.has('multi-prefix')).toBe(true);
+    expect(ctx.endCAPNegotiation).not.toHaveBeenCalled();
+
+    handlers.handleCAPCommand(['NAK', ':multi-prefix']);
     expect(ctx.endCAPNegotiation).toHaveBeenCalled();
+  });
+
+  it('handles CAP LIST and disabled ACK values', () => {
+    handlers.handleCAPCommand(['LIST', ':multi-prefix sasl=PLAIN']);
+
+    expect(ctx.capEnabledSet.has('multi-prefix')).toBe(true);
+    expect(ctx.capValues.get('sasl')).toBe('PLAIN');
+    expect(ctx.emit).toHaveBeenCalledWith(
+      'capabilities-list',
+      expect.arrayContaining(['multi-prefix', 'sasl']),
+    );
+
+    handlers.handleCAPCommand(['ACK', ':-sasl']);
+    expect(ctx.capEnabledSet.has('sasl')).toBe(false);
   });
 
   it('handles CAP NEW and requests sasl again when credentials exist', () => {

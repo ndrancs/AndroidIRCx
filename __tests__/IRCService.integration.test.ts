@@ -128,10 +128,14 @@ describe('IRCService connectivity & basic flow', () => {
       socket.writes.find(w => w.startsWith('AUTHENTICATE PLAIN')),
     ).toBeTruthy();
 
-    // Once SASL auth begins, a subsequent ACK without SASL should end CAP
+    // Once SASL auth begins, CAP still waits for every requested capability.
     (irc as any).capNegotiating = true;
     (irc as any).saslAuthenticating = true;
     (irc as any).handleCAPCommand(['ACK', 'multi-prefix']);
+    jest.runAllTimers();
+    expect(socket.writes.find(w => w.startsWith('CAP END'))).toBeFalsy();
+
+    (irc as any).handleCAPCommand(['NAK', 'message-tags']);
     jest.runAllTimers();
     expect(socket.writes.find(w => w.startsWith('CAP END'))).toBeTruthy();
     expect((irc as any)._sendRegistration).toHaveBeenCalled();

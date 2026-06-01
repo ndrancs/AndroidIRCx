@@ -50,6 +50,7 @@ interface IRCServiceInterface {
   logRaw: (message: string) => void;
   getNetworkName: () => string;
   hasCapability: (cap: string) => boolean;
+  processISupport: (tokens: string[]) => void;
   getUserManagementService: () => any;
 
   // Channel/User
@@ -321,6 +322,7 @@ export class IRCNumericHandlers {
 
       // Capabilities
       hasCapability: (cap: string) => svc.hasCapability(cap),
+      processISupport: (tokens: string[]) => svc.processISupport(tokens),
 
       // Config
       getConfig: () => svc.config,
