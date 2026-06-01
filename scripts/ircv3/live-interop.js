@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global Buffer */
 
 const fs = require('fs');
 const net = require('net');
@@ -534,7 +535,7 @@ function runFixture(fixture, options = {}) {
       if (socket && !socket.destroyed) {
         try {
           send('QUIT :AndroidIRCX IRCv3 interop probe complete');
-        } catch (_error) {
+        } catch {
           // Ignore shutdown write failures.
         }
         socket.end();

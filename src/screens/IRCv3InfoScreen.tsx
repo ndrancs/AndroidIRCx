@@ -8,6 +8,8 @@
  * in a clean, user-friendly layout.
  */
 
+/* eslint-disable react-native/no-inline-styles -- settings screen uses dynamic local layout styles extensively */
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -158,13 +160,13 @@ export const IRCv3InfoScreen: React.FC<IRCv3InfoScreenProps> = ({
       {
         name: 'Typing',
         check:
-          typeof capValues['typing'] !== 'undefined' || enabled.has('typing'),
+          typeof capValues.typing !== 'undefined' || enabled.has('typing'),
         description: 'Typing indicators',
       },
       {
         name: 'Reactions',
         check:
-          typeof capValues['react'] !== 'undefined' || enabled.has('react'),
+          typeof capValues.react !== 'undefined' || enabled.has('react'),
         description: 'Message reactions / emoji',
       },
       {
