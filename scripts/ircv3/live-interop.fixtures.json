@@ -9,11 +9,7 @@
       "tls": true,
       "nickPrefix": "AIXv3",
       "timeoutMs": 15000,
-      "expectedAnyCaps": [
-        "server-time",
-        "sasl",
-        "multi-prefix"
-      ],
+      "expectedAnyCaps": ["server-time", "sasl", "multi-prefix"],
       "requestCaps": [
         "server-time",
         "message-tags",
@@ -194,11 +190,7 @@
       "nickPrefix": "AIXv3Z",
       "pass": "${IRCV3_ZNC_PASS}",
       "timeoutMs": 15000,
-      "expectedAnyCaps": [
-        "server-time",
-        "message-tags",
-        "batch"
-      ],
+      "expectedAnyCaps": ["server-time", "message-tags", "batch"],
       "requestCaps": [
         "server-time",
         "message-tags",
@@ -233,11 +225,7 @@
         "clientHostname": "${IRCV3_WEBIRC_CLIENT_HOSTNAME:-127.0.0.1}",
         "clientAddress": "${IRCV3_WEBIRC_CLIENT_ADDRESS:-127.0.0.1}"
       },
-      "expectedAnyCaps": [
-        "server-time",
-        "message-tags",
-        "multi-prefix"
-      ],
+      "expectedAnyCaps": ["server-time", "message-tags", "multi-prefix"],
       "requestCaps": [
         "server-time",
         "message-tags",
@@ -267,11 +255,7 @@
       "webSocketSubprotocol": "${IRCV3_WEBSOCKET_SUBPROTOCOL:-binary.ircv3.net}",
       "nickPrefix": "AIXv3X",
       "timeoutMs": 15000,
-      "expectedAnyCaps": [
-        "server-time",
-        "message-tags",
-        "multi-prefix"
-      ],
+      "expectedAnyCaps": ["server-time", "message-tags", "multi-prefix"],
       "requestCaps": [
         "server-time",
         "message-tags",

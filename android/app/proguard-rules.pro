@@ -25,9 +25,6 @@
 -dontwarn com.google.android.play.core.integrity.**
 -dontwarn com.google.android.play.integrity.**
 
-# Firebase Messaging
--keep class com.google.firebase.messaging.** { *; }
-
 # Firebase Crashlytics (OBAVEZNO)
 -keepattributes SourceFile,LineNumberTable
 -keepattributes *Annotation*

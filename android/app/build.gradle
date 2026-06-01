@@ -363,9 +363,10 @@ dependencies {
         implementation jscFlavor
     }
 
-    // Firebase Cloud Messaging
+    // Firebase app services used by AndroidIRCX. Do not include Firebase Messaging
+    // unless remote push is implemented; unused FCM auto-init has caused
+    // FirebaseMessaging token refresh crashes in production.
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-    implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-appcheck")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-analytics")
