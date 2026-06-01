@@ -159,14 +159,12 @@ export const IRCv3InfoScreen: React.FC<IRCv3InfoScreenProps> = ({
       },
       {
         name: 'Typing',
-        check:
-          typeof capValues.typing !== 'undefined' || enabled.has('typing'),
+        check: typeof capValues.typing !== 'undefined' || enabled.has('typing'),
         description: 'Typing indicators',
       },
       {
         name: 'Reactions',
-        check:
-          typeof capValues.react !== 'undefined' || enabled.has('react'),
+        check: typeof capValues.react !== 'undefined' || enabled.has('react'),
         description: 'Message reactions / emoji',
       },
       {
