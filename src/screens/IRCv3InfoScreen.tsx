@@ -33,6 +33,7 @@ interface IRCv3InfoScreenProps {
 
 interface IRCv3Data {
   networkName: string;
+  isConnected: boolean;
   availableCaps: string[];
   enabledCaps: string[];
   capValues: Record<string, string>;
@@ -43,18 +44,17 @@ function useIRCv3Data(networkId?: string): IRCv3Data | null {
   const [data, setData] = useState<IRCv3Data | null>(null);
 
   const refresh = useCallback(() => {
-    if (!networkId) {
-      setData(null);
-      return;
-    }
-    const conn = connectionManager.getConnection(networkId);
+    const conn = networkId
+      ? connectionManager.getConnection(networkId)
+      : connectionManager.getActiveConnection();
     const irc: IRCService | undefined = conn?.ircService;
     if (!irc) {
       setData(null);
       return;
     }
     setData({
-      networkName: irc.getNetworkName() || networkId,
+      networkName: irc.getNetworkName() || networkId || conn?.networkId || '',
+      isConnected: irc.getConnectionStatus(),
       availableCaps: irc.getAvailableCapabilities(),
       enabledCaps: irc.getEnabledCapabilities(),
       capValues: irc.getCapabilityValues(),
@@ -78,6 +78,7 @@ export const IRCv3InfoScreen: React.FC<IRCv3InfoScreenProps> = ({
   const { colors } = useTheme();
   const irData = useIRCv3Data(networkId);
   const hasCaps = (irData?.availableCaps?.length ?? 0) > 0;
+  const isConnected = Boolean(irData?.isConnected);
 
   const styles = createStyles(colors);
 
@@ -478,7 +479,7 @@ export const IRCv3InfoScreen: React.FC<IRCv3InfoScreenProps> = ({
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
         >
-          {hasCaps ? renderConnectedInfo() : renderNotConnected()}
+          {isConnected ? renderConnectedInfo() : renderNotConnected()}
         </ScrollView>
       </View>
     </Modal>

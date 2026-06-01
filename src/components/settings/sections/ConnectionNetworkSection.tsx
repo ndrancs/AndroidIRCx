@@ -504,10 +504,21 @@ export const ConnectionNetworkSection: React.FC<
   }, [passwordsUnlocked]);
 
   useEffect(() => {
-    setQuickConnectNetworks(networks);
+    setQuickConnectNetworks(prev => {
+      const isSameNetworkList =
+        prev.length === networks.length &&
+        prev.every((network, index) => network.id === networks[index]?.id);
+      return isSameNetworkList ? prev : networks;
+    });
   }, [networks]);
 
   const openQuickConnectModal = useCallback(async () => {
+    // Open immediately using the already-loaded networks. Waiting for storage refresh
+    // before showing the picker can make the tap look like it did nothing if the
+    // settings row is re-rendered/unmounted or storage is slow on Android.
+    setQuickConnectNetworks(networks);
+    setShowQuickConnectModal(true);
+
     try {
       const loadedNetworks = await settingsService.loadNetworks();
       if (!isMountedRef.current) {
@@ -517,10 +528,8 @@ export const ConnectionNetworkSection: React.FC<
       await refreshNetworks();
     } catch (error) {
       console.error('Failed to load quick connect networks:', error);
-      setQuickConnectNetworks(networks);
-    } finally {
       if (isMountedRef.current) {
-        setShowQuickConnectModal(true);
+        setQuickConnectNetworks(networks);
       }
     }
   }, [networks, refreshNetworks]);

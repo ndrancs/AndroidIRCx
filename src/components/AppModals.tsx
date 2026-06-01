@@ -370,7 +370,7 @@ export function AppModals({
           console.log('🔍 SettingsScreen onClose called');
           setShowSettings(false);
         }}
-        currentNetwork={activeTab?.networkId}
+        currentNetwork={activeTab?.networkId ?? focusedNetworkId}
         showRawCommands={showRawCommands}
         onShowRawCommandsChange={persistentSetShowRawCommands}
         rawCategoryVisibility={rawCategoryVisibility}
@@ -669,7 +669,7 @@ export function AppModals({
       {showIRCv3Info && (
         <IRCv3InfoScreen
           visible={showIRCv3Info}
-          networkId={activeTab?.networkId}
+          networkId={activeTab?.networkId ?? focusedNetworkId}
           onClose={() => setShowIRCv3Info(false)}
         />
       )}

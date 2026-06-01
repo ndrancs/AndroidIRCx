@@ -12,6 +12,10 @@ import { pick, isErrorWithCode } from '@react-native-documents/picker';
 const mockCapturedItems = new Map<string, any>();
 const mockSettingsGet = jest.fn(async (_k: string, d: any) => d);
 const mockSettingsSet = jest.fn(async () => undefined);
+const mockSettingsLoadNetworks = jest.fn(async () => [
+  { id: 'net1', name: 'Libera.Chat' },
+  { id: 'net2', name: 'OFTC' },
+]);
 const mockUpdateNetwork = jest.fn(async () => undefined);
 const mockSetQuickConnect = jest.fn(async () => undefined);
 const mockUpdateRateLimitConfig = jest.fn(async () => undefined);
@@ -55,6 +59,7 @@ const mockChannelFavoritesGetAll = jest.fn(() => new Map());
 const mockChannelFavoritesRemove = jest.fn(async () => undefined);
 const mockChannelFavoritesMove = jest.fn(async () => undefined);
 const mockIdentityProfilesList = jest.fn(async () => []);
+const mockSetShowIRCv3Info = jest.fn();
 
 jest.mock('../../../src/i18n/transifex', () => ({
   useT: () => (key: string, params?: Record<string, any>) => {
@@ -133,6 +138,7 @@ jest.mock('../../../src/services/SettingsService', () => ({
   settingsService: {
     getSetting: (...args: any[]) => mockSettingsGet(...args),
     setSetting: (...args: any[]) => mockSettingsSet(...args),
+    loadNetworks: (...args: any[]) => mockSettingsLoadNetworks(...args),
     onSettingChange: jest.fn(() => jest.fn()),
     updateNetwork: (...args: any[]) => mockUpdateNetwork(...args),
   },
@@ -208,6 +214,14 @@ jest.mock('../../../src/services/ConnectionManager', () => ({
   },
 }));
 
+jest.mock('../../../src/stores/uiStore', () => ({
+  useUIStore: {
+    getState: () => ({
+      setShowIRCv3Info: (...args: any[]) => mockSetShowIRCv3Info(...args),
+    }),
+  },
+}));
+
 jest.mock('../../../src/services/ServiceDetectionService', () => ({
   serviceDetectionService: {
     getDetectionResult: (...args: any[]) => mockServiceDetectionGet(...args),
@@ -269,6 +283,7 @@ describe('ConnectionNetworkSection', () => {
     mockIdentityProfilesList.mockResolvedValue([]);
     mockConnectionGet.mockReturnValue(null);
     mockServiceDetectionGet.mockReturnValue(null);
+    mockSetShowIRCv3Info.mockClear();
   });
 
   afterEach(() => {
@@ -305,7 +320,7 @@ describe('ConnectionNetworkSection', () => {
     });
   });
 
-  it('shows IRCv3 diagnostics for the active network', async () => {
+  it('opens IRCv3 diagnostics for the active network', async () => {
     mockConnectionGet.mockReturnValue({
       ircService: {
         getAvailableCapabilities: jest.fn(() => [
@@ -340,16 +355,9 @@ describe('ConnectionNetworkSection', () => {
 
     mockCapturedItems.get('connection-ircv3-diagnostics').onPress();
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'IRCv3 Diagnostics',
-      expect.stringContaining('Transport: websocket (text.ircv3.net)'),
-      [{ text: 'OK' }],
-    );
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'IRCv3 Diagnostics',
-      expect.stringContaining('Advertised CAPs (2): server-time, message-tags'),
-      [{ text: 'OK' }],
-    );
+    expect(mockConnectionGet).toHaveBeenCalledWith('net1');
+    expect(mockSetShowIRCv3Info).toHaveBeenCalledWith(true);
+    expect(Alert.alert).not.toHaveBeenCalled();
   });
 
   it('triggers callback props correctly', async () => {

@@ -11,6 +11,28 @@ let mockNickContextMenuProps: any = null;
 let mockKickBanModalProps: any = null;
 let mockActiveIrc: any = null;
 
+const defaultPerformanceConfig = {
+  enableVirtualization: true,
+  maxVisibleMessages: 100,
+  messageLoadChunk: 50,
+  enableLazyLoading: true,
+  messageLimit: 1000,
+  enableMessageCleanup: false,
+  cleanupThreshold: 1500,
+  renderOptimization: true,
+  imageLazyLoad: true,
+  userListGrouping: true,
+  userListVirtualization: true,
+  userListAutoDisableGroupingThreshold: 1000,
+  userListAutoVirtualizeThreshold: 500,
+  userListType: 'flashlist',
+  userListSearchDebounceMs: 300,
+  userListSkipSortThreshold: 1000,
+  userListEnableChunkLoading: true,
+  userListChunkSize: 100,
+  userListInitialRenderCount: 50,
+};
+
 // ── sub-component mocks ────────────────────────────────────────────────────
 jest.mock('../../src/components/LinkPreview', () => ({
   LinkPreview: (_p: any) => null,
@@ -140,27 +162,7 @@ jest.mock('../../src/services/LayoutService', () => ({
 jest.mock('../../src/services/PerformanceService', () => ({
   performanceService: {
     measureRender: jest.fn(),
-    getConfig: jest.fn(() => ({
-      enableVirtualization: true,
-      maxVisibleMessages: 100,
-      messageLoadChunk: 50,
-      enableLazyLoading: true,
-      messageLimit: 1000,
-      enableMessageCleanup: false,
-      cleanupThreshold: 1500,
-      renderOptimization: true,
-      imageLazyLoad: true,
-      userListGrouping: true,
-      userListVirtualization: true,
-      userListAutoDisableGroupingThreshold: 1000,
-      userListAutoVirtualizeThreshold: 500,
-      userListType: 'flashlist',
-      userListSearchDebounceMs: 300,
-      userListSkipSortThreshold: 1000,
-      userListEnableChunkLoading: true,
-      userListChunkSize: 100,
-      userListInitialRenderCount: 50,
-    })),
+    getConfig: jest.fn(() => defaultPerformanceConfig),
     onConfigChange: jest.fn(() => jest.fn()),
   },
 }));
@@ -463,6 +465,10 @@ describe('MessageArea', () => {
       on: jest.fn(() => jest.fn()),
     };
     mockGetConnection.mockReturnValue({ ircService: mockActiveIrc });
+    const {
+      performanceService,
+    } = require('../../src/services/PerformanceService');
+    performanceService.getConfig.mockReturnValue(defaultPerformanceConfig);
   });
 
   // ── basic rendering ──────────────────────────────────────────────────────
