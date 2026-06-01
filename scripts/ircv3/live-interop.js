@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global Buffer */
+/* eslint-disable no-undef */
 
 const fs = require('fs');
 const net = require('net');
