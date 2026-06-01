@@ -63,7 +63,6 @@ import { biometricAuthService } from '../../../services/BiometricAuthService';
 import { secureStorageService } from '../../../services/SecureStorageService';
 import { connectionManager } from '../../../services/ConnectionManager';
 import { serviceDetectionService } from '../../../services/ServiceDetectionService';
-import { IRCV3_CAPABILITY_DEFINITIONS } from '../../../services/irc/IRCv3CapabilityRegistry';
 import { useUIStore } from '../../../stores/uiStore';
 
 interface ConnectionNetworkSectionProps {
@@ -116,32 +115,6 @@ type GlobalProxySettings = {
 };
 
 const PIN_STORAGE_KEY = '@AndroidIRCX:pin-lock';
-
-const formatDiagnosticList = (values: string[], maxItems = 24): string => {
-  if (values.length === 0) return 'none';
-  const visible = values.slice(0, maxItems);
-  const suffix =
-    values.length > visible.length
-      ? `, +${values.length - visible.length} more`
-      : '';
-  return `${visible.join(', ')}${suffix}`;
-};
-
-const formatDiagnosticRecord = (
-  record: Record<string, string | true>,
-  maxItems = 18,
-): string => {
-  const entries = Object.entries(record).sort(([a], [b]) => a.localeCompare(b));
-  if (entries.length === 0) return 'none';
-  const visible = entries
-    .slice(0, maxItems)
-    .map(([key, value]) => (value === true ? key : `${key}=${value}`));
-  const suffix =
-    entries.length > visible.length
-      ? `, +${entries.length - visible.length} more`
-      : '';
-  return `${visible.join(', ')}${suffix}`;
-};
 
 export const ConnectionNetworkSection: React.FC<
   ConnectionNetworkSectionProps
