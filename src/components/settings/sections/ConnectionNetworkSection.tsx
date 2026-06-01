@@ -64,6 +64,7 @@ import { secureStorageService } from '../../../services/SecureStorageService';
 import { connectionManager } from '../../../services/ConnectionManager';
 import { serviceDetectionService } from '../../../services/ServiceDetectionService';
 import { IRCV3_CAPABILITY_DEFINITIONS } from '../../../services/irc/IRCv3CapabilityRegistry';
+import { useUIStore } from '../../../stores/uiStore';
 
 interface ConnectionNetworkSectionProps {
   colors: {
@@ -1308,10 +1309,9 @@ export const ConnectionNetworkSection: React.FC<
   }, [currentNetwork, getDefaultAutoReconnectConfig]);
 
   const showIRCv3Diagnostics = useCallback(() => {
-    const title = t('IRCv3 Diagnostics', { _tags: tags });
     if (!currentNetwork) {
       Alert.alert(
-        title,
+        t('IRCv3 Diagnostics', { _tags: tags }),
         t('Select or connect a network before opening IRCv3 diagnostics.', {
           _tags: tags,
         }),
@@ -1323,70 +1323,14 @@ export const ConnectionNetworkSection: React.FC<
     const connection = connectionManager.getConnection(currentNetwork);
     if (!connection) {
       Alert.alert(
-        title,
+        t('IRCv3 Diagnostics', { _tags: tags }),
         t('No active IRC connection for this network.', { _tags: tags }),
         [{ text: t('OK', { _tags: tags }) }],
       );
       return;
     }
 
-    const ircService = connection.ircService as any;
-    const availableCaps: string[] =
-      ircService.getAvailableCapabilities?.() || [];
-    const enabledCaps: string[] = ircService.getEnabledCapabilities?.() || [];
-    const capValues: Record<string, string> =
-      ircService.getCapabilityValues?.() || {};
-    const isupportValues: Record<string, string | true> =
-      ircService.getISupportValues?.() || {};
-    const transportInfo =
-      ircService.getTransportInfo?.() || ({ transport: 'tcp' } as const);
-
-    const availableSet = new Set(availableCaps);
-    const enabledSet = new Set(enabledCaps);
-    const capReasons = IRCV3_CAPABILITY_DEFINITIONS.filter(
-      definition => definition.status !== 'deprecated',
-    )
-      .map(definition => {
-        if (!availableSet.has(definition.name)) {
-          return `${definition.name}: not advertised`;
-        }
-        if (!enabledSet.has(definition.name)) {
-          return `${definition.name}: advertised but not enabled`;
-        }
-        return null;
-      })
-      .filter(Boolean) as string[];
-    const requiredISupportTokens = [
-      'CHATHISTORY',
-      'MSGREFTYPES',
-      'MONITOR',
-      'PREFIX',
-      'WHOX',
-      'UTF8ONLY',
-      'ACCOUNTEXTBAN',
-      'NETWORK',
-      'draft/ICON',
-    ];
-    const isupportReasons = requiredISupportTokens
-      .filter(token => isupportValues[token] === undefined)
-      .map(token => `${token}: ISUPPORT token not advertised`);
-    const unavailableReasons = [...capReasons, ...isupportReasons];
-    const protocol = transportInfo.webSocketProtocol
-      ? ` (${transportInfo.webSocketProtocol})`
-      : '';
-
-    Alert.alert(
-      title,
-      [
-        `Transport: ${transportInfo.transport}${protocol}`,
-        `Advertised CAPs (${availableCaps.length}): ${formatDiagnosticList(availableCaps)}`,
-        `Enabled CAPs (${enabledCaps.length}): ${formatDiagnosticList(enabledCaps)}`,
-        `CAP values: ${formatDiagnosticRecord(capValues)}`,
-        `ISUPPORT: ${formatDiagnosticRecord(isupportValues)}`,
-        `Unavailable: ${formatDiagnosticList(unavailableReasons, 18)}`,
-      ].join('\n\n'),
-      [{ text: t('OK', { _tags: tags }) }],
-    );
+    useUIStore.getState().setShowIRCv3Info(true);
   }, [currentNetwork, t, tags]);
 
   const sectionData: SettingItemType[] = useMemo(() => {
@@ -1926,6 +1870,7 @@ export const ConnectionNetworkSection: React.FC<
             )
           : t('Connect a network to inspect IRCv3 details', { _tags: tags }),
         type: 'button',
+        icon: { name: 'code', solid: true },
         disabled: !currentNetwork,
         searchKeywords: [
           'ircv3',

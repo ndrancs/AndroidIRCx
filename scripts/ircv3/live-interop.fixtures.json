@@ -1,0 +1,296 @@
+{
+  "fixtures": [
+    {
+      "id": "libera-style",
+      "family": "Libera-style",
+      "enabled": true,
+      "host": "irc.libera.chat",
+      "port": 6697,
+      "tls": true,
+      "nickPrefix": "AIXv3",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "sasl",
+        "multi-prefix"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "ergo",
+      "family": "Ergo",
+      "enabled": false,
+      "host": "${IRCV3_ERGO_HOST}",
+      "port": "${IRCV3_ERGO_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3E",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "draft/chathistory",
+        "draft/read-marker",
+        "draft/metadata-2"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport",
+        "draft/chathistory",
+        "chathistory",
+        "draft/read-marker",
+        "draft/metadata-2",
+        "metadata-2"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "inspircd",
+      "family": "InspIRCd",
+      "enabled": false,
+      "host": "${IRCV3_INSPIRCD_HOST}",
+      "port": "${IRCV3_INSPIRCD_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3I",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "labeled-response",
+        "standard-replies"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "unrealircd",
+      "family": "UnrealIRCd",
+      "enabled": false,
+      "host": "${IRCV3_UNREALIRCD_HOST}",
+      "port": "${IRCV3_UNREALIRCD_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3U",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "standard-replies"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "soju",
+      "family": "soju",
+      "enabled": false,
+      "host": "${IRCV3_SOJU_HOST}",
+      "port": "${IRCV3_SOJU_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3S",
+      "pass": "${IRCV3_SOJU_PASS}",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "draft/chathistory",
+        "draft/read-marker"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/chathistory",
+        "chathistory",
+        "draft/read-marker"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "znc",
+      "family": "ZNC",
+      "enabled": false,
+      "host": "${IRCV3_ZNC_HOST}",
+      "port": "${IRCV3_ZNC_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3Z",
+      "pass": "${IRCV3_ZNC_PASS}",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "batch"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "webirc-gateway",
+      "family": "WebIRC gateway",
+      "enabled": false,
+      "host": "${IRCV3_WEBIRC_HOST}",
+      "port": "${IRCV3_WEBIRC_PORT:-6697}",
+      "tls": true,
+      "nickPrefix": "AIXv3W",
+      "timeoutMs": 15000,
+      "webirc": {
+        "password": "${IRCV3_WEBIRC_PASSWORD}",
+        "gateway": "${IRCV3_WEBIRC_GATEWAY:-AndroidIRCX}",
+        "clientHostname": "${IRCV3_WEBIRC_CLIENT_HOSTNAME:-127.0.0.1}",
+        "clientAddress": "${IRCV3_WEBIRC_CLIENT_ADDRESS:-127.0.0.1}"
+      },
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "multi-prefix"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    },
+    {
+      "id": "websocket",
+      "family": "IRCv3 WebSocket",
+      "enabled": false,
+      "transport": "websocket",
+      "url": "${IRCV3_WEBSOCKET_URL}",
+      "webSocketSubprotocol": "${IRCV3_WEBSOCKET_SUBPROTOCOL:-binary.ircv3.net}",
+      "nickPrefix": "AIXv3X",
+      "timeoutMs": 15000,
+      "expectedAnyCaps": [
+        "server-time",
+        "message-tags",
+        "multi-prefix"
+      ],
+      "requestCaps": [
+        "server-time",
+        "message-tags",
+        "batch",
+        "labeled-response",
+        "cap-notify",
+        "multi-prefix",
+        "userhost-in-names",
+        "away-notify",
+        "account-notify",
+        "extended-join",
+        "chghost",
+        "standard-replies",
+        "message-ids",
+        "draft/extended-isupport"
+      ],
+      "probes": {
+        "capListAfterRegistration": true
+      }
+    }
+  ]
+}

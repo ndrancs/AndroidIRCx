@@ -122,6 +122,7 @@ export function useUIState() {
   const showHelpTroubleshooting = useUIStore(
     state => state.showHelpTroubleshooting,
   );
+  const showIRCv3Info = useUIStore(state => state.showIRCv3Info);
 
   return {
     // Connection state
@@ -202,5 +203,6 @@ export function useUIState() {
     showHelpMedia,
     showHelpChannelManagement,
     showHelpTroubleshooting,
+    showIRCv3Info,
   };
 }

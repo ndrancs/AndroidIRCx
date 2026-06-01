@@ -1997,9 +1997,7 @@
   "Enter a mask to ignore. Examples:": {
     "string": "Unesite masku za ignorisanje. Primeri:"
   },
-  "nick (ignore specific nick)": {
-    "string": "nick (ignoriši određeni nadimak)"
-  },
+  "nick (ignore specific nick)": {},
   "*!*@host.com (ignore all from host)": {
     "string": "*!*@host.com (ignoriši sve sa hosta)"
   },
@@ -3998,9 +3996,7 @@
   "*** You are now an IRC operator. Quick aliases: /oper /kill /gline /rehash /locops /wallops": {
     "string": "*** Sada si IRC operator. Brze prečice: /oper /kill /gline /rehash /locops /wallops"
   },
-  "is a bot": {
-    "string": "je bot"
-  },
+  "is a bot": {},
   "is using a secure connection": {
     "string": "koristi sigurnu vezu"
   },
@@ -5999,9 +5995,7 @@
   "Reset": {
     "string": "Vrati"
   },
-  "Reset All Sounds": {
-    "string": "Vrati sve zvukove"
-  },
+  "Reset All Sounds": {},
   "This will reset all sound settings to defaults. Continue?": {
     "string": "Ovo će vratiti sva podešavanja zvuka na podrazumevano. Nastavi?"
   },
@@ -8000,9 +7994,7 @@
   "Enter decryption password": {
     "string": "Unesite lozinku za dešifrovanje"
   },
-  "Decrypt & Restore": {
-    "string": "Dešifruj i vrati"
-  },
+  "Decrypt & Restore": {},
   "Topic Preview": {
     "string": "Pregled teme"
   },
@@ -10001,9 +9993,7 @@
   "help.media.autoDownloadTitle": {
     "string": "help.media.autoDownloadTitle"
   },
-  "help.media.autoDownloadDescription": {
-    "string": "help.media.autoDownloadDescription"
-  },
+  "help.media.autoDownloadDescription": {},
   "help.media.manualDownloadTitle": {
     "string": "help.media.manualDownloadTitle"
   },
@@ -12002,9 +11992,7 @@
   "Symptoms: \"Cannot join channel\", Error 473-475": {
     "string": ""
   },
-  "+i (Invite-only): Ask operator for invite": {
-    "string": ""
-  },
+  "+i (Invite-only): Ask operator for invite": {},
   "+k (Key required): Join with password: /join #channel password": {
     "string": ""
   },
@@ -13078,5 +13066,29 @@
   },
   "Unexpected syntax check failure.": {
     "string": ""
+  },
+  "IRCv3 Info": {
+    "string": "IRCv3 Info"
+  },
+  "IRCv3 Features": {
+    "string": "IRCv3 Mogućnosti"
+  },
+  "Core Capabilities": {
+    "string": "Osnovne mogućnosti"
+  },
+  "Extended Capabilities": {
+    "string": "Proširene mogućnosti"
+  },
+  "Server Support (ISUPPORT)": {
+    "string": "Serverska podrška (ISUPPORT)"
+  },
+  "Refresh Data": {
+    "string": "Osveži podatke"
+  },
+  "Advertised": {
+    "string": "Oglašeno"
+  },
+  "Connect to an IRC network to view IRCv3 capabilities and server features.": {
+    "string": "Povežite se na IRC mrežu da vidite IRCv3 mogućnosti i serverske funkcije."
   }
 }

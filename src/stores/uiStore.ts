@@ -121,6 +121,9 @@ export interface UIState {
     channels?: string[];
   } | null;
 
+  // IRCv3
+  showIRCv3Info: boolean;
+
   // Help Screens
   showHelpConnection: boolean;
   showHelpCommands: boolean;
@@ -250,6 +253,7 @@ export interface UIState {
   setShowHelpMedia: (show: boolean) => void;
   setShowHelpChannelManagement: (show: boolean) => void;
   setShowHelpTroubleshooting: (show: boolean) => void;
+  setShowIRCv3Info: (show: boolean) => void;
 
   // Bulk updates
   updateUIState: (updates: Partial<UIState>) => void;
@@ -326,6 +330,7 @@ const initialState = {
   showHelpMedia: false,
   showHelpChannelManagement: false,
   showHelpTroubleshooting: false,
+  showIRCv3Info: false,
 } satisfies Pick<
   UIState,
   | 'showFirstRunSetup'
@@ -395,6 +400,7 @@ const initialState = {
   | 'showHelpMedia'
   | 'showHelpChannelManagement'
   | 'showHelpTroubleshooting'
+  | 'showIRCv3Info'
 >;
 
 export const useUIStore = create<UIState>()(
@@ -511,6 +517,7 @@ export const useUIStore = create<UIState>()(
         set({ showHelpChannelManagement: show }),
       setShowHelpTroubleshooting: show =>
         set({ showHelpTroubleshooting: show }),
+      setShowIRCv3Info: (show: boolean) => set({ showIRCv3Info: show }),
 
       // Bulk updates
       updateUIState: updates => set(state => ({ ...state, ...updates })),

@@ -77,6 +77,7 @@ import {
 import { banService } from '../services/BanService';
 import { dccChatService } from '../services/DCCChatService';
 import { ircService } from '../services/IRCService';
+import { setPendingReply } from '../services/PendingReplyStore';
 import { encryptedDMService } from '../services/EncryptedDMService';
 import { channelEncryptionService } from '../services/ChannelEncryptionService';
 import { formatIRCTextWithLinks } from '../utils/IRCFormatter';
@@ -1000,6 +1001,12 @@ const MessageItem = React.memo<MessageItemProps>(
             <Text style={styles.timestamp}>
               {formatTimestamp(message.timestamp)}
             </Text>
+          )}
+          {message.replyTo && (
+            <View style={styles.replyIndicator}>
+              <Text style={styles.replyIndicatorIcon}>&#8634;</Text>
+              <Text style={styles.replyIndicatorText}>{t('Reply')}</Text>
+            </View>
           )}
           {message.type === 'raw' && formatParts ? (
             <View style={styles.messageContent}>
@@ -3887,6 +3894,30 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
               >
                 <Text style={styles.selectionButtonText}>{t('Copy')}</Text>
               </TouchableOpacity>
+              {selectedMessageIds.size === 1 && (
+                <TouchableOpacity
+                  style={styles.selectionButton}
+                  onPress={() => {
+                    const selectedMsg = displayMessages.find(m =>
+                      selectedMessageIds.has(m.id),
+                    );
+                    if (selectedMsg?.msgid) {
+                      const target =
+                        selectedMsg.channel && selectedMsg.channel !== '*'
+                          ? selectedMsg.channel
+                          : selectedMsg.from || channel || '';
+                      setPendingReply({
+                        msgid: selectedMsg.msgid,
+                        target,
+                        nick: selectedMsg.from || '',
+                      });
+                      clearSelection();
+                    }
+                  }}
+                >
+                  <Text style={styles.selectionButtonText}>{t('Reply')}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.selectionButton, styles.selectionCancelButton]}
                 onPress={clearSelection}
@@ -3950,52 +3981,10 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         <TouchableOpacity
           style={styles.searchButton}
           onPress={() => handleSearchVisibleChange(true)}
-          activeOpacity={0.7}
         >
           <Icon name="search" size={20} color={colors.buttonPrimaryText} />
         </TouchableOpacity>
       )}
-      <NickContextMenu
-        visible={isMessageModalVisible('context')}
-        nick={contextNick}
-        onClose={() => setShowContextMenu(false)}
-        onAction={(action, actionContext) =>
-          handleNickAction(action, actionContext)
-        }
-        colors={colors}
-        network={network}
-        channel={channel}
-        activeNick={currentNick}
-        channelUsers={channelUsers}
-        connection={connection}
-        allowQrVerification={allowQrVerification}
-        allowFileExchange={allowFileExchange}
-        allowNfcExchange={allowNfcExchange}
-        isServerOper={isServerOper}
-        ignoreActionId="ignore_toggle"
-        initialUserHostInfo={contextHostInfo}
-        sourceMessageType={contextSourceMessageType}
-      />
-      <KickBanModal
-        visible={isMessageModalVisible('kickBan')}
-        onClose={() => setShowKickBanModal(false)}
-        onConfirm={handleKickBanConfirm}
-        nick={kickBanTarget?.nick || ''}
-        userHost={
-          kickBanTarget?.user && kickBanTarget?.host
-            ? `${kickBanTarget.user}@${kickBanTarget.host}`
-            : undefined
-        }
-        mode={kickBanMode}
-        colors={{
-          background: colors.surface,
-          text: colors.text,
-          accent: colors.primary,
-          border: colors.border,
-          inputBackground: colors.messageBackground,
-        }}
-      />
-      {blacklistModals}
       {selectionMode && (
         <Animated.View
           style={[
@@ -4017,6 +4006,30 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
             >
               <Text style={styles.selectionButtonText}>{t('Copy')}</Text>
             </TouchableOpacity>
+            {selectedMessageIds.size === 1 && (
+              <TouchableOpacity
+                style={styles.selectionButton}
+                onPress={() => {
+                  const selectedMsg = displayMessages.find(m =>
+                    selectedMessageIds.has(m.id),
+                  );
+                  if (selectedMsg?.msgid) {
+                    const target =
+                      selectedMsg.channel && selectedMsg.channel !== '*'
+                        ? selectedMsg.channel
+                        : selectedMsg.from || channel || '';
+                    setPendingReply({
+                      msgid: selectedMsg.msgid,
+                      target,
+                      nick: selectedMsg.from || '',
+                    });
+                    clearSelection();
+                  }
+                }}
+              >
+                <Text style={styles.selectionButtonText}>{t('Reply')}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.selectionButton, styles.selectionCancelButton]}
               onPress={clearSelection}
@@ -4136,6 +4149,26 @@ const createStyles = (
       marginRight: 8,
       minWidth: 50,
       writingDirection: layoutConfig.messageTextDirection || 'auto',
+    },
+    replyIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+      paddingLeft: 8,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      opacity: 0.85,
+    },
+    replyIndicatorIcon: {
+      color: colors.primary,
+      fontSize: 11,
+      marginRight: 4,
+      fontWeight: '700',
+    },
+    replyIndicatorText: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '600',
     },
     messageWrapper: {
       flex: 1,

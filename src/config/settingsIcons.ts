@@ -41,6 +41,7 @@ export const SETTINGS_ICONS: Record<string, SettingIcon> = {
   'display-whois': { name: 'id-card', solid: false },
 
   // Connection & Network
+  'connection-ircv3-diagnostics': { name: 'code', solid: true },
   'connection-global-proxy': { name: 'network-wired', solid: false },
   'connection-auto-reconnect': { name: 'sync-alt', solid: false },
   'connection-quality': { name: 'signal', solid: false },
