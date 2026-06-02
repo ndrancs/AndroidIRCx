@@ -28,6 +28,7 @@ export const SETTINGS_ICONS: Record<string, SettingIcon> = {
   'layout-message-padding': { name: 'expand', solid: false },
 
   // Display & UI
+  'display-adaptive-layout': { name: 'expand-arrows-alt', solid: false },
   'display-tab-sort': { name: 'sort', solid: false },
   'display-raw': { name: 'terminal', solid: false },
   'display-raw-categories': { name: 'filter', solid: false },

@@ -91,6 +91,49 @@ interface AppLayoutProps {
   onKillSwitchPress?: () => void;
 }
 
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
+
+export const getEffectiveLayoutConfig = (
+  config: LayoutConfig,
+  width: number,
+  height: number,
+  adaptiveLayoutEnabled = true,
+): LayoutConfig => {
+  if (!adaptiveLayoutEnabled) {
+    return config;
+  }
+
+  const isLandscape = width > height;
+  const shortSide = Math.min(width, height);
+  const isTabletLike = shortSide >= 600 || width >= 900;
+  const wideEnoughForSidePanel = width >= 640;
+  const userListPosition =
+    wideEnoughForSidePanel &&
+    (isLandscape || isTabletLike) &&
+    (config.userListPosition === 'top' || config.userListPosition === 'bottom')
+      ? 'right'
+      : config.userListPosition;
+  const maxSidePanelSize = Math.max(
+    120,
+    Math.min(280, Math.floor(width * 0.3)),
+  );
+  const maxStackedPanelSize = Math.max(
+    96,
+    Math.min(220, Math.floor(height * (isLandscape ? 0.28 : 0.35))),
+  );
+  const userListSizePx =
+    userListPosition === 'left' || userListPosition === 'right'
+      ? clamp(config.userListSizePx, 120, maxSidePanelSize)
+      : clamp(config.userListSizePx, 96, maxStackedPanelSize);
+
+  return {
+    ...config,
+    userListPosition,
+    userListSizePx,
+  };
+};
+
 export function AppLayout({
   tabs,
   activeTabId,
@@ -144,9 +187,6 @@ export function AppLayout({
   const { colors } = useTheme();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
-  const isSideTabs =
-    layoutConfig.tabPosition === 'left' || layoutConfig.tabPosition === 'right';
-  const showSideTabs = isSideTabs && sideTabsVisible;
 
   // Message search state
   const [searchVisible, setSearchVisible] = useState(false);
@@ -155,11 +195,41 @@ export function AppLayout({
   >('input_above');
   const [nicklistTongueEnabled, setNicklistTongueEnabled] = useState(true);
   const [nicklistTongueSizePx, setNicklistTongueSizePx] = useState(56);
+  const [adaptiveLayoutEnabled, setAdaptiveLayoutEnabled] = useState(true);
   const [swipeBehavior, setSwipeBehavior] = useState<
     'off' | 'switch-tabs' | 'show-panels'
   >('off');
   const [swipeInverse, setSwipeInverse] = useState(false);
   const setShowUserList = useUIStore(state => state.setShowUserList);
+  const effectiveLayoutConfig = useMemo(
+    () =>
+      getEffectiveLayoutConfig(
+        layoutConfig,
+        width,
+        height,
+        adaptiveLayoutEnabled,
+      ),
+    [layoutConfig, width, height, adaptiveLayoutEnabled],
+  );
+  const isSideTabs =
+    effectiveLayoutConfig.tabPosition === 'left' ||
+    effectiveLayoutConfig.tabPosition === 'right';
+  const showSideTabs = isSideTabs && sideTabsVisible;
+
+  useEffect(() => {
+    let mounted = true;
+    settingsService.getSetting('adaptiveLayoutEnabled', true).then(value => {
+      if (mounted) setAdaptiveLayoutEnabled(Boolean(value));
+    });
+    const unsubscribe = settingsService.onSettingChange<boolean>(
+      'adaptiveLayoutEnabled',
+      value => setAdaptiveLayoutEnabled(Boolean(value)),
+    );
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -272,8 +342,8 @@ export function AppLayout({
             }
           } else if (swipeBehavior === 'show-panels') {
             const isSideTabs =
-              layoutConfig.tabPosition === 'left' ||
-              layoutConfig.tabPosition === 'right';
+              effectiveLayoutConfig.tabPosition === 'left' ||
+              effectiveLayoutConfig.tabPosition === 'right';
 
             // Apply inverse if enabled
             const isRightSwipe = swipeInverse ? gesture.dx < 0 : gesture.dx > 0;
@@ -319,7 +389,7 @@ export function AppLayout({
       activeTab,
       showUserList,
       setShowUserList,
-      layoutConfig.tabPosition,
+      effectiveLayoutConfig.tabPosition,
     ],
   );
 
@@ -333,8 +403,8 @@ export function AppLayout({
         channelName={activeTab.name}
         network={activeTab?.networkId}
         position={position}
-        panelSizePx={layoutConfig.userListSizePx}
-        nickFontSizePx={layoutConfig.userListNickFontSizePx}
+        panelSizePx={effectiveLayoutConfig.userListSizePx}
+        nickFontSizePx={effectiveLayoutConfig.userListNickFontSizePx}
         onUserPress={handleUserPress}
         onWHOISPress={handleWHOISPress}
       />
@@ -353,7 +423,7 @@ export function AppLayout({
       Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6,
     onPanResponderRelease: (_, gesture) => {
       const threshold = 24;
-      const pos = layoutConfig.userListPosition;
+      const pos = effectiveLayoutConfig.userListPosition;
       if (pos === 'left') {
         if (gesture.dx > threshold) setShowUserList(true);
         if (gesture.dx < -threshold) setShowUserList(false);
@@ -385,7 +455,7 @@ export function AppLayout({
       backgroundColor: colors.surfaceVariant || colors.surface,
       borderColor: colors.border,
     };
-    const pos = layoutConfig.userListPosition;
+    const pos = effectiveLayoutConfig.userListPosition;
     if (pos === 'left') {
       return [
         base,
@@ -514,7 +584,7 @@ export function AppLayout({
         onSearchPress={() => setSearchVisible(prev => !prev)}
       />
       {bannerPosition === 'tabs_below' && bannerNode}
-      {layoutConfig.tabPosition === 'top' && (
+      {effectiveLayoutConfig.tabPosition === 'top' && (
         <ChannelTabs
           tabs={tabs}
           activeTabId={activeTabId}
@@ -525,7 +595,7 @@ export function AppLayout({
         />
       )}
       <View style={[styles.contentArea, showSideTabs && styles.contentAreaRow]}>
-        {layoutConfig.tabPosition === 'left' && showSideTabs && (
+        {effectiveLayoutConfig.tabPosition === 'left' && showSideTabs && (
           <ChannelTabs
             tabs={tabs}
             activeTabId={activeTabId}
@@ -538,16 +608,18 @@ export function AppLayout({
         <View
           style={[
             styles.messageAndUser,
-            (layoutConfig.userListPosition === 'left' ||
-              layoutConfig.userListPosition === 'right') &&
+            (effectiveLayoutConfig.userListPosition === 'left' ||
+              effectiveLayoutConfig.userListPosition === 'right') &&
               styles.messageAndUserRow,
-            (layoutConfig.userListPosition === 'top' ||
-              layoutConfig.userListPosition === 'bottom') &&
+            (effectiveLayoutConfig.userListPosition === 'top' ||
+              effectiveLayoutConfig.userListPosition === 'bottom') &&
               styles.messageAndUserColumn,
           ]}
         >
-          {layoutConfig.userListPosition === 'top' && renderUserList('top')}
-          {layoutConfig.userListPosition === 'left' && renderUserList('left')}
+          {effectiveLayoutConfig.userListPosition === 'top' &&
+            renderUserList('top')}
+          {effectiveLayoutConfig.userListPosition === 'left' &&
+            renderUserList('left')}
           <View
             {...swipePanResponder.panHandlers}
             style={styles.messageAreaContainer}
@@ -581,11 +653,12 @@ export function AppLayout({
               />
             )}
           </View>
-          {layoutConfig.userListPosition === 'right' && renderUserList('right')}
-          {layoutConfig.userListPosition === 'bottom' &&
+          {effectiveLayoutConfig.userListPosition === 'right' &&
+            renderUserList('right')}
+          {effectiveLayoutConfig.userListPosition === 'bottom' &&
             renderUserList('bottom')}
         </View>
-        {layoutConfig.tabPosition === 'right' && showSideTabs && (
+        {effectiveLayoutConfig.tabPosition === 'right' && showSideTabs && (
           <ChannelTabs
             tabs={tabs}
             activeTabId={activeTabId}
@@ -605,7 +678,7 @@ export function AppLayout({
             }
           />
         )}
-      {layoutConfig.tabPosition === 'bottom' && (
+      {effectiveLayoutConfig.tabPosition === 'bottom' && (
         <ChannelTabs
           tabs={tabs}
           activeTabId={activeTabId}

@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-vision-camera-barcode-scanner/android/build.gradle b/node_modules/react-native-vision-camera-barcode-scanner/android/build.gradle
+index e5549f0..034237a 100644
+--- a/node_modules/react-native-vision-camera-barcode-scanner/android/build.gradle
++++ b/node_modules/react-native-vision-camera-barcode-scanner/android/build.gradle
+@@ -67,6 +67,7 @@ android {
+   externalNativeBuild {
+     cmake {
+       path "CMakeLists.txt"
++      buildStagingDirectory file("${rootProject.buildDir}/short-cxx/${project.name}")
+     }
+   }
+ 

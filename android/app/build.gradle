@@ -263,14 +263,18 @@ android {
         applicationId = "com.androidircx"
         minSdkVersion = rootProject.ext.minSdkVersion
         targetSdkVersion = rootProject.ext.targetSdkVersion
-        versionCode = 126
-        versionName = "1.9.22"
+        versionCode = 127
+        versionName = "1.9.23"
 
         buildConfigField "long", "PLAY_INTEGRITY_PROJECT_NUMBER", "1060587657852L"
 
-        // Ensure all ABIs are included in the APK to prevent native lib crashes
+        // Ship ARM ABIs only in production. v1.9.21 Crashlytics reports showed
+        // fatal startup crashes on x86_64 installs where React Native native
+        // libraries were missing or extracted with the wrong ABI. Real Android
+        // phones/tablets are ARM-based, so release artifacts prioritize startup
+        // stability over emulator/x86 compatibility.
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
     }
     signingConfigs {

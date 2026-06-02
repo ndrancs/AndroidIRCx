@@ -1,6 +1,9 @@
 import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
-import { AppLayout } from '../../src/components/AppLayout';
+import {
+  AppLayout,
+  getEffectiveLayoutConfig,
+} from '../../src/components/AppLayout';
 import { PanResponder } from 'react-native';
 
 const mockChannelTabs = jest.fn(() => null);
@@ -319,6 +322,54 @@ describe('AppLayout', () => {
     expect(mockTypingIndicator).not.toHaveBeenCalled();
   });
 
+  it('keeps stacked nicklist layout on narrow portrait screens', () => {
+    const effectiveConfig = getEffectiveLayoutConfig(
+      {
+        ...baseProps.layoutConfig,
+        userListPosition: 'bottom',
+        userListSizePx: 180,
+      },
+      390,
+      844,
+    );
+
+    expect(effectiveConfig.userListPosition).toBe('bottom');
+    expect(effectiveConfig.userListSizePx).toBe(180);
+  });
+
+  it('moves stacked nicklist to a clamped side panel in landscape/tablet layouts', () => {
+    const effectiveConfig = getEffectiveLayoutConfig(
+      {
+        ...baseProps.layoutConfig,
+        userListPosition: 'bottom',
+        userListSizePx: 420,
+      },
+      900,
+      420,
+    );
+
+    expect(effectiveConfig.userListPosition).toBe('right');
+    expect(effectiveConfig.userListSizePx).toBe(270);
+  });
+
+  it('preserves saved layout when adaptive layout is disabled', () => {
+    const savedConfig = {
+      ...baseProps.layoutConfig,
+      userListPosition: 'bottom' as const,
+      userListSizePx: 420,
+    };
+    const effectiveConfig = getEffectiveLayoutConfig(
+      savedConfig,
+      900,
+      420,
+      false,
+    );
+
+    expect(effectiveConfig).toBe(savedConfig);
+    expect(effectiveConfig.userListPosition).toBe('bottom');
+    expect(effectiveConfig.userListSizePx).toBe(420);
+  });
+
   it('renders user-list tongue and toggles list on press', () => {
     const handleToggleUserList = jest.fn();
     const { getByLabelText } = render(
@@ -367,6 +418,7 @@ describe('AppLayout', () => {
     expect(settingListeners.has('swipeBehavior')).toBe(true);
     expect(settingListeners.has('bannerPosition')).toBe(true);
     expect(settingListeners.has('nicklistTongueEnabled')).toBe(true);
+    expect(settingListeners.has('adaptiveLayoutEnabled')).toBe(true);
   });
 
   it('executes swipe pan handlers for switch-tabs and show-panels behaviors', async () => {

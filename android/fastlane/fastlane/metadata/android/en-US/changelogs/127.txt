@@ -1,0 +1,5 @@
+What's new in v1.9.23:
+- Improved startup stability by tightening release native-library packaging
+- Improved tablet and large-screen compatibility for devices without NFC, camera, or microphone hardware
+- Added adaptive landscape/tablet layout handling in Display & UI settings
+- Nicklist now uses safer adaptive sizing so it does not crowd the chat area on wide screens

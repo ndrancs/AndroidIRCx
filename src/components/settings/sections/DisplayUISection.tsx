@@ -116,6 +116,7 @@ export const DisplayUISection: React.FC<DisplayUISectionProps> = ({
   const [keyboardVerticalOffset, setKeyboardVerticalOffset] = useState('0');
   const [useAndroidBottomSafeArea, setUseAndroidBottomSafeArea] =
     useState(true);
+  const [adaptiveLayoutEnabled, setAdaptiveLayoutEnabled] = useState(true);
   const [bannerPosition, setBannerPosition] = useState<
     'input_above' | 'input_below' | 'tabs_above' | 'tabs_below'
   >('input_above');
@@ -238,6 +239,12 @@ export const DisplayUISection: React.FC<DisplayUISectionProps> = ({
       );
       setUseAndroidBottomSafeArea(androidSafeArea);
 
+      const adaptiveLayout = await settingsService.getSetting(
+        'adaptiveLayoutEnabled',
+        true,
+      );
+      setAdaptiveLayoutEnabled(Boolean(adaptiveLayout));
+
       const bannerPos = await settingsService.getSetting(
         'bannerPosition',
         'input_above',
@@ -351,6 +358,37 @@ export const DisplayUISection: React.FC<DisplayUISectionProps> = ({
     ];
 
     const items: SettingItemType[] = [
+      {
+        id: 'display-adaptive-layout',
+        title: t('Adaptive layout for landscape/tablets', { _tags: tags }),
+        description: adaptiveLayoutEnabled
+          ? t('Automatically keeps chat usable on wide screens', {
+              _tags: tags,
+            })
+          : t(
+              'Use your saved tab and nicklist positions without wide-screen adjustments',
+              {
+                _tags: tags,
+              },
+            ),
+        type: 'switch',
+        value: adaptiveLayoutEnabled,
+        searchKeywords: [
+          'adaptive',
+          'layout',
+          'landscape',
+          'tablet',
+          'wide screen',
+          'nicklist',
+          'userlist',
+          'responsive',
+        ],
+        onValueChange: async (value: boolean | string) => {
+          const boolValue = Boolean(value);
+          setAdaptiveLayoutEnabled(boolValue);
+          await settingsService.setSetting('adaptiveLayoutEnabled', boolValue);
+        },
+      },
       {
         id: 'display-tab-sort',
         title: t('Sort Tabs Alphabetically', { _tags: tags }),
@@ -1264,6 +1302,7 @@ export const DisplayUISection: React.FC<DisplayUISectionProps> = ({
     keyboardBehaviorAndroid,
     keyboardVerticalOffset,
     useAndroidBottomSafeArea,
+    adaptiveLayoutEnabled,
     bannerPosition,
     channelListScrollSwitchTabs,
     channelListScrollSwitchTabsInverse,

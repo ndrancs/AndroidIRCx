@@ -13078,5 +13078,287 @@
   },
   "Unexpected syntax check failure.": {
     "string": "Unexpected syntax check failure."
+  },
+  "Invalid audio source": {
+    "string": "Invalid audio source"
+  },
+  "Unsupported audio source": {
+    "string": "Unsupported audio source"
+  },
+  "Reply": {
+    "string": "Reply"
+  },
+  "Failed to scan QR": {
+    "string": "Failed to scan QR"
+  },
+  "Load older history": {
+    "string": "Load older history"
+  },
+  "Loading history...": {
+    "string": "Loading history..."
+  },
+  "Copy user@host": {
+    "string": "Copy user@host"
+  },
+  "Copy hostmask": {
+    "string": "Copy hostmask"
+  },
+  "IRCv3 Info": {
+    "string": "IRCv3 Info"
+  },
+  "IRCv3 Diagnostics": {
+    "string": "IRCv3 Diagnostics"
+  },
+  "Select or connect a network before opening IRCv3 diagnostics.": {
+    "string": "Select or connect a network before opening IRCv3 diagnostics."
+  },
+  "No active IRC connection for this network.": {
+    "string": "No active IRC connection for this network."
+  },
+  "View CAP, ISUPPORT, transport, and unavailable feature details": {
+    "string": "View CAP, ISUPPORT, transport, and unavailable feature details"
+  },
+  "Connect a network to inspect IRCv3 details": {
+    "string": "Connect a network to inspect IRCv3 details"
+  },
+  "Allow Screenshots": {
+    "string": "Allow Screenshots"
+  },
+  "Copy WHOIS Details": {
+    "string": "Copy WHOIS Details"
+  },
+  "Backup generation returned empty data": {
+    "string": "Backup generation returned empty data"
+  },
+  "No backup data available to copy": {
+    "string": "No backup data available to copy"
+  },
+  "No backup data available to save": {
+    "string": "No backup data available to save"
+  },
+  "Failed to decrypt backup": {
+    "string": "Failed to decrypt backup"
+  },
+  "Generated backup is large, so inline JSON preview is hidden to keep the app stable. You can still copy, save, or restore it.": {
+    "string": "Generated backup is large, so inline JSON preview is hidden to keep the app stable. You can still copy, save, or restore it."
+  },
+  "Generated Backup": {
+    "string": "Generated Backup"
+  },
+  "Encrypted: Yes": {
+    "string": "Encrypted: Yes"
+  },
+  "Encrypted: No": {
+    "string": "Encrypted: No"
+  },
+  "IRCv3 Features": {
+    "string": "IRCv3 Features"
+  },
+  "Core Capabilities": {
+    "string": "Core Capabilities"
+  },
+  "Extended Capabilities": {
+    "string": "Extended Capabilities"
+  },
+  "Server Support (ISUPPORT)": {
+    "string": "Server Support (ISUPPORT)"
+  },
+  "Refresh Data": {
+    "string": "Refresh Data"
+  },
+  "Advertised": {
+    "string": "Advertised"
+  },
+  "Connect to an IRC network to view IRCv3 capabilities and server features.": {
+    "string": "Connect to an IRC network to view IRCv3 capabilities and server features."
+  },
+  "WHOIS response format": {
+    "string": "WHOIS response format"
+  },
+  "WHO response format": {
+    "string": "WHO response format"
+  },
+  "NAMES response format": {
+    "string": "NAMES response format"
+  },
+  "user@host": {
+    "string": "user@host"
+  },
+  "real name": {
+    "string": "real name"
+  },
+  "channels": {
+    "string": "channels"
+  },
+  "names": {
+    "string": "names"
+  },
+  "owners": {
+    "string": "owners"
+  },
+  "admins": {
+    "string": "admins"
+  },
+  "ops": {
+    "string": "ops"
+  },
+  "halfops": {
+    "string": "halfops"
+  },
+  "voices": {
+    "string": "voices"
+  },
+  "normal": {
+    "string": "normal"
+  },
+  "count": {
+    "string": "count"
+  },
+  "idle": {
+    "string": "idle"
+  },
+  "date": {
+    "string": "date"
+  },
+  "status": {
+    "string": "status"
+  },
+  "is connecting from {userhost}": {
+    "string": "is connecting from {userhost}"
+  },
+  "Gs*! 8": {
+    "string": "Gs*! 8"
+  },
+  "Nicks on {channel}": {
+    "string": "Nicks on {channel}"
+  },
+  "[{hostmask} has joined]": {
+    "string": "[{hostmask} has joined]"
+  },
+  "Raw response presets": {
+    "string": "Raw response presets"
+  },
+  "Search history...": {
+    "string": "Search history..."
+  },
+  "WEBIRC requires password, gateway, hostname, and IP before it can be enabled.": {
+    "string": "WEBIRC requires password, gateway, hostname, and IP before it can be enabled."
+  },
+  "IRCv3 Transport and Gateway": {
+    "string": "IRCv3 Transport and Gateway"
+  },
+  "Use IRCv3 WebSocket": {
+    "string": "Use IRCv3 WebSocket"
+  },
+  "WebSocket URL": {
+    "string": "WebSocket URL"
+  },
+  "wss://irc.example.net:6697/": {
+    "string": "wss://irc.example.net:6697/"
+  },
+  "WebSocket Subprotocols": {
+    "string": "WebSocket Subprotocols"
+  },
+  "binary.ircv3.net, text.ircv3.net": {
+    "string": "binary.ircv3.net, text.ircv3.net"
+  },
+  "Leave URL blank to use ws/wss with the network host and port.": {
+    "string": "Leave URL blank to use ws/wss with the network host and port."
+  },
+  "Enable WEBIRC": {
+    "string": "Enable WEBIRC"
+  },
+  "WEBIRC is only for trusted gateway/browser-style deployments where the IRC server has configured this password.": {
+    "string": "WEBIRC is only for trusted gateway/browser-style deployments where the IRC server has configured this password."
+  },
+  "WEBIRC Password": {
+    "string": "WEBIRC Password"
+  },
+  "shared WEBIRC password": {
+    "string": "shared WEBIRC password"
+  },
+  "WEBIRC Gateway": {
+    "string": "WEBIRC Gateway"
+  },
+  "WEBIRC Hostname": {
+    "string": "WEBIRC Hostname"
+  },
+  "client.example.net": {
+    "string": "client.example.net"
+  },
+  "WEBIRC IP": {
+    "string": "WEBIRC IP"
+  },
+  "203.0.113.10": {
+    "string": "203.0.113.10"
+  },
+  "WEBIRC Options": {
+    "string": "WEBIRC Options"
+  },
+  "secure, tls": {
+    "string": "secure, tls"
+  },
+  "Backup payload is empty": {
+    "string": "Backup payload is empty"
+  },
+  "Encryption password is required": {
+    "string": "Encryption password is required"
+  },
+  "Failed to encode encrypted backup": {
+    "string": "Failed to encode encrypted backup"
+  },
+  "Decryption password is required": {
+    "string": "Decryption password is required"
+  },
+  "Invalid encrypted backup payload": {
+    "string": "Invalid encrypted backup payload"
+  },
+  "Decryption failed - decrypted payload was empty": {
+    "string": "Decryption failed - decrypted payload was empty"
+  },
+  "End of WHO list for {channel}": {
+    "string": "End of WHO list for {channel}"
+  },
+  "*** Nicks on {channel}: {names}": {
+    "string": "*** Nicks on {channel}: {names}"
+  },
+  "is away: {message}": {
+    "string": "is away: {message}"
+  },
+  "is {userhost} * {realname}": {
+    "string": "is {userhost} * {realname}"
+  },
+  "using {server} {info}": {
+    "string": "using {server} {info}"
+  },
+  "has been idle {idle}, signed on {date}": {
+    "string": "has been idle {idle}, signed on {date}"
+  },
+  "End of WHOIS for {nick}": {
+    "string": "End of WHOIS for {nick}"
+  },
+  "is on channels: {channels}": {
+    "string": "is on channels: {channels}"
+  },
+  "is logged in as {account}": {
+    "string": "is logged in as {account}"
+  },
+  "is actually using host {host}": {
+    "string": "is actually using host {host}"
+  },
+  "is connecting from {host}": {
+    "string": "is connecting from {host}"
+  },
+  "is using modes {modes}": {
+    "string": "is using modes {modes}"
+  },
+  "WebSocket connection error": {
+    "string": "WebSocket connection error"
+  },
+  "Invalid WebIRC {field}": {
+    "string": "Invalid WebIRC {field}"
+  },
+  "METADATA is not supported by this server": {
+    "string": "METADATA is not supported by this server"
   }
 }
