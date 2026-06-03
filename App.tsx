@@ -7,7 +7,16 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StatusBar, View, Alert, AppState, LogBox } from 'react-native';
+import {
+  StatusBar,
+  View,
+  Text,
+  ActivityIndicator,
+  Alert,
+  AppState,
+  LogBox,
+  StyleSheet,
+} from 'react-native';
 import { createStyles } from './App.styles';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
@@ -70,6 +79,7 @@ import { useUserListActions } from './src/hooks/useUserListActions';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useLazyMessageHistory } from './src/hooks/useLazyMessageHistory';
 import { useDeepLinkHandler } from './src/hooks/useDeepLinkHandler';
+import { useAgeCompliance } from './src/hooks/useAgeCompliance';
 import { killSwitchService } from './src/services/KillSwitchService';
 import { screenshotProtectionService } from './src/services/ScreenshotProtectionService';
 import { getActiveTabSafe } from './src/utils/activeTabUtils';
@@ -80,15 +90,81 @@ LogBox.ignoreLogs([
   "It looks like you might be using shared value's .value inside reanimated inline style.",
 ]);
 
+function AgeComplianceGate({
+  mode,
+  reason,
+}: {
+  mode: 'checking' | 'blocked';
+  reason?: string;
+}) {
+  const isChecking = mode === 'checking';
+
+  return (
+    <SafeAreaProvider>
+      <StatusBar barStyle="light-content" backgroundColor="#2196F3" />
+      <View style={ageComplianceStyles.container}>
+        {isChecking ? <ActivityIndicator size="large" color="#2196F3" /> : null}
+        <Text style={ageComplianceStyles.title}>
+          {isChecking ? 'Checking age requirements…' : 'Access restricted'}
+        </Text>
+        <Text style={ageComplianceStyles.message}>
+          {isChecking
+            ? 'AndroidIRCX is checking Google Play Age Signals where required by local law.'
+            : reason ||
+              'Google Play age verification signals do not allow access to this app on this account.'}
+        </Text>
+      </View>
+    </SafeAreaProvider>
+  );
+}
+
+const ageComplianceStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  message: {
+    color: '#CBD5E1',
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  title: {
+    color: '#F8FAFC',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+});
+
 function App() {
   // Initialize Firebase App Check, consent management, AdMob, and error reporting
   useAppInitialization();
+  const ageCompliance = useAgeCompliance();
 
   useEffect(() => {
     initTransifex().catch(() => {});
     const unsubscribe = listenToLocaleChanges();
     return () => unsubscribe();
   }, []);
+
+  if (ageCompliance.isChecking) {
+    return <AgeComplianceGate mode="checking" />;
+  }
+
+  if (!ageCompliance.decision.allowed) {
+    return (
+      <AgeComplianceGate
+        mode="blocked"
+        reason={ageCompliance.decision.reason}
+      />
+    );
+  }
 
   return (
     <TXProvider tx={tx}>

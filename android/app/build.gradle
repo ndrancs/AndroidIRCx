@@ -263,8 +263,8 @@ android {
         applicationId = "com.androidircx"
         minSdkVersion = rootProject.ext.minSdkVersion
         targetSdkVersion = rootProject.ext.targetSdkVersion
-        versionCode = 127
-        versionName = "1.9.23"
+        versionCode = 128
+        versionName = "1.9.24"
 
         buildConfigField "long", "PLAY_INTEGRITY_PROJECT_NUMBER", "1060587657852L"
 
@@ -377,6 +377,7 @@ dependencies {
     implementation("com.google.firebase:firebase-crashlytics")
     debugImplementation("com.google.firebase:firebase-appcheck-debug")
     implementation("com.google.android.play:integrity:1.6.0")
+    implementation("com.google.android.play:age-signals:0.0.3")
 }
 
 // React Native Vector Icons

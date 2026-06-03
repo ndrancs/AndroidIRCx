@@ -56,7 +56,7 @@ class MainApplication : Application(), ReactApplication {
           // Fallback: return empty list - autolinking via Gradle should handle packages
           Log.w(TAG, "Falling back to empty package list - autolinking should handle packages")
           mutableListOf()
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
           Log.e(TAG, "Failed to get packages from PackageList: ${e.message}", e)
           // Report to Crashlytics safely
           reportToCrashlyticsSafely(e)
@@ -68,7 +68,7 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(IRCForegroundServicePackage())
               Log.d(TAG, "Added IRCForegroundServicePackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add IRCForegroundServicePackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
@@ -77,8 +77,17 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(PlayIntegrityPackage())
               Log.d(TAG, "Added PlayIntegrityPackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add PlayIntegrityPackage: ${e.message}", e)
+              // Don't fail completely if custom package fails
+          }
+
+          // Add our custom package for Play Age Signals API
+          try {
+              packages.add(PlayAgeSignalsPackage())
+              Log.d(TAG, "Added PlayAgeSignalsPackage")
+          } catch (e: Throwable) {
+              Log.e(TAG, "Failed to add PlayAgeSignalsPackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
 
@@ -86,7 +95,7 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(HttpPostPackage())
               Log.d(TAG, "Added HttpPostPackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add HttpPostPackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
@@ -95,7 +104,7 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(HttpPutPackage())
               Log.d(TAG, "Added HttpPutPackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add HttpPutPackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
@@ -104,7 +113,7 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(AudioFocusPackage())
               Log.d(TAG, "Added AudioFocusPackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add AudioFocusPackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
@@ -113,7 +122,7 @@ class MainApplication : Application(), ReactApplication {
           try {
               packages.add(ScreenshotProtectionPackage())
               Log.d(TAG, "Added ScreenshotProtectionPackage")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.e(TAG, "Failed to add ScreenshotProtectionPackage: ${e.message}", e)
               // Don't fail completely if custom package fails
           }
@@ -125,7 +134,7 @@ class MainApplication : Application(), ReactApplication {
           )
           Log.d(TAG, "ReactHost created successfully")
           host
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
           Log.e(TAG, "CRITICAL: Failed to initialize ReactHost: ${e.message}", e)
           // Report to Crashlytics safely
           reportToCrashlyticsSafely(e)
@@ -150,14 +159,14 @@ class MainApplication : Application(), ReactApplication {
                 } catch (e: NoClassDefFoundError) {
                     // Crashlytics classes not available - likely ProGuard issue
                     Log.w(TAG, "Crashlytics classes not found (ProGuard issue?): ${e.message}")
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     // Any other error reporting to Crashlytics - don't fail
                     Log.w(TAG, "Failed to report to Crashlytics: ${e.message}")
                 }
             } else {
                 Log.d(TAG, "Firebase not initialized, skipping Crashlytics report")
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // Even checking Firebase can fail - don't propagate
             Log.w(TAG, "Failed to check Firebase status: ${e.message}")
         }
@@ -167,7 +176,7 @@ class MainApplication : Application(), ReactApplication {
         try {
             val abis = android.os.Build.SUPPORTED_ABIS.joinToString(", ")
             Log.d(TAG, "[$stage] Device ABIs: $abis")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "[$stage] Failed to read supported ABIs: ${e.message}")
         }
 
@@ -178,7 +187,7 @@ class MainApplication : Application(), ReactApplication {
             val nativeList = nativeFiles?.joinToString(", ") { it.name } ?: "none"
             Log.d(TAG, "[$stage] nativeLibraryDir=$nativeDir (exists=${nativeDirFile.exists()})")
             Log.d(TAG, "[$stage] native libs: $nativeList")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "[$stage] Failed to list native libs: ${e.message}")
         }
     }
@@ -198,7 +207,10 @@ class MainApplication : Application(), ReactApplication {
                 Log.d(TAG, "[$stage] Class OK: $className")
             } catch (e: Throwable) {
                 Log.e(TAG, "[$stage] Class check failed: $className (${e.message})", e)
-                reportToCrashlyticsSafely(e)
+                // Do not send these diagnostic probes to Crashlytics. Some Android/RN
+                // startup paths can throw a stackless NoClassDefFoundError while the
+                // runtime is still loading classes, and recording that probe creates a
+                // misleading production issue even when startup continues successfully.
             }
         }
     }
@@ -217,7 +229,7 @@ class MainApplication : Application(), ReactApplication {
                 applicationInfo?.nativeLibraryDir ?: "unknown"
             )
             crashlytics.setCustomKey("new_arch_enabled", true)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "Failed to set Crashlytics diagnostic keys: ${e.message}")
         }
     }
@@ -240,11 +252,11 @@ class MainApplication : Application(), ReactApplication {
               // Set custom keys for better crash reporting
               recordCrashlyticsKeys()
               Log.d(TAG, "Crashlytics configured successfully")
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
               Log.w(TAG, "Failed to configure Crashlytics: ${e.message}", e)
               // Don't fail - Crashlytics is optional
           }
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
           Log.e(TAG, "Failed to initialize Firebase: ${e.message}", e)
           // Don't fail completely - Firebase is optional for basic functionality
           // Don't try to report to Crashlytics here as it might not be initialized yet
@@ -272,7 +284,7 @@ class MainApplication : Application(), ReactApplication {
           Log.e(TAG, "CRITICAL: Failed to link native library: ${e.message}", e)
           reportToCrashlyticsSafely(e)
           throw RuntimeException("Native library linking failed - please reinstall the app", e)
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
           Log.e(TAG, "CRITICAL: Failed to load React Native: ${e.message}", e)
           // Report to Crashlytics safely
           reportToCrashlyticsSafely(e)
