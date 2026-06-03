@@ -11,4 +11,4 @@ RUN sed -i 's/\r$//' /app/scripts/docker/prepare-secrets.sh /app/android/gradlew
   && chmod +x /app/scripts/docker/prepare-secrets.sh /app/android/gradlew
 
 ENTRYPOINT ["/app/scripts/docker/prepare-secrets.sh"]
-CMD ["./gradlew", "clean", ":app:externalNativeBuildCleanRelease", "assembleRelease", "bundleRelease", "-PreactNativeArchitectures=armeabi-v7a,arm64-v8a", "--no-daemon", "--no-configuration-cache", "--stacktrace"]
+CMD ["./gradlew", "clean", ":app:externalNativeBuildCleanRelease", "assembleRelease", "bundleRelease", "-PreactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64", "--no-daemon", "--no-configuration-cache", "--stacktrace"]

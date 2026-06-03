@@ -466,7 +466,7 @@ Automated Docker-based builds on push to master:
 Dockerfile -> reactnativecommunity/react-native-android
            -> yarn install
            -> prepare-secrets.sh (inject signing keys)
-           -> assembleRelease + bundleRelease (armeabi-v7a, arm64-v8a)
+           -> assembleRelease + bundleRelease (armeabi-v7a, arm64-v8a, x86, x86_64)
            -> upload artifacts
 ```
 
