@@ -4,6 +4,7 @@ package com.androidircx
 import android.app.Application
 import android.util.Log
 import java.io.File
+import java.io.FileInputStream
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -17,6 +18,11 @@ class MainApplication : Application(), ReactApplication {
 
     companion object {
         private const val TAG = "MainApplication"
+        private const val SOLOADER_BACKUP_DIR = "lib-main"
+        private const val ELF_MACHINE_ARM = 40
+        private const val ELF_MACHINE_AARCH64 = 183
+        private const val ELF_MACHINE_X86 = 3
+        private const val ELF_MACHINE_X86_64 = 62
     }
 
   // Temporary ReactNativeHost for PackageList initialization
@@ -234,6 +240,194 @@ class MainApplication : Application(), ReactApplication {
         }
     }
 
+    private fun expectedElfMachineForRuntime(): Pair<String, Int>? {
+        val nativeDir = try {
+            applicationInfo?.nativeLibraryDir.orEmpty()
+        } catch (e: Throwable) {
+            ""
+        }
+
+        val abi = when {
+            nativeDir.contains("arm64-v8a") -> "arm64-v8a"
+            nativeDir.contains("armeabi-v7a") -> "armeabi-v7a"
+            nativeDir.contains("x86_64") -> "x86_64"
+            nativeDir.contains("x86") -> "x86"
+            else -> try {
+                android.os.Build.SUPPORTED_ABIS.firstOrNull()
+            } catch (e: Throwable) {
+                null
+            }
+        } ?: return null
+
+        val machine = when (abi) {
+            "armeabi-v7a" -> ELF_MACHINE_ARM
+            "arm64-v8a" -> ELF_MACHINE_AARCH64
+            "x86" -> ELF_MACHINE_X86
+            "x86_64" -> ELF_MACHINE_X86_64
+            else -> return null
+        }
+        return abi to machine
+    }
+
+    private fun readElfMachine(file: File): Int? {
+        return try {
+            val header = ByteArray(20)
+            FileInputStream(file).use { stream ->
+                val read = stream.read(header)
+                if (read < header.size) {
+                    return null
+                }
+            }
+
+            if (
+                header[0] != 0x7f.toByte() ||
+                header[1] != 'E'.code.toByte() ||
+                header[2] != 'L'.code.toByte() ||
+                header[3] != 'F'.code.toByte()
+            ) {
+                return null
+            }
+
+            val littleEndian = header[5].toInt() == 1
+            val first = header[18].toInt() and 0xff
+            val second = header[19].toInt() and 0xff
+            if (littleEndian) {
+                first or (second shl 8)
+            } else {
+                (first shl 8) or second
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Failed to read ELF header for ${file.name}: ${e.message}")
+            null
+        }
+    }
+
+    private fun machineName(machine: Int?): String {
+        return when (machine) {
+            ELF_MACHINE_ARM -> "armeabi-v7a"
+            ELF_MACHINE_AARCH64 -> "arm64-v8a"
+            ELF_MACHINE_X86 -> "x86"
+            ELF_MACHINE_X86_64 -> "x86_64"
+            null -> "unknown"
+            else -> "machine-$machine"
+        }
+    }
+
+    private fun clearSoLoaderBackupCache(reason: String): Boolean {
+        val dataDir = try {
+            applicationInfo?.dataDir
+        } catch (e: Throwable) {
+            null
+        } ?: return false
+
+        val backupDir = File(dataDir, SOLOADER_BACKUP_DIR)
+        if (!backupDir.exists()) {
+            return false
+        }
+
+        return try {
+            val deleted = backupDir.deleteRecursively()
+            Log.w(TAG, "Cleared SoLoader backup cache ($reason): deleted=$deleted")
+            deleted
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to clear SoLoader backup cache ($reason): ${e.message}", e)
+            false
+        }
+    }
+
+    private fun clearStaleSoLoaderCacheIfNeeded(stage: String) {
+        val expected = expectedElfMachineForRuntime() ?: return
+        val dataDir = try {
+            applicationInfo?.dataDir
+        } catch (e: Throwable) {
+            null
+        } ?: return
+
+        val backupDir = File(dataDir, SOLOADER_BACKUP_DIR)
+        if (!backupDir.exists()) {
+            return
+        }
+
+        val criticalLibraries = listOf(
+            "libc++_shared.so",
+            "libreactnative.so",
+            "libhermesvm.so",
+            "libfbjni.so",
+            "libjsi.so"
+        )
+
+        for (library in criticalLibraries) {
+            val cachedLibrary = File(backupDir, library)
+            if (!cachedLibrary.exists()) {
+                continue
+            }
+
+            val actualMachine = readElfMachine(cachedLibrary)
+            if (actualMachine != null && actualMachine != expected.second) {
+                clearSoLoaderBackupCache(
+                    "$stage: $library is ${machineName(actualMachine)}; expected ${expected.first}"
+                )
+                return
+            }
+        }
+    }
+
+    private fun isNativeLoadFailure(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (
+                current is com.facebook.soloader.SoLoaderDSONotFoundError ||
+                current is UnsatisfiedLinkError
+            ) {
+                return true
+            }
+
+            val className = current.javaClass.name
+            val message = current.message.orEmpty()
+            if (
+                className.startsWith("com.facebook.soloader.") ||
+                message.contains("couldn't find DSO to load", ignoreCase = true) ||
+                message.contains("dlopen failed", ignoreCase = true) ||
+                message.contains(SOLOADER_BACKUP_DIR, ignoreCase = true) ||
+                message.contains("Native library", ignoreCase = true)
+            ) {
+                return true
+            }
+
+            current = current.cause
+        }
+        return false
+    }
+
+    private fun loadReactNativeWithNativeCacheRecovery() {
+        clearStaleSoLoaderCacheIfNeeded("before React Native load")
+
+        try {
+            loadReactNative(this)
+            return
+        } catch (e: Throwable) {
+            if (!isNativeLoadFailure(e)) {
+                throw e
+            }
+
+            Log.e(TAG, "Native load failed; clearing SoLoader cache before one retry", e)
+            reportToCrashlyticsSafely(e)
+            val cleared = clearSoLoaderBackupCache("React Native native load failure")
+            if (!cleared) {
+                throw e
+            }
+
+            try {
+                loadReactNative(this)
+                Log.d(TAG, "React Native loaded after clearing SoLoader backup cache")
+                return
+            } catch (retryError: Throwable) {
+                retryError.addSuppressed(e)
+                throw retryError
+            }
+        }
+    }
+
   override fun onCreate() {
     super.onCreate()
       Log.d(TAG, "Application onCreate started")
@@ -265,7 +459,7 @@ class MainApplication : Application(), ReactApplication {
       try {
           // Initialize React Native
           Log.d(TAG, "Loading React Native...")
-          loadReactNative(this)
+          loadReactNativeWithNativeCacheRecovery()
           Log.d(TAG, "React Native loaded successfully")
           logNativeDiagnostics("onCreate:afterRN")
           logReactNativeClassDiagnostics("onCreate:afterRN", includeNative = true)

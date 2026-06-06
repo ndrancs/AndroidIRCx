@@ -70,6 +70,25 @@ Remove-Item -Recurse -Force .\app\build, .\app\.cxx -ErrorAction SilentlyContinu
 # IMPORTANT — ONE LINE gradlew
 .\gradlew.bat clean :app:externalNativeBuildCleanRelease assembleRelease bundleRelease -P"reactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64" --no-configuration-cache --stacktrace
 
+$verifyScript = Join-Path $projectRoot "scripts\verify-android-native-libs.ps1"
+$releaseArtifacts = @(
+    ".\app\build\outputs\apk\release\app-release.apk",
+    ".\app\build\outputs\bundle\release\app-release.aab"
+)
+
+foreach ($artifact in $releaseArtifacts)
+{
+    if (Test-Path $artifact)
+    {
+        Write-Host "Verifying native libraries in $artifact..." -ForegroundColor Cyan
+        powershell -NoProfile -ExecutionPolicy Bypass -File $verifyScript -ArtifactPath $artifact
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw "Native library verification failed for $artifact"
+        }
+    }
+}
+
 # Return only if we pushed
 if ($pushed)
 {
