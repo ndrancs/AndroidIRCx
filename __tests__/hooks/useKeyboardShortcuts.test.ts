@@ -5,7 +5,7 @@
  * Tests for useKeyboardShortcuts hook
  */
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-native';
 import { useKeyboardShortcuts } from '../../src/hooks/useKeyboardShortcuts';
 
 const mockRegisterShortcut = jest.fn();

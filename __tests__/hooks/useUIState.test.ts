@@ -5,7 +5,7 @@
  * Tests for useUIState hook
  */
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-native';
 import { useUIState } from '../../src/hooks/useUIState';
 
 // Mock all Zustand stores

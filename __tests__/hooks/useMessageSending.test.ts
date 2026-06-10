@@ -5,7 +5,7 @@
  * Tests for useMessageSending hook - Wave 4
  */
 
-import { renderHook, act, cleanup } from '@testing-library/react-hooks';
+import { renderHook, act, cleanup } from '@testing-library/react-native';
 
 // Mock tab store
 const mockTabStore = {

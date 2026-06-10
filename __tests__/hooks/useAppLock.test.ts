@@ -5,7 +5,7 @@
  * Tests for useAppLock hook - Wave 4
  */
 
-import { renderHook, act, cleanup } from '@testing-library/react-hooks';
+import { renderHook, act, cleanup } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
 // Mock service dependencies

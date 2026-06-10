@@ -8,7 +8,7 @@
 // Undo global mock from jest.setup.ts
 jest.unmock('../../src/hooks/useSettingsSecurity');
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useSettingsSecurity } from '../../src/hooks/useSettingsSecurity';
 
 const settingChangeCallbacks: Record<string, (value: any) => void> = {};

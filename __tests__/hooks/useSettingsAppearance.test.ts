@@ -9,7 +9,7 @@
 jest.unmock('../../src/hooks/useSettingsAppearance');
 jest.unmock('../../src/services/ThemeService');
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useSettingsAppearance } from '../../src/hooks/useSettingsAppearance';
 
 const mockTheme = { id: 'dark', name: 'Dark', colors: { primary: '#000' } };

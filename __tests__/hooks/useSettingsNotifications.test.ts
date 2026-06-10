@@ -8,7 +8,7 @@
 // Undo global mock from jest.setup.ts
 jest.unmock('../../src/hooks/useSettingsNotifications');
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useSettingsNotifications } from '../../src/hooks/useSettingsNotifications';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 

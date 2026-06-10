@@ -5,7 +5,7 @@
  * Tests for useStartupServices hook - Wave 4
  */
 
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-native';
 import { useStartupServices } from '../../src/hooks/useStartupServices';
 
 // Track which services were initialized

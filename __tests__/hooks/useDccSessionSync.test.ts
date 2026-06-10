@@ -5,7 +5,7 @@
  * Tests for useDccSessionSync hook
  */
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-native';
 import { useDccSessionSync } from '../../src/hooks/useDccSessionSync';
 
 let sessionCallback: ((session: any) => void) | null = null;

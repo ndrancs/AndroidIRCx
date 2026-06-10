@@ -5,7 +5,7 @@
  * Tests for useMessageBatching hook - Wave 4
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useMessageBatching } from '../../src/hooks/useMessageBatching';
 
 // Mock dependencies

@@ -8,7 +8,7 @@
 // Undo global mock from jest.setup.ts
 jest.unmock('../../src/services/ThemeService');
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useThemeWithSettings } from '../../src/hooks/useThemeWithSettings';
 
 const mockTheme = {

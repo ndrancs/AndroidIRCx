@@ -8,7 +8,7 @@ import type { UserManagementService } from '../services/UserManagementService';
 
 interface UseUserManagementNetworkSyncParams {
   networkName: string;
-  getActiveUserManagementService: () => UserManagementService;
+  getActiveUserManagementService: () => UserManagementService | null;
 }
 
 export const useUserManagementNetworkSync = (
@@ -19,7 +19,7 @@ export const useUserManagementNetworkSync = (
   useEffect(() => {
     if (networkName && networkName !== 'Not connected') {
       const activeUserMgmt = getActiveUserManagementService();
-      activeUserMgmt.setNetwork(networkName);
+      activeUserMgmt?.setNetwork(networkName);
     }
   }, [networkName, getActiveUserManagementService]);
 };

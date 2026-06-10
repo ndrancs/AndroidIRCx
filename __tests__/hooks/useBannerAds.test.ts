@@ -5,7 +5,7 @@
  * Tests for useBannerAds hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useBannerAds } from '../../src/hooks/useBannerAds';
 
 const mockSetScriptingTimeMs = jest.fn();

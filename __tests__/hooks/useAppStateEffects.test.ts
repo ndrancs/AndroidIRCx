@@ -5,7 +5,7 @@
  * Tests for useAppStateEffects hook
  */
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-native';
 import { Alert, AppState } from 'react-native';
 import { useAppStateEffects } from '../../src/hooks/useAppStateEffects';
 

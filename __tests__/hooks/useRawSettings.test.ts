@@ -5,7 +5,7 @@
  * Tests for useRawSettings hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useRawSettings } from '../../src/hooks/useRawSettings';
 
 // Mock services
