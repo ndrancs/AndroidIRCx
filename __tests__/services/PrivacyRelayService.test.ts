@@ -7,8 +7,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { privacyRelayService } from '../../src/services/PrivacyRelayService';
 
 describe('PrivacyRelayService', () => {
+  const jsonResponse = (body: unknown, overrides: Partial<Response> = {}) => ({
+    ok: true,
+    status: 200,
+    headers: {
+      get: jest.fn((name: string) =>
+        name === 'content-type' ? 'application/json' : null,
+      ),
+    },
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+    ...overrides,
+  });
+
   beforeEach(async () => {
     (AsyncStorage as any).__reset();
+    (privacyRelayService as any).initialized = false;
+    (privacyRelayService as any).listeners = new Set();
     await privacyRelayService.clearSubscription();
     global.fetch = jest.fn();
   });
@@ -180,5 +195,139 @@ describe('PrivacyRelayService', () => {
     ).rejects.toThrow(
       'Privacy Relay backend did not return valid TURN credentials.',
     );
+  });
+
+  it('initializes from storage once and falls back to null for invalid stored JSON', async () => {
+    await AsyncStorage.setItem(
+      '@AndroidIRCX:privacyRelaySubscription',
+      JSON.stringify({
+        productId: 'privacy_relay',
+        basePlanId: 'monthly',
+        purchaseToken: 'stored-token',
+        status: 'active',
+        expiresAt: null,
+        activatedAt: '2026-01-01T00:00:00.000Z',
+        lastValidatedAt: null,
+      }),
+    );
+
+    await privacyRelayService.initialize();
+    expect(privacyRelayService.getSubscription()?.purchaseToken).toBe(
+      'stored-token',
+    );
+
+    await AsyncStorage.setItem(
+      '@AndroidIRCX:privacyRelaySubscription',
+      '{not-json',
+    );
+    await privacyRelayService.initialize();
+    expect(privacyRelayService.getSubscription()?.purchaseToken).toBe(
+      'stored-token',
+    );
+
+    (privacyRelayService as any).initialized = false;
+    await privacyRelayService.initialize();
+    expect(privacyRelayService.getSubscription()).toBeNull();
+  });
+
+  it('deactivates, clears, and ignores restore lists without purchase tokens', async () => {
+    const listener = jest.fn();
+    privacyRelayService.addListener(listener);
+
+    expect(
+      await privacyRelayService.restoreFromPurchaseTokens([
+        { purchaseToken: null, basePlanId: 'monthly' },
+        { basePlanId: 'yearly' },
+      ]),
+    ).toBe(0);
+
+    await privacyRelayService.activateSubscription({
+      purchaseToken: 'token-to-deactivate',
+      basePlanId: 'monthly',
+    });
+    await privacyRelayService.deactivateSubscription('cancelled');
+
+    expect(privacyRelayService.hasActiveSubscription()).toBe(false);
+    expect(privacyRelayService.getSubscription()?.status).toBe('cancelled');
+
+    await privacyRelayService.clearSubscription();
+    expect(privacyRelayService.getSubscription()).toBeNull();
+    expect(listener).toHaveBeenLastCalledWith(null);
+  });
+
+  it('creates and persists a device id when fetching TURN credentials without options', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1234567890);
+    jest.spyOn(Math, 'random').mockReturnValue(0.123456789);
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({
+        ice_servers: [
+          {
+            urls: 'turn:turn.dbase.in.rs:3478?transport=udp',
+            username: 'relay-user',
+            credential: 'relay-pass',
+          },
+        ],
+        relay: false,
+      }),
+    );
+
+    const credentials = await privacyRelayService.fetchTurnCredentials('token');
+
+    expect(credentials.deviceId).toBe('relay-1234567890-4fzzzxjy');
+    expect(credentials.callId).toBe('relay-call-1234567890');
+    expect(credentials.relay).toBe(false);
+    expect(
+      await AsyncStorage.getItem('@AndroidIRCX:privacyRelayDeviceId'),
+    ).toBe('relay-1234567890-4fzzzxjy');
+  });
+
+  it('surfaces bounded backend error JSON for failed API responses', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ error: 'subscription expired' }, {
+        ok: false,
+        status: 403,
+        headers: {
+          get: jest.fn((name: string) => {
+            if (name === 'content-length') {
+              return '32';
+            }
+            if (name === 'content-type') {
+              return 'application/json';
+            }
+            return null;
+          }),
+        } as any,
+        text: async () => JSON.stringify({ error: 'subscription expired' }),
+      } as any),
+    );
+
+    await expect(
+      privacyRelayService.registerPurchaseWithBackend('expired-token'),
+    ).rejects.toThrow('subscription expired');
+  });
+
+  it('rejects oversized and non-JSON backend responses', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce(
+        jsonResponse({}, {
+          headers: { get: jest.fn(() => `${129 * 1024}`) } as any,
+        } as any),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({}, {
+          headers: {
+            get: jest.fn((name: string) =>
+              name === 'content-type' ? 'text/html' : null,
+            ),
+          } as any,
+        } as any),
+      );
+
+    await expect(
+      privacyRelayService.registerPurchaseWithBackend('too-large'),
+    ).rejects.toThrow('Privacy Relay backend response is too large.');
+    await expect(
+      privacyRelayService.registerPurchaseWithBackend('html-response'),
+    ).rejects.toThrow('Privacy Relay backend returned a non-JSON response.');
   });
 });

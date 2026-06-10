@@ -30,6 +30,7 @@ const mockHelpEncryptionScreen = jest.fn(() => null);
 const mockHelpMediaScreen = jest.fn(() => null);
 const mockHelpChannelManagementScreen = jest.fn(() => null);
 const mockFirstRunSetupScreen = jest.fn(() => null);
+const mockIRCv3InfoScreen = jest.fn(() => null);
 
 const mockUseUIState = jest.fn();
 const mockUseStoreSetters = jest.fn();
@@ -175,6 +176,9 @@ jest.mock('../../src/screens/help/HelpMediaScreen', () => ({
 jest.mock('../../src/screens/help/HelpChannelManagementScreen', () => ({
   HelpChannelManagementScreen: (p: any) => mockHelpChannelManagementScreen(p),
 }));
+jest.mock('../../src/screens/IRCv3InfoScreen', () => ({
+  IRCv3InfoScreen: (p: any) => mockIRCv3InfoScreen(p),
+}));
 
 const createUIState = (overrides: Record<string, unknown> = {}) => ({
   showFirstRunSetup: false,
@@ -220,6 +224,7 @@ const createUIState = (overrides: Record<string, unknown> = {}) => ({
   showHelpMedia: false,
   showHelpChannelManagement: false,
   showHelpTroubleshooting: false,
+  showIRCv3Info: false,
   ...overrides,
 });
 
@@ -239,6 +244,7 @@ const createSetters = () => ({
   setShowHelpMedia: jest.fn(),
   setShowHelpChannelManagement: jest.fn(),
   setShowHelpTroubleshooting: jest.fn(),
+  setShowIRCv3Info: jest.fn(),
 });
 
 const createUIStoreState = () => ({
@@ -657,5 +663,21 @@ describe('AppModals', () => {
     expect(baseProps.attemptBiometricUnlock).toHaveBeenCalled();
     expect(baseProps.handleAppPinUnlock).toHaveBeenCalledWith('12');
     expect(baseProps.onKillSwitchFromUnlock).toHaveBeenCalled();
+  });
+
+  it('renders IRCv3 info with focused network fallback and closes it', () => {
+    const setters = createSetters();
+    mockUseStoreSetters.mockReturnValue(setters);
+    mockUseUIState.mockReturnValue(createUIState({ showIRCv3Info: true }));
+
+    render(<AppModals {...baseProps} activeTab={null} />);
+
+    expect(mockIRCv3InfoScreen).toHaveBeenCalledTimes(1);
+    const ircv3Props = mockIRCv3InfoScreen.mock.calls[0][0];
+    expect(ircv3Props.visible).toBe(true);
+    expect(ircv3Props.networkId).toBe('net-1');
+
+    ircv3Props.onClose();
+    expect(setters.setShowIRCv3Info).toHaveBeenCalledWith(false);
   });
 });

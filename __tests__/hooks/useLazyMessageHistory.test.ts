@@ -281,4 +281,176 @@ describe('useLazyMessageHistory', () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
     consoleErrorSpy.mockRestore();
   });
+
+  it('uses server history key for server tabs', async () => {
+    const setTabs = jest.fn((next: any) => {
+      mockStoreState.tabs =
+        typeof next === 'function' ? next(mockStoreState.tabs) : next;
+    });
+    mockStoreState = {
+      tabs: [
+        {
+          id: 'server-net',
+          type: 'server',
+          name: 'Libera',
+          networkId: 'net',
+          messages: [],
+        },
+      ],
+      setTabs,
+    };
+    useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
+    useTabStore.getState.mockImplementation(() => mockStoreState);
+    loadMessages.mockResolvedValueOnce([
+      { id: 'server-history', text: 'connected', timestamp: 10 },
+    ]);
+
+    renderHook(() => useLazyMessageHistory({ activeTabId: 'server-net' }));
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(loadMessages).toHaveBeenCalledWith('net', 'server');
+    expect(mockStoreState.tabs[0].messages[0].id).toBe('server-history');
+  });
+
+  it('skips update if tab is removed while history load is in flight', async () => {
+    let resolveHistory: (messages: any[]) => void = () => {};
+    const historyPromise = new Promise<any[]>(resolve => {
+      resolveHistory = resolve;
+    });
+    const setTabs = jest.fn((next: any) => {
+      mockStoreState.tabs =
+        typeof next === 'function' ? next(mockStoreState.tabs) : next;
+    });
+    mockStoreState = {
+      tabs: [
+        {
+          id: 't1',
+          type: 'channel',
+          name: '#a',
+          networkId: 'net',
+          messages: [],
+        },
+      ],
+      setTabs,
+    };
+    useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
+    useTabStore.getState.mockImplementation(() => mockStoreState);
+    loadMessages.mockReturnValueOnce(historyPromise);
+
+    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    mockStoreState.tabs = [];
+    resolveHistory([{ id: 'late', text: 'late', timestamp: 11 }]);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(setTabs).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite messages that arrive while history load is in flight', async () => {
+    let resolveHistory: (messages: any[]) => void = () => {};
+    const historyPromise = new Promise<any[]>(resolve => {
+      resolveHistory = resolve;
+    });
+    const setTabs = jest.fn((next: any) => {
+      mockStoreState.tabs =
+        typeof next === 'function' ? next(mockStoreState.tabs) : next;
+    });
+    mockStoreState = {
+      tabs: [
+        {
+          id: 't1',
+          type: 'channel',
+          name: '#a',
+          networkId: 'net',
+          messages: [],
+        },
+      ],
+      setTabs,
+    };
+    useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
+    useTabStore.getState.mockImplementation(() => mockStoreState);
+    loadMessages.mockReturnValueOnce(historyPromise);
+
+    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    mockStoreState.tabs = [
+      { ...mockStoreState.tabs[0], messages: [{ id: 'live', text: 'live' }] },
+    ];
+    resolveHistory([{ id: 'old-history', text: 'old', timestamp: 12 }]);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(setTabs).not.toHaveBeenCalled();
+    expect(mockStoreState.tabs[0].messages[0].id).toBe('live');
+  });
+
+  it('force reloads empty active tab after foreground transition', async () => {
+    const setTabs = jest.fn((next: any) => {
+      mockStoreState.tabs =
+        typeof next === 'function' ? next(mockStoreState.tabs) : next;
+    });
+    mockStoreState = {
+      tabs: [
+        {
+          id: 't1',
+          type: 'channel',
+          name: '#a',
+          networkId: 'net',
+          messages: [],
+        },
+      ],
+      setTabs,
+    };
+    useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
+    useTabStore.getState.mockImplementation(() => mockStoreState);
+    loadMessages.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await new Promise(r => setTimeout(r, 300));
+    setTabs.mockClear();
+    loadMessages.mockResolvedValueOnce([
+      { id: 'from-force', text: 'force', timestamp: 13 },
+    ]);
+
+    appStateChangeListener?.('background');
+    appStateChangeListener?.('active');
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(loadMessages).toHaveBeenLastCalledWith('net', '#a');
+    expect(setTabs).toHaveBeenCalled();
+    expect(mockStoreState.tabs[0].messages[0].id).toBe('from-force');
+  });
+
+  it('skips foreground force reload when there is no active tab after interactions', async () => {
+    const setTabs = jest.fn();
+    mockStoreState = {
+      tabs: [
+        {
+          id: 't1',
+          type: 'channel',
+          name: '#a',
+          networkId: 'net',
+          messages: [],
+        },
+      ],
+      setTabs,
+    };
+    useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
+    useTabStore.getState.mockImplementation(() => mockStoreState);
+    const interactionManager = require('react-native').InteractionManager;
+    interactionManager.runAfterInteractions.mockImplementationOnce((cb: any) =>
+      cb(),
+    );
+
+    const { rerender } = renderHook(
+      ({ activeTabId }) => useLazyMessageHistory({ activeTabId }),
+      { initialProps: { activeTabId: 't1' as string | null } },
+    );
+    await new Promise(r => setTimeout(r, 0));
+    loadMessages.mockClear();
+
+    appStateChangeListener?.('background');
+    rerender({ activeTabId: null });
+    appStateChangeListener?.('active');
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(loadMessages).not.toHaveBeenCalled();
+  });
 });

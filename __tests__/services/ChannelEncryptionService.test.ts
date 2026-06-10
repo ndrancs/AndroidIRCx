@@ -5,6 +5,7 @@
  * Tests for ChannelEncryptionService - Wave 2 coverage target
  */
 
+import sodium from 'react-native-libsodium';
 import { channelEncryptionService } from '../../src/services/ChannelEncryptionService';
 import { secureStorageService } from '../../src/services/SecureStorageService';
 
@@ -168,6 +169,17 @@ describe('ChannelEncryptionService', () => {
       expect(secureStorageService.removeSecret).toHaveBeenCalled();
     });
 
+    it('should canonicalize network names before removing channel keys', async () => {
+      await channelEncryptionService.removeChannelKey(
+        '#General',
+        'Freenode (2)',
+      );
+
+      expect(secureStorageService.removeSecret).toHaveBeenCalledWith(
+        'chanenc:key:freenode:#general',
+      );
+    });
+
     it('should notify listeners', async () => {
       const listener = jest.fn();
       channelEncryptionService.onChannelKeyChange(listener);
@@ -175,6 +187,110 @@ describe('ChannelEncryptionService', () => {
       await channelEncryptionService.removeChannelKey('#general', 'freenode');
 
       expect(listener).toHaveBeenCalledWith('#general', 'freenode');
+    });
+  });
+
+  describe('encryptMessage / decryptMessage', () => {
+    const storedChannelKey = {
+      v: 1 as const,
+      channel: '#general',
+      network: 'freenode',
+      key: 'testkey123',
+      createdAt: 1000,
+    };
+
+    beforeEach(() => {
+      (secureStorageService.getSecret as jest.Mock).mockResolvedValue(
+        JSON.stringify(storedChannelKey),
+      );
+    });
+
+    it('should encrypt messages with channel and canonical network AAD', async () => {
+      const encrypted = await channelEncryptionService.encryptMessage(
+        'Hello',
+        '#general',
+        'freenode (2)',
+      );
+
+      expect(encrypted).toEqual({
+        v: 1,
+        nonce: 'bW9ja2tleQ==',
+        cipher: 'bW9ja2tleQ==',
+      });
+      expect(
+        sodium.crypto_aead_xchacha20poly1305_ietf_encrypt,
+      ).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        'chanmsg:freenode:#general',
+        null,
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+      );
+    });
+
+    it('should decrypt messages with AAD and decode plaintext', async () => {
+      await expect(
+        channelEncryptionService.decryptMessage(
+          { v: 1, nonce: 'nonce', cipher: 'cipher' },
+          '#general',
+          'freenode',
+        ),
+      ).resolves.toBe('Hello');
+
+      expect(
+        sodium.crypto_aead_xchacha20poly1305_ietf_decrypt,
+      ).toHaveBeenCalledWith(
+        null,
+        expect.any(Uint8Array),
+        'chanmsg:freenode:#general',
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+      );
+    });
+
+    it('should retry decryption with empty AAD for legacy messages', async () => {
+      (
+        sodium.crypto_aead_xchacha20poly1305_ietf_decrypt as jest.Mock
+      ).mockImplementationOnce(() => {
+        throw new Error('bad mac');
+      });
+
+      await expect(
+        channelEncryptionService.decryptMessage(
+          { v: 1, nonce: 'nonce', cipher: 'cipher' },
+          '#general',
+          'freenode',
+        ),
+      ).resolves.toBe('Hello');
+
+      expect(
+        sodium.crypto_aead_xchacha20poly1305_ietf_decrypt,
+      ).toHaveBeenLastCalledWith(
+        null,
+        expect.any(Uint8Array),
+        '',
+        expect.any(Uint8Array),
+        expect.any(Uint8Array),
+      );
+    });
+
+    it('should throw for missing keys and unsupported encrypted message versions', async () => {
+      (secureStorageService.getSecret as jest.Mock).mockResolvedValueOnce(null);
+      await expect(
+        channelEncryptionService.encryptMessage(
+          'Hello',
+          '#general',
+          'freenode',
+        ),
+      ).rejects.toThrow('no channel key');
+
+      await expect(
+        channelEncryptionService.decryptMessage(
+          { v: 2 as any, nonce: 'nonce', cipher: 'cipher' },
+          '#general',
+          'freenode',
+        ),
+      ).rejects.toThrow('version');
     });
   });
 
