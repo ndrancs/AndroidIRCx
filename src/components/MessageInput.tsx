@@ -1156,6 +1156,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 const createStyles = (colors: any, bottomInset: number = 0) =>
   StyleSheet.create({
     container: {
+      flexShrink: 0,
       backgroundColor: colors.background,
       borderTopWidth: 1,
       borderTopColor: colors.border,

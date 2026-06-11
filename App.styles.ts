@@ -17,13 +17,17 @@ export const createStyles = (colors: any) =>
     },
     contentArea: {
       flex: 1,
+      flexShrink: 1,
       flexDirection: 'column',
+      minHeight: 0,
     },
     contentAreaRow: {
       flexDirection: 'row',
     },
     messageAndUser: {
       flex: 1,
+      flexShrink: 1,
+      minHeight: 0,
     },
     messageAndUserRow: {
       flexDirection: 'row',
@@ -33,9 +37,11 @@ export const createStyles = (colors: any) =>
     },
     messageAreaContainer: {
       flex: 1,
+      flexShrink: 1,
       flexDirection: 'row',
       position: 'relative',
       minWidth: 0,
+      minHeight: 0,
     },
     userListToggle: {
       position: 'absolute',
