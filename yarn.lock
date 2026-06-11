@@ -7983,10 +7983,10 @@ react-native-webrtc@^124.0.7:
     debug "4.3.4"
     event-target-shim "6.0.2"
 
-react-native-worklets@0.9.1:
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.9.1.tgz#a220942e3447559cb5edb183c1814484bc407900"
-  integrity sha512-kb6lGtBI5Ap41tvBPM09Np472r2GXuJ+jRApIFy1eXBk699eChG3U+lyqRC2/wz/VDpaJAy6i5XPcceNOoH3mA==
+react-native-worklets@0.9.2:
+  version "0.9.2"
+  resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.9.2.tgz#453ef91bed70ac2b7954deb1f1426e9d10c989d2"
+  integrity sha512-bCBV4dwcoLnqpk0bbL92nNuv6km37DRpamCX/nqNxsRs6LmLeFoFe/a7OKL1pVDi3PY97C0BEhmq8Qq/iNvpVg==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.27.1"
     "@babel/plugin-transform-class-properties" "^7.28.6"
@@ -7997,6 +7997,7 @@ react-native-worklets@0.9.1:
     "@babel/plugin-transform-template-literals" "^7.27.1"
     "@babel/plugin-transform-unicode-regex" "^7.27.1"
     "@babel/preset-typescript" "^7.28.5"
+    "@babel/types" "^7.27.1"
     convert-source-map "^2.0.0"
     semver "^7.7.4"
 
@@ -8411,10 +8412,10 @@ shebang-regex@^3.0.0:
   resolved "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
-shell-quote@^1.6.1, shell-quote@^1.8.3:
-  version "1.8.3"
-  resolved "https://registry.npmjs.org/shell-quote/-/shell-quote-1.8.3.tgz"
-  integrity sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==
+shell-quote@1.8.4, shell-quote@^1.6.1, shell-quote@^1.8.3:
+  version "1.8.4"
+  resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.8.4.tgz#2edd9a4dcefc96649e2e2cb12f637b1f1d92a190"
+  integrity sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==
 
 side-channel-list@^1.0.0:
   version "1.0.0"
