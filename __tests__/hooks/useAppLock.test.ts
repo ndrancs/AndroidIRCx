@@ -5,7 +5,7 @@
  * Tests for useAppLock hook - Wave 4
  */
 
-import { renderHook, act, cleanup } from '@testing-library/react-hooks';
+import { renderHook, act, cleanup } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
 // Mock service dependencies
@@ -50,6 +50,7 @@ const mockStore = {
   appLockUseBiometric: false,
   appLockAutoBiometricPrompt: false,
   appLockUsePin: false,
+  appUnlockModalVisible: false,
   appPinEntry: '',
   setAppLocked: jest.fn(),
   setAppUnlockModalVisible: jest.fn(),
@@ -489,6 +490,212 @@ describe('useAppLock', () => {
       unmount();
 
       expect(mockRemove).toHaveBeenCalled();
+    });
+
+    it('should refresh a long-background lock screen after freeze timeout', async () => {
+      mockStore.appLockEnabled = true;
+      mockStore.appLockOnBackground = true;
+      mockStore.appLockOnLaunch = false;
+      mockStore.appLocked = true;
+      mockStore.appUnlockModalVisible = true;
+
+      let now = 1000;
+      jest.spyOn(Date, 'now').mockImplementation(() => now);
+      let appStateCallback: ((state: string) => void) | undefined;
+      jest
+        .spyOn(AppState, 'addEventListener')
+        .mockImplementation((event: any, callback: any) => {
+          appStateCallback = callback;
+          return { remove: jest.fn() };
+        });
+
+      renderHook(() => useAppLock());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      await act(async () => {
+        appStateCallback?.('background');
+      });
+      now += 61000;
+      mockStore.setAppUnlockModalVisible.mockClear();
+
+      await act(async () => {
+        appStateCallback?.('active');
+      });
+      expect(mockStore.setAppPinError).toHaveBeenCalledWith('');
+
+      await act(async () => {
+        jest.advanceTimersByTime(30000);
+      });
+      expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(false);
+
+      await act(async () => {
+        jest.advanceTimersByTime(100);
+      });
+      expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppPinError).toHaveBeenCalledWith(
+        'Lock screen refreshed. Please try again.',
+      );
+    });
+  });
+
+  describe('Settings and biometric migration branches', () => {
+    it('should disable restored biometric lock when no biometrics are enrolled', async () => {
+      (settingsService.getSetting as jest.Mock).mockImplementation(
+        (key, defaultValue) =>
+          Promise.resolve(
+            key === 'appLockEnabled' || key === 'appLockUseBiometric'
+              ? true
+              : defaultValue,
+          ),
+      );
+      (
+        biometricAuthService.hasEnrolledBiometrics as jest.Mock
+      ).mockResolvedValue(false);
+
+      renderHook(() => useAppLock());
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(settingsService.setSetting).toHaveBeenCalledWith(
+        'appLockUseBiometric',
+        false,
+      );
+      expect(biometricAuthService.disableLock).toHaveBeenCalledWith('app');
+      expect(settingsService.setSetting).toHaveBeenCalledWith(
+        'appLockEnabled',
+        false,
+      );
+      expect(mockStore.setAppLockEnabled).toHaveBeenCalledWith(false);
+    });
+
+    it('should enable PIN-based lock from stored settings and lock on launch', async () => {
+      (settingsService.getSetting as jest.Mock).mockImplementation(
+        (key, defaultValue) => {
+          const values: Record<string, any> = {
+            appLockEnabled: true,
+            appLockUsePin: true,
+            appLockOnLaunch: true,
+          };
+          return Promise.resolve(key in values ? values[key] : defaultValue);
+        },
+      );
+      (secureStorageService.getSecret as jest.Mock).mockResolvedValue('1234');
+
+      renderHook(() => useAppLock());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockStore.setAppLockEnabled).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppLockUsePin).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppLocked).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(true);
+    });
+
+    it('should apply setting change callbacks and ignore lock-now while disabled', async () => {
+      const callbacks: Record<string, (value?: any) => void> = {};
+      (settingsService.onSettingChange as jest.Mock).mockImplementation(
+        (key, cb) => {
+          callbacks[key] = cb;
+          return jest.fn();
+        },
+      );
+
+      renderHook(() => useAppLock());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      callbacks.appLockEnabled(true);
+      callbacks.appLockUseBiometric(true);
+      callbacks.appLockUsePin(true);
+      callbacks.appLockAutoBiometricPrompt(true);
+      callbacks.appLockOnLaunch(false);
+      callbacks.appLockOnBackground(false);
+
+      expect(mockStore.setAppLockEnabled).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppLockUseBiometric).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppLockUsePin).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppLockAutoBiometricPrompt).toHaveBeenCalledWith(
+        true,
+      );
+      expect(mockStore.setAppLockOnLaunch).toHaveBeenCalledWith(false);
+      expect(mockStore.setAppLockOnBackground).toHaveBeenCalledWith(false);
+
+      mockStore.setAppLocked.mockClear();
+      mockStore.appLockEnabled = false;
+      callbacks.appLockNow();
+      expect(mockStore.setAppLocked).not.toHaveBeenCalled();
+
+      mockStore.appLockEnabled = true;
+      callbacks.appLockNow();
+      expect(mockStore.setAppLocked).toHaveBeenCalledWith(true);
+      expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(true);
+    });
+
+    it('should retry biometric unlock after successful migration', async () => {
+      Object.defineProperty(AppState, 'currentState', {
+        configurable: true,
+        value: 'active',
+      });
+      mockStore.appLockUseBiometric = true;
+      (biometricAuthService.authenticate as jest.Mock)
+        .mockResolvedValueOnce({
+          success: false,
+          errorKey: 'Authentication cancelled or credentials not found',
+        })
+        .mockResolvedValueOnce({ success: true })
+        .mockResolvedValueOnce({ success: true });
+      (biometricAuthService.enableLock as jest.Mock).mockResolvedValue(true);
+
+      const { result } = renderHook(() => useAppLock());
+
+      let unlockResult: boolean | undefined;
+      await act(async () => {
+        unlockResult = await result.current.attemptBiometricUnlock();
+      });
+
+      expect(unlockResult).toBe(true);
+      expect(biometricAuthService.enableLock).toHaveBeenCalledWith('app');
+      expect(biometricAuthService.disableLock).toHaveBeenCalledWith(undefined);
+      expect(mockStore.setAppLocked).toHaveBeenCalledWith(false);
+      expect(mockStore.setAppUnlockModalVisible).toHaveBeenCalledWith(false);
+    });
+
+    it('should surface migration failure and generic biometric errors', async () => {
+      Object.defineProperty(AppState, 'currentState', {
+        configurable: true,
+        value: 'active',
+      });
+      mockStore.appLockUseBiometric = true;
+      (biometricAuthService.authenticate as jest.Mock)
+        .mockResolvedValueOnce({
+          success: false,
+          errorKey: 'Authentication cancelled or credentials not found',
+        })
+        .mockResolvedValueOnce({ success: false })
+        .mockResolvedValueOnce({ success: false, errorKey: 'Other failure' });
+
+      const { result } = renderHook(() => useAppLock());
+
+      await act(async () => {
+        await result.current.attemptBiometricUnlock();
+      });
+      expect(mockStore.setAppPinError).toHaveBeenCalledWith(
+        'Biometric credentials not found. Please disable and re-enable biometric lock in Settings > Security.',
+      );
+
+      mockStore.setAppPinError.mockClear();
+      await act(async () => {
+        await result.current.attemptBiometricUnlock();
+      });
+      expect(mockStore.setAppPinError).toHaveBeenCalledWith(
+        'Biometric authentication failed. Please try again.',
+      );
     });
   });
 });

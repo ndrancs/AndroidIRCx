@@ -5,7 +5,7 @@
  * Tests for useAppExit hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useAppExit } from '../../src/hooks/useAppExit';
 import { Platform, BackHandler } from 'react-native';
 

@@ -8,7 +8,7 @@
 // Ensure no global mocks interfere
 jest.unmock('../../src/hooks/useTabEncryption');
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import { useTabEncryption } from '../../src/hooks/useTabEncryption';
 
 let alwaysEncryptCallback:
@@ -98,7 +98,7 @@ describe('useTabEncryption', () => {
   });
 
   it('should check encryption keys when connected', async () => {
-    const { waitForNextUpdate } = renderHook(() =>
+    renderHook(() =>
       useTabEncryption({
         isConnected: true,
         setTabs: mockSetTabs,
@@ -107,18 +107,16 @@ describe('useTabEncryption', () => {
     );
 
     // Wait for async reconciliation
-    await waitForNextUpdate().catch(() => {});
-
-    // Should check channel key for channel tab
-    expect(channelEncryptionService.hasChannelKey).toHaveBeenCalledWith(
-      '#secret',
-      'net1',
-    );
-    // Should check DM encryption for query tab
-    expect(encryptedDMService.isEncryptedForNetwork).toHaveBeenCalledWith(
-      'net1',
-      'Alice',
-    );
+    await waitFor(() => {
+      expect(channelEncryptionService.hasChannelKey).toHaveBeenCalledWith(
+        '#secret',
+        'net1',
+      );
+      expect(encryptedDMService.isEncryptedForNetwork).toHaveBeenCalledWith(
+        'net1',
+        'Alice',
+      );
+    });
   });
 
   it('should update tabs when channel has encryption key', async () => {
@@ -129,7 +127,7 @@ describe('useTabEncryption', () => {
       channelEncryptionSettingsService.getAlwaysEncrypt as jest.Mock
     ).mockResolvedValue(true);
 
-    const { waitForNextUpdate } = renderHook(() =>
+    renderHook(() =>
       useTabEncryption({
         isConnected: true,
         setTabs: mockSetTabs,
@@ -137,10 +135,11 @@ describe('useTabEncryption', () => {
       }),
     );
 
-    await waitForNextUpdate().catch(() => {});
+    await waitFor(() => {
+      expect(mockSetTabs).toHaveBeenCalled();
+    });
 
     // Should call setTabs with updated encryption flags
-    expect(mockSetTabs).toHaveBeenCalled();
     const updatedTabs = mockSetTabs.mock.calls[0][0];
     const channelTab = updatedTabs.find((t: any) => t.type === 'channel');
     expect(channelTab.isEncrypted).toBe(true);
@@ -155,7 +154,7 @@ describe('useTabEncryption', () => {
       channelEncryptionSettingsService.getAlwaysEncrypt as jest.Mock
     ).mockResolvedValue(true);
 
-    const { waitForNextUpdate } = renderHook(() =>
+    renderHook(() =>
       useTabEncryption({
         isConnected: true,
         setTabs: mockSetTabs,
@@ -163,9 +162,9 @@ describe('useTabEncryption', () => {
       }),
     );
 
-    await waitForNextUpdate().catch(() => {});
-
-    expect(mockSetTabs).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockSetTabs).toHaveBeenCalled();
+    });
     const updatedTabs = mockSetTabs.mock.calls[0][0];
     const queryTab = updatedTabs.find((t: any) => t.type === 'query');
     expect(queryTab.isEncrypted).toBe(true);
@@ -274,7 +273,7 @@ describe('useTabEncryption', () => {
       ],
     });
 
-    const { waitForNextUpdate } = renderHook(() =>
+    renderHook(() =>
       useTabEncryption({
         isConnected: true,
         setTabs: mockSetTabs,
@@ -282,9 +281,9 @@ describe('useTabEncryption', () => {
       }),
     );
 
-    await waitForNextUpdate().catch(() => {});
-
-    expect(mockSetTabs).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockSetTabs).toHaveBeenCalled();
+    });
     const updatedTabs = mockSetTabs.mock.calls[0][0];
     const channelTab = updatedTabs[0];
     expect(channelTab.isEncrypted).toBe(false);

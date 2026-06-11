@@ -5,7 +5,7 @@
  * Tests for useMessageBatching hook - Wave 4
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useMessageBatching } from '../../src/hooks/useMessageBatching';
 
 // Mock dependencies
@@ -611,5 +611,155 @@ describe('useMessageBatching', () => {
     const newState = setTabsCall([existingTab]);
     expect(newState[0].messages.length).toBe(2);
     expect(newState[0].messages[1].id).toBe('m3');
+  });
+
+  it('should skip messages with missing context and return previous tabs', () => {
+    const pendingMessagesRef = {
+      current: [
+        {
+          message: {
+            id: 'msg-no-context',
+            type: 'message',
+            text: 'ignored',
+            timestamp: 1,
+            channel: '#test',
+          },
+          context: null,
+        },
+      ],
+    };
+
+    const { result } = renderHook(() =>
+      useMessageBatching({
+        pendingMessagesRef,
+        messageBatchTimeoutRef: { current: 'timer' as any },
+        activeTabId: 'tab-1',
+        tabSortAlphabetical: false,
+        setTabs: mockSetTabs,
+      }),
+    );
+
+    act(() => {
+      result.current.processBatchedMessages();
+    });
+
+    expect(pendingMessagesRef.current).toEqual([]);
+    const prevTabs = [{ id: 'existing', messages: [] }];
+    const setTabsCall = mockSetTabs.mock.calls[0][0];
+    expect(setTabsCall(prevTabs)).toBe(prevTabs);
+  });
+
+  it('should ignore missing server target tabs instead of creating them', () => {
+    const pendingMessagesRef = {
+      current: [
+        {
+          message: {
+            id: 'server-msg',
+            type: 'system',
+            text: 'server text',
+            timestamp: 1,
+          },
+          context: {
+            targetTabId: 'server-freenode',
+            targetTabType: 'server',
+            messageNetwork: 'freenode',
+            newTabIsEncrypted: false,
+            hasValidNetwork: true,
+          },
+        },
+      ],
+    };
+
+    const { result } = renderHook(() =>
+      useMessageBatching({
+        pendingMessagesRef,
+        messageBatchTimeoutRef: { current: null },
+        activeTabId: 'tab-1',
+        tabSortAlphabetical: false,
+        setTabs: mockSetTabs,
+      }),
+    );
+
+    act(() => {
+      result.current.processBatchedMessages();
+    });
+
+    const prevTabs: any[] = [];
+    const setTabsCall = mockSetTabs.mock.calls[0][0];
+    expect(setTabsCall(prevTabs)).toBe(prevTabs);
+    expect(messageHistoryService.saveMessage).not.toHaveBeenCalled();
+  });
+
+  it('should load and de-duplicate scrollback for newly created tabs', async () => {
+    jest.useFakeTimers();
+    const bouncer = require('../../src/services/BouncerService').bouncerService;
+    bouncer.getConfig.mockReturnValue({
+      loadScrollbackOnJoin: true,
+      scrollbackLines: 3,
+    });
+    (messageHistoryService.loadMessages as jest.Mock).mockResolvedValue([
+      { id: 'old-1', type: 'message', text: 'old 1', timestamp: 1 },
+      { id: 'old-2', type: 'message', text: 'old 2', timestamp: 2 },
+      { id: 'same-time', type: 'message', text: 'duplicate', timestamp: 5 },
+    ]);
+
+    let state: any[] = [];
+    const setTabsWithState = jest.fn((updater: any) => {
+      state = typeof updater === 'function' ? updater(state) : updater;
+    });
+    const pendingMessagesRef = {
+      current: [
+        {
+          message: {
+            id: 'new-1',
+            type: 'message',
+            text: 'new',
+            timestamp: 5,
+            channel: '#test',
+          },
+          context: {
+            targetTabId: 'channel-freenode-#test',
+            targetTabType: 'channel',
+            messageNetwork: 'freenode',
+            newTabIsEncrypted: false,
+            hasValidNetwork: true,
+          },
+        },
+      ],
+    };
+
+    const { result } = renderHook(() =>
+      useMessageBatching({
+        pendingMessagesRef,
+        messageBatchTimeoutRef: { current: null },
+        activeTabId: 'tab-1',
+        tabSortAlphabetical: false,
+        setTabs: setTabsWithState,
+      }),
+    );
+
+    act(() => {
+      result.current.processBatchedMessages();
+    });
+    expect(state[0].messages).toHaveLength(1);
+
+    await act(async () => {
+      jest.advanceTimersByTime(50);
+      await Promise.resolve();
+    });
+
+    expect(messageHistoryService.loadMessages).toHaveBeenCalledWith(
+      'freenode',
+      '#test',
+    );
+    expect(state[0].scrollbackLoaded).toBe(true);
+    expect(state[0].messages.map((m: any) => m.id)).toEqual([
+      'old-1',
+      'old-2',
+      expect.stringContaining('scrollback-separator-'),
+      'new-1',
+    ]);
+    expect(state[0].messages[0].isScrollback).toBe(true);
+    jest.useRealTimers();
   });
 });

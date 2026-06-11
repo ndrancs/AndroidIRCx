@@ -5,7 +5,7 @@
  * Tests for useSoundSettings hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useSoundSettings } from '../../src/hooks/useSoundSettings';
 
 const mockSettings = {

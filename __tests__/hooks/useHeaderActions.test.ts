@@ -5,7 +5,7 @@
  * Tests for useHeaderActions hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useHeaderActions } from '../../src/hooks/useHeaderActions';
 
 // Mock UI Store

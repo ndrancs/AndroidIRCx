@@ -5,7 +5,7 @@
  * Tests for useAppLockActions hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useAppLockActions } from '../../src/hooks/useAppLockActions';
 
 describe('useAppLockActions', () => {

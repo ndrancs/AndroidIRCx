@@ -5,7 +5,7 @@
  * Tests for useServerTabNameSync hook
  */
 
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-native';
 import { useServerTabNameSync } from '../../src/hooks/useServerTabNameSync';
 import { useTabStore } from '../../src/stores/tabStore';
 

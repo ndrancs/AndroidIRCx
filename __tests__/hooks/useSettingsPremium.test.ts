@@ -9,7 +9,7 @@
 jest.unmock('../../src/hooks/useSettingsPremium');
 jest.unmock('../../src/services/AdRewardService');
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { useSettingsPremium } from '../../src/hooks/useSettingsPremium';
 

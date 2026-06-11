@@ -5,7 +5,7 @@
  * Tests for useUserListActions hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useUserListActions } from '../../src/hooks/useUserListActions';
 
 // Mock services

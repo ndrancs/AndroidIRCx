@@ -5,7 +5,7 @@
  * Tests for useUISettings hook
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useUISettings } from '../../src/hooks/useUISettings';
 
 const mockStore = {
