@@ -4,8 +4,9 @@ import {
   AppLayout,
   getEffectiveLayoutConfig,
 } from '../../src/components/AppLayout';
-import { PanResponder } from 'react-native';
+import { Keyboard, PanResponder, Platform } from 'react-native';
 
+const mockKeyboardAvoidingView = jest.fn();
 const mockChannelTabs = jest.fn(() => null);
 const mockMessageArea = jest.fn(() => null);
 const mockMessageInput = jest.fn(() => null);
@@ -77,8 +78,10 @@ jest.mock('react-native-keyboard-controller', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
-    KeyboardAvoidingView: ({ children, ...props }: any) =>
-      React.createElement(View, props, children),
+    KeyboardAvoidingView: ({ children, ...props }: any) => {
+      mockKeyboardAvoidingView(props);
+      return React.createElement(View, props, children);
+    },
   };
 });
 
@@ -215,6 +218,92 @@ describe('AppLayout', () => {
     expect(mockUserList).toHaveBeenCalledTimes(1);
     expect(mockTypingIndicator).toHaveBeenCalledTimes(1);
     expect(mockBannerAd).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps JS keyboard avoidance enabled in Android portrait', () => {
+    const originalOS = Platform.OS;
+    Object.defineProperty(Platform, 'OS', {
+      value: 'android',
+      configurable: true,
+    });
+
+    try {
+      render(<AppLayout {...baseProps} keyboardBehaviorAndroid="height" />);
+
+      expect(mockKeyboardAvoidingView).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          behavior: 'height',
+          keyboardVerticalOffset: 10,
+        }),
+      );
+    } finally {
+      Object.defineProperty(Platform, 'OS', {
+        value: originalOS,
+        configurable: true,
+      });
+    }
+  });
+
+  it('temporarily disables Android keyboard avoidance after keyboardDidHide', async () => {
+    const originalOS = Platform.OS;
+    const originalRequestAnimationFrame = global.requestAnimationFrame;
+    const originalCancelAnimationFrame = global.cancelAnimationFrame;
+    const listeners: Record<string, () => void> = {};
+    let frameCallback: FrameRequestCallback | null = null;
+    const remove = jest.fn();
+    const addListenerSpy = jest
+      .spyOn(Keyboard, 'addListener')
+      .mockImplementation((eventName: any, callback: any) => {
+        listeners[eventName] = callback;
+        return { remove } as any;
+      });
+    global.requestAnimationFrame = jest.fn(callback => {
+      frameCallback = callback;
+      return 42;
+    }) as any;
+    global.cancelAnimationFrame = jest.fn() as any;
+
+    Object.defineProperty(Platform, 'OS', {
+      value: 'android',
+      configurable: true,
+    });
+
+    try {
+      render(<AppLayout {...baseProps} />);
+
+      expect(addListenerSpy).toHaveBeenCalledWith(
+        'keyboardDidHide',
+        expect.any(Function),
+      );
+      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: true, behavior: 'height' }),
+      );
+
+      await act(async () => {
+        listeners.keyboardDidHide?.();
+      });
+
+      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: false, behavior: undefined }),
+      );
+
+      await act(async () => {
+        frameCallback?.(0);
+      });
+
+      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: true, behavior: 'height' }),
+      );
+    } finally {
+      addListenerSpy.mockRestore();
+      global.requestAnimationFrame = originalRequestAnimationFrame;
+      global.cancelAnimationFrame = originalCancelAnimationFrame;
+      Object.defineProperty(Platform, 'OS', {
+        value: originalOS,
+        configurable: true,
+      });
+    }
   });
 
   it('toggles message search from header action', async () => {

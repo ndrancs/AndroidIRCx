@@ -8,8 +8,9 @@
  * Extracted from App.tsx to reduce complexity.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
+  Keyboard,
   Platform,
   View,
   useWindowDimensions,
@@ -190,6 +191,8 @@ export function AppLayout({
 
   // Message search state
   const [searchVisible, setSearchVisible] = useState(false);
+  const [keyboardResetting, setKeyboardResetting] = useState(false);
+  const keyboardResetFrameRef = useRef<number | null>(null);
   const [bannerPosition, setBannerPosition] = useState<
     'input_above' | 'input_below' | 'tabs_above' | 'tabs_below'
   >('input_above');
@@ -520,10 +523,40 @@ export function AppLayout({
     ];
   })();
 
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    const subscription = Keyboard.addListener('keyboardDidHide', () => {
+      if (keyboardResetFrameRef.current !== null) {
+        cancelAnimationFrame(keyboardResetFrameRef.current);
+      }
+
+      // Force react-native-keyboard-controller to drop any stale animated
+      // height after the IME is dismissed from the keyboard's own hide button,
+      // without remounting the chat tree or losing child component state.
+      setKeyboardResetting(true);
+      keyboardResetFrameRef.current = requestAnimationFrame(() => {
+        keyboardResetFrameRef.current = null;
+        setKeyboardResetting(false);
+      });
+    });
+
+    return () => {
+      subscription.remove();
+      if (keyboardResetFrameRef.current !== null) {
+        cancelAnimationFrame(keyboardResetFrameRef.current);
+        keyboardResetFrameRef.current = null;
+      }
+    };
+  }, []);
+
   const keyboardBehavior =
     Platform.OS === 'ios' ? keyboardBehaviorIOS : keyboardBehaviorAndroid;
   const keyboardEnabled =
     keyboardAvoidingEnabled && !(Platform.OS === 'android' && isLandscape);
+  const keyboardViewEnabled = keyboardEnabled && !keyboardResetting;
   const bottomInset =
     Platform.OS === 'android' && !useAndroidBottomSafeArea
       ? 0
@@ -551,8 +584,8 @@ export function AppLayout({
 
   return (
     <KeyboardAvoidingView
-      behavior={keyboardEnabled ? keyboardBehavior : undefined}
-      enabled={keyboardEnabled}
+      behavior={keyboardViewEnabled ? keyboardBehavior : undefined}
+      enabled={keyboardViewEnabled}
       keyboardVerticalOffset={keyboardVerticalOffset}
       style={[styles.container, { paddingTop: safeAreaInsets.top }]}
     >
