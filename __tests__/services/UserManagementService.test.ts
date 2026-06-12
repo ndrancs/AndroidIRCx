@@ -967,4 +967,159 @@ describe('UserManagementService', () => {
       expect(listener).not.toHaveBeenCalled();
     });
   });
+
+  describe('numeric WHOIS/WHOWAS handling', () => {
+    it('merges common numeric replies into WHOIS state and finalizes pending requests', async () => {
+      jest.useFakeTimers();
+      const sendCommand = jest.fn();
+      const irc = {
+        on: jest.fn(),
+        getNetworkName: jest.fn(() => 'NumericNet'),
+        sendCommand,
+      } as any;
+      userManagementService.setIRCService(irc);
+
+      const pending = userManagementService.requestWHOIS('Alice', 'NumericNet');
+      expect(sendCommand).toHaveBeenCalledWith('WHOIS Alice');
+
+      const handleNumericReply = (
+        userManagementService as any
+      ).handleNumericReply.bind(userManagementService);
+      handleNumericReply(
+        311,
+        'server',
+        ['me', 'Alice', 'ident', 'host.test', '*', 'Real Name'],
+        Date.now(),
+      );
+      handleNumericReply(
+        312,
+        'server',
+        ['me', 'Alice', 'irc.example', 'Example server'],
+        Date.now(),
+      );
+      handleNumericReply(
+        313,
+        'server',
+        ['me', 'Alice', 'is an IRC operator'],
+        Date.now(),
+      );
+      handleNumericReply(
+        317,
+        'server',
+        ['me', 'Alice', '42', '1710000000'],
+        Date.now(),
+      );
+      handleNumericReply(
+        319,
+        'server',
+        ['me', 'Alice', '@#ops +#voice #public'],
+        Date.now(),
+      );
+      handleNumericReply(
+        330,
+        'server',
+        ['me', 'Alice', 'alice-account', 'is logged in as'],
+        Date.now(),
+      );
+      handleNumericReply(
+        301,
+        'server',
+        ['me', 'Alice', 'away for dinner'],
+        Date.now(),
+      );
+      handleNumericReply(
+        318,
+        'server',
+        ['me', 'Alice', 'End of WHOIS'],
+        Date.now(),
+      );
+
+      await expect(pending).resolves.toMatchObject({
+        nick: 'Alice',
+        username: 'ident',
+        hostname: 'host.test',
+        realname: 'Real Name',
+        server: 'irc.example',
+        serverInfo: 'Example server',
+        isOper: true,
+        idle: 42,
+        signon: 1710000000000,
+        channels: ['@#ops', '+#voice', '#public'],
+        account: 'alice-account',
+        away: true,
+        awayMessage: 'away for dinner',
+        network: 'NumericNet',
+      });
+
+      jest.useRealTimers();
+    });
+
+    it('rejects stale duplicate WHOIS requests and times out incomplete data safely', async () => {
+      jest.useFakeTimers();
+      const sendCommand = jest.fn();
+      userManagementService.setIRCService({
+        on: jest.fn(),
+        getNetworkName: jest.fn(() => 'TimeoutNet'),
+        sendCommand,
+      } as any);
+      (userManagementService as any).WHOIS_TIMEOUT = 5;
+
+      const first = userManagementService.requestWHOIS('Bob', 'TimeoutNet');
+      const second = userManagementService.requestWHOIS('Bob', 'TimeoutNet');
+
+      await expect(first).rejects.toThrow('New WHOIS request');
+      userManagementService.updateWHOIS(
+        { nick: 'Bob', username: 'partial' },
+        'TimeoutNet',
+      );
+      jest.advanceTimersByTime(6);
+      await expect(second).rejects.toThrow('timed out');
+      expect(
+        userManagementService.getWHOIS('Bob', 'TimeoutNet'),
+      ).toBeUndefined();
+
+      jest.useRealTimers();
+    });
+
+    it('sends WHOWAS variants and records WHOWAS numeric replies', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      userManagementService.requestWHOWAS('Ghost', 'NoService');
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+
+      const sendCommand = jest.fn();
+      userManagementService.setIRCService({
+        on: jest.fn(),
+        getNetworkName: jest.fn(() => 'WhowasNet'),
+        sendCommand,
+      } as any);
+      userManagementService.requestWHOWAS('Ghost', 'WhowasNet', 3);
+      expect(sendCommand).toHaveBeenCalledWith('WHOWAS Ghost 3');
+
+      const handleNumericReply = (
+        userManagementService as any
+      ).handleNumericReply.bind(userManagementService);
+      handleNumericReply(
+        314,
+        'server',
+        ['me', 'Ghost', 'oldident', 'old.host', '*', 'Old Real'],
+        Date.now(),
+      );
+      handleNumericReply(
+        369,
+        'server',
+        ['me', 'Ghost', 'End of WHOWAS'],
+        Date.now(),
+      );
+      expect(
+        userManagementService.getWHOWAS('Ghost', 'WhowasNet')[0],
+      ).toMatchObject({
+        nick: 'Ghost',
+        username: 'oldident',
+        hostname: 'old.host',
+        realname: 'Old Real',
+        network: 'WhowasNet',
+      });
+    });
+  });
 });

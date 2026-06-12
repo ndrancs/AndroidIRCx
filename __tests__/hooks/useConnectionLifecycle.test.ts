@@ -5,7 +5,7 @@
  * Tests for useConnectionLifecycle hook
  */
 
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { useConnectionLifecycle } from '../../src/hooks/useConnectionLifecycle';
 
 // Mock all services and modules used in the hook
@@ -224,6 +224,9 @@ describe('useConnectionLifecycle', () => {
     );
     require('../../src/services/IRCService').ircService.getCurrentNick.mockReturnValue(
       'testuser',
+    );
+    require('../../src/services/UserManagementService').userManagementService.isUserIgnored.mockReturnValue(
+      false,
     );
   });
 
@@ -1003,5 +1006,168 @@ describe('useConnectionLifecycle', () => {
     expect(
       require('../../src/services/IRCService').ircService.sendRaw,
     ).toHaveBeenCalledWith('PRIVMSG NickServ :IDENTIFY ns-secret');
+  });
+
+  it('does not process IRC messages from ignored users', async () => {
+    const { ircService } = require('../../src/services/IRCService');
+    const {
+      userManagementService,
+    } = require('../../src/services/UserManagementService');
+    userManagementService.isUserIgnored.mockReturnValue(true);
+
+    let messageHandler: any;
+    ircService.onMessage.mockImplementation((handler: any) => {
+      messageHandler = handler;
+      return jest.fn();
+    });
+
+    mockParams.pendingMessagesRef.current = [];
+    mockParams.processBatchedMessages.mockClear();
+
+    renderHook(() => useConnectionLifecycle(mockParams));
+
+    mockParams.pendingMessagesRef.current = [];
+    await act(async () => {
+      messageHandler({
+        id: 'ignored-msg',
+        type: 'message',
+        from: 'IgnoredNick',
+        text: 'should not enter batch',
+        network: 'test-network',
+        channel: '#chan',
+        timestamp: Date.now(),
+      });
+    });
+
+    expect(mockParams.pendingMessagesRef.current).toEqual([]);
+    expect(mockParams.processBatchedMessages).not.toHaveBeenCalled();
+  });
+
+  it('routes typing payloads from IRC messages to the query target', async () => {
+    const { ircService } = require('../../src/services/IRCService');
+    ircService.getCurrentNick.mockReturnValue('testuser');
+    mockParams.pendingMessagesRef.current = [];
+
+    let messageHandler: any;
+    ircService.onMessage.mockImplementation((handler: any) => {
+      messageHandler = handler;
+      return jest.fn();
+    });
+
+    renderHook(() => useConnectionLifecycle(mockParams));
+
+    await act(async () => {
+      await messageHandler({
+        type: 'message',
+        from: 'Alice',
+        channel: 'testuser',
+        text: '',
+        typing: 'active',
+        network: 'test-network',
+        timestamp: Date.now(),
+      });
+    });
+
+    expect(mockParams.setTypingUser).toHaveBeenCalledWith(
+      'test-network',
+      'Alice',
+      'Alice',
+      expect.objectContaining({ status: 'active' }),
+    );
+  });
+
+  it('auto-accepts DCC SEND offers that match the accept extension list', async () => {
+    const { ircService } = require('../../src/services/IRCService');
+    const { dccFileService } = require('../../src/services/DCCFileService');
+    const { settingsService } = require('../../src/services/SettingsService');
+    dccFileService.parseSendOffer.mockReturnValue({
+      filename: 'readme.TXT',
+      size: 123,
+    });
+    dccFileService.handleOffer.mockReturnValue({ id: 'transfer-accepted' });
+    dccFileService.getDefaultDownloadPath.mockResolvedValue(
+      '/downloads/readme.TXT',
+    );
+    settingsService.getSetting.mockImplementation(
+      async (key: string, defaultValue: any) => {
+        if (key === 'dccAutoGetMode') return 'reject';
+        if (key === 'dccAutoGetFrom') return 1;
+        if (key === 'dccAcceptExts') return ['*.txt'];
+        if (key === 'dccRejectExts') return ['*.exe'];
+        if (key === 'dccDontSendExts') return ['*.bat'];
+        return defaultValue;
+      },
+    );
+
+    let messageHandler: any;
+    ircService.onMessage.mockImplementation((handler: any) => {
+      messageHandler = handler;
+      return jest.fn();
+    });
+
+    renderHook(() => useConnectionLifecycle(mockParams));
+
+    await act(async () => {
+      await messageHandler({
+        type: 'message',
+        from: 'Alice',
+        text: 'DCC SEND readme.TXT',
+        network: 'test-network',
+        timestamp: Date.now(),
+      });
+    });
+
+    expect(dccFileService.accept).toHaveBeenCalledWith(
+      'transfer-accepted',
+      ircService,
+      '/downloads/readme.TXT',
+    );
+    expect(dccFileService.cancel).not.toHaveBeenCalledWith('transfer-accepted');
+  });
+
+  it('rejects DCC SEND offers that match dangerous extension filters', async () => {
+    const { ircService } = require('../../src/services/IRCService');
+    const { dccFileService } = require('../../src/services/DCCFileService');
+    const { settingsService } = require('../../src/services/SettingsService');
+    dccFileService.parseSendOffer.mockReturnValue({
+      filename: 'payload.exe',
+      size: 456,
+    });
+    dccFileService.handleOffer.mockReturnValue({ id: 'transfer-rejected' });
+    settingsService.getSetting.mockImplementation(
+      async (key: string, defaultValue: any) => {
+        if (key === 'dccAutoGetMode') return 'accept';
+        if (key === 'dccAutoGetFrom') return 4;
+        if (key === 'dccAcceptExts') return ['*.txt'];
+        if (key === 'dccRejectExts') return ['*.exe'];
+        if (key === 'dccDontSendExts') return [];
+        return defaultValue;
+      },
+    );
+
+    let messageHandler: any;
+    ircService.onMessage.mockImplementation((handler: any) => {
+      messageHandler = handler;
+      return jest.fn();
+    });
+
+    renderHook(() => useConnectionLifecycle(mockParams));
+
+    await act(async () => {
+      await messageHandler({
+        type: 'message',
+        from: 'Mallory',
+        text: 'DCC SEND payload.exe',
+        network: 'test-network',
+        timestamp: Date.now(),
+      });
+    });
+
+    expect(dccFileService.cancel).toHaveBeenCalledWith('transfer-rejected');
+    expect(dccFileService.accept).not.toHaveBeenCalledWith(
+      'transfer-rejected',
+      expect.anything(),
+      expect.anything(),
+    );
   });
 });

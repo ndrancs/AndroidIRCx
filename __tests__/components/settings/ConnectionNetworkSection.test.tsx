@@ -1290,6 +1290,98 @@ describe('ConnectionNetworkSection', () => {
     // The cancel error should not trigger the failed alert
   });
 
+  it('stores a selected DCC download directory from the native folder picker', async () => {
+    const pickerModule = require('@react-native-documents/picker');
+    pickerModule.pickDirectory.mockResolvedValue({
+      uri: 'file:///storage/emulated/0/Download%20Files',
+    });
+
+    render(
+      <ConnectionNetworkSection
+        colors={colors}
+        styles={styles as any}
+        settingIcons={{}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(mockCapturedItems.has('connection-dcc')).toBe(true),
+    );
+
+    const dcc = mockCapturedItems.get('connection-dcc');
+    await dcc.submenuItems
+      .find((x: any) => x.id === 'dcc-download-folder')
+      .onPress();
+
+    expect(mockSettingsSet).toHaveBeenCalledWith(
+      'dccDownloadFolder',
+      '/storage/emulated/0/Download Files',
+    );
+    expect(pick).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a picked file URI when the folder picker is unavailable', async () => {
+    const pickerModule = require('@react-native-documents/picker');
+    pickerModule.pickDirectory.mockResolvedValue(null);
+    (pick as jest.Mock).mockResolvedValue({
+      fileCopyUri: 'file:///storage/emulated/0/Downloads/example.txt',
+    });
+
+    render(
+      <ConnectionNetworkSection
+        colors={colors}
+        styles={styles as any}
+        settingIcons={{}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(mockCapturedItems.has('connection-dcc')).toBe(true),
+    );
+
+    const dcc = mockCapturedItems.get('connection-dcc');
+    await dcc.submenuItems
+      .find((x: any) => x.id === 'dcc-download-folder')
+      .onPress();
+
+    expect(mockSettingsSet).toHaveBeenCalledWith(
+      'dccDownloadFolder',
+      '/storage/emulated/0/Downloads',
+    );
+  });
+
+  it('warns when the fallback file picker cannot resolve a folder', async () => {
+    const pickerModule = require('@react-native-documents/picker');
+    pickerModule.pickDirectory.mockResolvedValue(null);
+    (pick as jest.Mock).mockResolvedValue({ uri: 'single-file' });
+
+    render(
+      <ConnectionNetworkSection
+        colors={colors}
+        styles={styles as any}
+        settingIcons={{}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(mockCapturedItems.has('connection-dcc')).toBe(true),
+    );
+
+    const dcc = mockCapturedItems.get('connection-dcc');
+    await dcc.submenuItems
+      .find((x: any) => x.id === 'dcc-download-folder')
+      .onPress();
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Download Folder',
+      'Unable to resolve a folder from the selected file.',
+    );
+    expect(mockSettingsSet).not.toHaveBeenCalledWith(
+      'dccDownloadFolder',
+      expect.any(String),
+    );
+  });
+
   it('handles invalid numeric inputs gracefully', async () => {
     render(
       <ConnectionNetworkSection
@@ -1503,5 +1595,29 @@ describe('ConnectionNetworkSection', () => {
     expect(mockUpdateLagMonitoringConfig).not.toHaveBeenCalledWith({
       warningThreshold: 0,
     });
+  });
+
+  it('shows an IRCv3 diagnostics safety alert when no connection is active', async () => {
+    mockConnectionGet.mockReturnValue(null);
+
+    render(
+      <ConnectionNetworkSection
+        colors={colors}
+        styles={styles as any}
+        settingIcons={{}}
+        currentNetwork="net1"
+      />,
+    );
+
+    await waitFor(() =>
+      expect(mockCapturedItems.has('connection-ircv3-diagnostics')).toBe(true),
+    );
+    mockCapturedItems.get('connection-ircv3-diagnostics').onPress();
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'IRCv3 Diagnostics',
+      'No active IRC connection for this network.',
+      [{ text: 'OK' }],
+    );
+    expect(mockSetShowIRCv3Info).not.toHaveBeenCalled();
   });
 });

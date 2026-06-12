@@ -309,6 +309,81 @@ describe('ScriptingService', () => {
     ).toBe('/y');
   });
 
+  it('handles corrupt or unavailable persisted scripts without crashing', async () => {
+    await (AsyncStorage as any).setItem('@AndroidIRCX:scripts', 'not-json');
+
+    await scriptingService.load();
+    expect(scriptingService.list()).toEqual([]);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'scripting',
+      expect.stringContaining('Failed to load scripts'),
+    );
+
+    jest.clearAllMocks();
+    (AsyncStorage as any).getItem.mockRejectedValueOnce(
+      new Error('storage down'),
+    );
+
+    await scriptingService.load();
+    expect(scriptingService.list()).toEqual([]);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'scripting',
+      expect.stringContaining('Failed to load scripts'),
+    );
+  });
+
+  it('cleans script-owned timers when a script is removed', async () => {
+    jest.useFakeTimers();
+    const strayTimer = setTimeout(jest.fn(), 1000);
+    await scriptingService.add({
+      id: 'timer-script',
+      name: 'TimerScript',
+      enabled: true,
+      code: 'module.exports = { onTimer: () => api.log("timer") };',
+    });
+    const api = (scriptingService as any).makeApi({
+      id: 'timer-script',
+      name: 'TimerScript',
+      code: '',
+      enabled: true,
+    });
+
+    api.setTimer('owned', 1000);
+    expect((scriptingService as any).timers.has('timer-script:owned')).toBe(
+      true,
+    );
+
+    await scriptingService.remove('timer-script');
+
+    expect((scriptingService as any).timers.has('timer-script:owned')).toBe(
+      false,
+    );
+    clearTimeout(strayTimer);
+    jest.useRealTimers();
+  });
+
+  it('disables enabled scripts and stops tracking when rewarded scripting time expires', async () => {
+    await scriptingService.add({
+      id: 'expires',
+      name: 'Expires',
+      enabled: true,
+      code: 'module.exports = { onConnect: () => api.log("connect") };',
+    });
+    mockAdRewardService.hasAvailableTime.mockReturnValue(false);
+    mockAdRewardService.isTracking.mockReturnValue(true);
+
+    scriptingService.handleConnect('net1');
+
+    expect(mockAdRewardService.stopUsageTracking).toHaveBeenCalled();
+    expect(scriptingService.list().find(s => s.id === 'expires')?.enabled).toBe(
+      false,
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'scripting',
+      expect.stringContaining('All scripts disabled'),
+    );
+  });
+
   it('exposes and validates script API helpers', async () => {
     const api = (scriptingService as any).makeApi({
       id: 'api-test',

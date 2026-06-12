@@ -302,6 +302,100 @@ describe('AutoReconnectService', () => {
       expect(mockInstance.onMessage).toHaveBeenCalled();
     });
 
+    it('tracks self join, part, and kick messages from registered connections', async () => {
+      const mockInstance = {
+        onConnectionChange: jest.fn().mockReturnValue(jest.fn()),
+        onMessage: jest.fn().mockReturnValue(jest.fn()),
+        on: jest.fn().mockReturnValue(jest.fn()),
+        getCurrentNick: jest.fn().mockReturnValue('TestUser'),
+      };
+      await autoReconnectService.saveConnectionState('freenode', {} as any, [
+        '#old',
+      ]);
+
+      autoReconnectService.registerConnection('freenode', mockInstance as any);
+      const onMessage = mockInstance.onMessage.mock.calls[0][0];
+
+      onMessage({ type: 'join', channel: '#new', from: 'TestUser' });
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.channels,
+      ).toEqual(['#old', '#new']);
+
+      onMessage({ type: 'part', channel: '#old', from: 'TestUser' });
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.channels,
+      ).not.toContain('#old');
+
+      onMessage({
+        type: 'mode',
+        text: 'KICK #new TestUser :bye',
+      });
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.channels,
+      ).not.toContain('#new');
+    });
+
+    it('ignores channel events from other nicks and malformed kick messages', async () => {
+      const mockInstance = {
+        onConnectionChange: jest.fn().mockReturnValue(jest.fn()),
+        onMessage: jest.fn().mockReturnValue(jest.fn()),
+        on: jest.fn().mockReturnValue(jest.fn()),
+        getCurrentNick: jest.fn().mockReturnValue('TestUser'),
+      };
+      await autoReconnectService.saveConnectionState('freenode', {} as any, [
+        '#keep',
+      ]);
+
+      autoReconnectService.registerConnection('freenode', mockInstance as any);
+      const onMessage = mockInstance.onMessage.mock.calls[0][0];
+
+      onMessage({ type: 'join', channel: '#other', from: 'OtherUser' });
+      onMessage({ type: 'part', channel: '#keep', from: 'OtherUser' });
+      onMessage({ type: 'mode', text: 'KICK #keep OtherUser :bye' });
+      onMessage({ type: 'mode', text: 'KICK #keep' });
+
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.channels,
+      ).toEqual(['#keep']);
+    });
+
+    it('uses registered connection callbacks for connect, disconnect, and intentional quit', async () => {
+      const mockInstance = {
+        onConnectionChange: jest.fn().mockReturnValue(jest.fn()),
+        onMessage: jest.fn().mockReturnValue(jest.fn()),
+        on: jest.fn().mockReturnValue(jest.fn()),
+        getCurrentNick: jest.fn().mockReturnValue('TestUser'),
+      };
+      await autoReconnectService.setConfig('freenode', {
+        enabled: true,
+        initialDelay: 1,
+      });
+      await autoReconnectService.saveConnectionState('freenode', {} as any, []);
+
+      autoReconnectService.registerConnection('freenode', mockInstance as any);
+      const onConnectionChange =
+        mockInstance.onConnectionChange.mock.calls[0][0];
+      const onIntentionalQuit = mockInstance.on.mock.calls[0][1];
+
+      onConnectionChange(false);
+      expect((autoReconnectService as any).isReconnecting.get('freenode')).toBe(
+        true,
+      );
+
+      onIntentionalQuit('freenode');
+      expect(
+        (autoReconnectService as any).intentionalDisconnects.has('freenode'),
+      ).toBe(true);
+      expect((autoReconnectService as any).isReconnecting.get('freenode')).toBe(
+        false,
+      );
+
+      onConnectionChange(true);
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.reconnectAttempts,
+      ).toBe(0);
+    });
+
     it('should clean up existing listeners before registering new ones', () => {
       const mockInstance = {
         onConnectionChange: jest.fn().mockReturnValue(jest.fn()),
@@ -482,6 +576,61 @@ describe('AutoReconnectService', () => {
         .mockResolvedValueOnce('{bad')
         .mockResolvedValueOnce('{bad');
       await expect(autoReconnectService.initialize()).resolves.toBeUndefined();
+    });
+
+    it('singleton listeners ignore missing network names and track self channel events', async () => {
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      await autoReconnectService.saveConnectionState('freenode', {} as any, [
+        '#old',
+      ]);
+      await autoReconnectService.initialize();
+
+      const onConnectionChange = (ircService.onConnectionChange as jest.Mock)
+        .mock.calls[0][0];
+      const onMessage = (ircService.onMessage as jest.Mock).mock.calls[0][0];
+      const onIntentionalQuit = (ircService.on as jest.Mock).mock.calls[0][1];
+
+      (ircService.getNetworkName as jest.Mock).mockReturnValueOnce(
+        'Not connected',
+      );
+      onConnectionChange(false);
+      expect((autoReconnectService as any).isReconnecting.size).toBe(0);
+
+      (ircService.getNetworkName as jest.Mock).mockReturnValue('freenode');
+      onMessage({ type: 'join', channel: '#new', from: 'TestUser' });
+      onMessage({ type: 'part', channel: '#old', from: 'TestUser' });
+      onMessage({ type: 'mode', text: 'KICK #new TestUser :bye' });
+      onMessage({ type: 'mode', text: 'KICK #ignored OtherUser :bye' });
+      onIntentionalQuit('freenode');
+      onIntentionalQuit('');
+
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.channels,
+      ).toEqual([]);
+      expect(
+        (autoReconnectService as any).intentionalDisconnects.has('freenode'),
+      ).toBe(true);
+    });
+
+    it('singleton connection listener routes connected and disconnected states', async () => {
+      await autoReconnectService.setConfig('freenode', {
+        enabled: true,
+        initialDelay: 1,
+      });
+      await autoReconnectService.saveConnectionState('freenode', {} as any, []);
+      await autoReconnectService.initialize();
+
+      const onConnectionChange = (ircService.onConnectionChange as jest.Mock)
+        .mock.calls[0][0];
+
+      onConnectionChange(false);
+      expect((autoReconnectService as any).isReconnecting.get('freenode')).toBe(
+        true,
+      );
+      onConnectionChange(true);
+      expect(
+        autoReconnectService.getConnectionState('freenode')?.reconnectAttempts,
+      ).toBe(0);
     });
 
     it('resolveNetworkConfig matches exact and normalized ids', async () => {

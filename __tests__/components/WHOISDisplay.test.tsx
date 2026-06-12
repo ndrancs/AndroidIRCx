@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { WHOISDisplay } from '../../src/components/WHOISDisplay';
 
@@ -208,5 +209,152 @@ describe('WHOISDisplay', () => {
       await ignoreAction.onPress();
     });
     expect(mockUserService.ignoreUser).toHaveBeenCalled();
+  });
+
+  it('renders extended WHOIS fields and copies details', async () => {
+    mockUserService.requestWHOIS.mockResolvedValue({
+      nick: 'alice',
+      realname: 'Alice Doe',
+      username: 'alice',
+      hostname: 'example.com',
+      account: 'alice',
+      modes: '+iwx',
+      connectingFrom: 'gateway.example',
+      server: 'irc.example',
+      serverInfo: 'Example IRCd',
+      away: true,
+      awayMessage: 'Out for lunch',
+      secure: true,
+      secureMessage: 'TLSv1.3',
+      idle: 360,
+      signon: new Date('2026-01-02T03:04:05Z').getTime(),
+      channels: ['~&#ops', '%#voice'],
+      isOper: true,
+      isAdmin: true,
+      isServicesAdmin: true,
+      isHelpOp: true,
+      isRegistered: true,
+      isBot: true,
+      specialStatus: 'network helper',
+    });
+
+    const { getByText, getAllByText } = render(
+      <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(getByText('+iwx')).toBeTruthy();
+      expect(getByText('gateway.example')).toBeTruthy();
+      expect(getByText('Example IRCd')).toBeTruthy();
+      expect(getByText('Out for lunch')).toBeTruthy();
+      expect(getByText('TLSv1.3')).toBeTruthy();
+      expect(getByText('network helper')).toBeTruthy();
+      expect(getAllByText('Yes').length).toBeGreaterThanOrEqual(6);
+    });
+
+    fireEvent.press(getByText('Copy WHOIS Details'));
+    expect(Clipboard.setString).toHaveBeenCalledWith(
+      expect.stringContaining('WHOIS: alice'),
+    );
+    expect(Clipboard.setString).toHaveBeenCalledWith(
+      expect.stringContaining('Modes: +iwx'),
+    );
+    expect(Alert.alert).toHaveBeenCalledWith('Copied');
+  });
+
+  it('saves and removes notes and aliases', async () => {
+    mockUserService.getUserNote.mockReturnValue('');
+    mockUserService.getUserAlias.mockReturnValue('');
+
+    const { getByText, getByPlaceholderText, getAllByText } = render(
+      <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
+    );
+
+    await waitFor(() => expect(getByText('Add Note')).toBeTruthy());
+
+    fireEvent.press(getByText('Add Note'));
+    fireEvent.changeText(
+      getByPlaceholderText('Enter note about this user'),
+      '  trusted  ',
+    );
+    await act(async () => {
+      fireEvent.press(getAllByText('Save')[0]);
+    });
+    expect(mockUserService.addUserNote).toHaveBeenCalledWith(
+      'alice',
+      'trusted',
+      undefined,
+    );
+
+    fireEvent.press(getByText('Edit Note'));
+    fireEvent.changeText(
+      getByPlaceholderText('Enter note about this user'),
+      '   ',
+    );
+    await act(async () => {
+      fireEvent.press(getAllByText('Save')[0]);
+    });
+    expect(mockUserService.removeUserNote).toHaveBeenCalledWith(
+      'alice',
+      undefined,
+    );
+
+    fireEvent.press(getByText('Add Alias'));
+    fireEvent.changeText(
+      getByPlaceholderText('Enter alias for this user'),
+      '  ally  ',
+    );
+    await act(async () => {
+      fireEvent.press(getAllByText('Save')[0]);
+    });
+    expect(mockUserService.addUserAlias).toHaveBeenCalledWith(
+      'alice',
+      'ally',
+      undefined,
+    );
+
+    fireEvent.press(getByText('Edit Alias'));
+    fireEvent.changeText(
+      getByPlaceholderText('Enter alias for this user'),
+      '   ',
+    );
+    await act(async () => {
+      fireEvent.press(getAllByText('Save')[0]);
+    });
+    expect(mockUserService.removeUserAlias).toHaveBeenCalledWith(
+      'alice',
+      undefined,
+    );
+  });
+
+  it('handles disconnected WHOIS and WHOWAS safeguards', async () => {
+    const disconnectedIrc = {
+      getConnectionStatus: jest.fn(() => false),
+      isRegistered: jest.fn(() => false),
+      getCurrentNick: jest.fn(() => 'me'),
+      sendCommand: jest.fn(),
+    };
+    mockGetActiveConnection.mockReturnValue({
+      ircService: disconnectedIrc,
+      userManagementService: mockUserService,
+    });
+
+    const { getByText } = render(
+      <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'WHOIS Error',
+        'Not connected or not registered yet.',
+      );
+    });
+
+    fireEvent.press(getByText('WHOWAS (History)'));
+    expect(disconnectedIrc.sendCommand).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Error',
+      'Not connected to server.',
+    );
   });
 });
