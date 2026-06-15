@@ -9,6 +9,7 @@ import { StyleSheet } from 'react-native';
 
 let mockNickContextMenuProps: any = null;
 let mockKickBanModalProps: any = null;
+let mockMessageSearchBarProps: any = null;
 let mockActiveIrc: any = null;
 
 const defaultPerformanceConfig = {
@@ -53,7 +54,10 @@ jest.mock('../../src/components/AudioPlayer', () => ({
   AudioPlayer: (_p: any) => null,
 }));
 jest.mock('../../src/components/MessageSearchBar', () => ({
-  MessageSearchBar: (_p: any) => null,
+  MessageSearchBar: (p: any) => {
+    mockMessageSearchBarProps = p;
+    return null;
+  },
 }));
 jest.mock('../../src/components/NickContextMenu', () => ({
   NickContextMenu: (p: any) => {
@@ -441,6 +445,7 @@ describe('MessageArea', () => {
     jest.clearAllMocks();
     mockNickContextMenuProps = null;
     mockKickBanModalProps = null;
+    mockMessageSearchBarProps = null;
 
     mockGetSetting.mockImplementation((_key: string, fallback: unknown) =>
       Promise.resolve(fallback),
@@ -700,6 +705,41 @@ describe('MessageArea', () => {
       />,
     );
     expect(toJSON()).toBeTruthy();
+  });
+
+  it('filters visible messages using search criteria from the search bar', async () => {
+    const messages = [
+      makeMsg({ id: 'm1', from: 'Alice', text: 'release is ready' }),
+      makeMsg({ id: 'm2', from: 'Bob', text: 'ordinary chat' }),
+      makeMsg({
+        id: 'm3',
+        type: 'notice',
+        from: 'Server',
+        text: 'release notice',
+      }),
+    ];
+    const { queryByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} searchVisible={true} />,
+    );
+
+    expect(mockMessageSearchBarProps).toBeTruthy();
+    await act(async () => {
+      mockMessageSearchBarProps.onSearch({
+        searchTerm: 'release',
+        messageTypes: {
+          message: true,
+          notice: false,
+          system: false,
+          join: false,
+          part: false,
+          quit: false,
+        },
+      });
+    });
+
+    expect(queryByText('release is ready')).toBeTruthy();
+    expect(queryByText('ordinary chat')).toBeNull();
+    expect(queryByText('release notice')).toBeNull();
   });
 
   it('renders with searchVisible=false (controlled)', async () => {
@@ -1877,5 +1917,24 @@ describe('MessageArea', () => {
       fireEvent.press(getByText('Add'));
     });
     expect(userManagementService.addBlacklistEntry).toHaveBeenCalled();
+  });
+
+  it('renders raw service listener messages alongside normal messages when raw output is enabled', async () => {
+    const messages = [
+      makeMsg({
+        id: 'listener',
+        type: 'raw',
+        text: 'PING :server',
+        rawCategory: 'irc_service_listener',
+      }),
+      makeMsg({ id: 'visible', from: 'Alice', text: 'normal message' }),
+    ];
+
+    const { getByText } = await renderAndSettle(
+      <MessageArea {...baseProps} messages={messages} showRawCommands={true} />,
+    );
+
+    expect(getByText('PING :server')).toBeTruthy();
+    expect(getByText('normal message')).toBeTruthy();
   });
 });

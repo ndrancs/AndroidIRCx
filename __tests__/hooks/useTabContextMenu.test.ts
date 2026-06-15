@@ -889,4 +889,55 @@ describe('useTabContextMenu', () => {
       '#test',
     );
   });
+
+  it('ignores stale async tab menu builds when the user long-presses another tab', async () => {
+    let resolveFirstConfig: (value: any) => void = () => {};
+    mockGetNetworkConfigForId
+      .mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveFirstConfig = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(null);
+
+    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const firstTab = {
+      id: 'server-freenode',
+      name: 'Freenode',
+      type: 'server' as const,
+      networkId: 'freenode',
+      messages: [],
+      unreadCount: 0,
+    };
+    const secondTab = {
+      id: 'server-oftc',
+      name: 'OFTC',
+      type: 'server' as const,
+      networkId: 'oftc',
+      messages: [],
+      unreadCount: 0,
+    };
+
+    act(() => {
+      result.current.handleTabLongPress(firstTab);
+    });
+    await act(async () => {
+      await result.current.handleTabLongPress(secondTab);
+    });
+    const callsAfterSecond = (mockUIStore.setTabOptionsTitle as jest.Mock).mock
+      .calls.length;
+
+    await act(async () => {
+      resolveFirstConfig({ id: 'freenode', name: 'Freenode' });
+      await Promise.resolve();
+    });
+
+    expect(
+      (mockUIStore.setTabOptionsTitle as jest.Mock).mock.calls.length,
+    ).toBe(callsAfterSecond);
+    expect(mockUIStore.setTabOptionsTitle).toHaveBeenLastCalledWith(
+      'Server: oftc',
+    );
+  });
 });
