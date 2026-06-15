@@ -66,6 +66,17 @@ export const NetworksListScreen: React.FC<NetworksListScreenProps> = ({
     try {
       const loaded = await settingsService.loadNetworks();
       setNetworks(loaded);
+
+      try {
+        const importSummary =
+          await ircDatabaseImportService.importDefaultNetworksIfNeeded();
+        if (importSummary) {
+          const refreshed = await settingsService.loadNetworks();
+          setNetworks(refreshed);
+        }
+      } catch (error) {
+        console.warn('Failed to auto-load IRC Database networks:', error);
+      }
     } finally {
       setIsLoading(false);
     }

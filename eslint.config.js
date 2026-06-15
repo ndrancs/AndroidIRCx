@@ -1,10 +1,49 @@
 const reactNativeConfig = require('@react-native/eslint-config/flat');
+const { fixupPluginRules } = require('@eslint/compat');
+
+const eslint10CompatibleReactNativeConfig = reactNativeConfig.map(config => {
+  if (!config.rules) {
+    return config;
+  }
+
+  const rules = { ...config.rules };
+  const plugins = Object.fromEntries(
+    Object.entries(config.plugins ?? {}).map(([name, plugin]) => [
+      name,
+      fixupPluginRules(plugin),
+    ]),
+  );
+  delete rules['eslint-comments/no-aggregating-enable'];
+  delete rules['eslint-comments/no-unlimited-disable'];
+  delete rules['eslint-comments/no-unused-disable'];
+  delete rules['eslint-comments/no-unused-enable'];
+
+  const languageOptions = config.languageOptions
+    ? config.languageOptions.parser?.meta?.name === '@babel/eslint-parser'
+      ? { ...config.languageOptions, parser: undefined }
+      : config.languageOptions
+    : undefined;
+
+  return {
+    ...config,
+    ...(languageOptions ? { languageOptions } : {}),
+    ...(config.plugins ? { plugins } : {}),
+    rules,
+  };
+});
 
 module.exports = [
   {
     ignores: ['.eslintrc.js', 'eslint.config.js', 'coverage/**'],
   },
-  ...reactNativeConfig,
+  ...eslint10CompatibleReactNativeConfig,
+  {
+    settings: {
+      react: {
+        version: '19.2',
+      },
+    },
+  },
   {
     files: ['**/*.js'],
     rules: {

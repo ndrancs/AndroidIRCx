@@ -88,6 +88,8 @@ const STORAGE_KEY = '@AndroidIRCX:networks';
 const STORAGE_KEY_SETTINGS = '@AndroidIRCX:settings';
 const STORAGE_KEY_DBASE_REMOVED = '@AndroidIRCX:dbaseRemoved';
 const DEFAULT_SERVER_ID = 'dbase-default';
+const IRCDB_NETWORK_ID_PREFIX = 'ircdb-';
+const PINNED_NETWORK_ORDER = ['dbase', 'chatzona'];
 export const DEFAULT_SERVER: IRCServerConfig = {
   id: DEFAULT_SERVER_ID,
   hostname: 'irc.dbase.in.rs',
@@ -311,6 +313,45 @@ class SettingsService {
     };
   }
 
+  private isIrcDatabaseNetwork(network: IRCNetworkConfig): boolean {
+    return network.id.toLowerCase().startsWith(IRCDB_NETWORK_ID_PREFIX);
+  }
+
+  private getPinnedNetworkRank(network: IRCNetworkConfig): number {
+    const normalizedId = network.id.trim().toLowerCase();
+    const normalizedName = network.name.trim().toLowerCase();
+    return PINNED_NETWORK_ORDER.findIndex(
+      pinned => pinned === normalizedId || pinned === normalizedName,
+    );
+  }
+
+  private sortNetworksForDisplay(
+    networks: IRCNetworkConfig[],
+  ): IRCNetworkConfig[] {
+    return networks
+      .map((network, index) => ({ network, index }))
+      .sort((a, b) => {
+        const aPinnedRank = this.getPinnedNetworkRank(a.network);
+        const bPinnedRank = this.getPinnedNetworkRank(b.network);
+        const aPinned = aPinnedRank !== -1;
+        const bPinned = bPinnedRank !== -1;
+        const aApi = this.isIrcDatabaseNetwork(a.network);
+        const bApi = this.isIrcDatabaseNetwork(b.network);
+        const aManual = !aPinned && !aApi;
+        const bManual = !bPinned && !bApi;
+
+        if (aManual !== bManual) {
+          return aManual ? -1 : 1;
+        }
+        if (aPinned || bPinned) {
+          if (aPinned && bPinned) return aPinnedRank - bPinnedRank;
+          return aPinned ? -1 : 1;
+        }
+        return a.index - b.index;
+      })
+      .map(entry => entry.network);
+  }
+
   private async ensureDefaults(
     networks: IRCNetworkConfig[],
   ): Promise<{ networks: IRCNetworkConfig[]; updated: boolean }> {
@@ -392,7 +433,12 @@ class SettingsService {
       return patched;
     });
 
-    return { networks: result, updated };
+    const sortedResult = this.sortNetworksForDisplay(result);
+    if (sortedResult.some((net, index) => net.id !== result[index]?.id)) {
+      updated = true;
+    }
+
+    return { networks: sortedResult, updated };
   }
 
   async loadNetworks(): Promise<IRCNetworkConfig[]> {
@@ -439,7 +485,8 @@ class SettingsService {
 
   async saveNetworks(networks: IRCNetworkConfig[]): Promise<void> {
     try {
-      const sanitized = await this.persistAndSanitizeNetworks(networks);
+      const sortedNetworks = this.sortNetworksForDisplay(networks);
+      const sanitized = await this.persistAndSanitizeNetworks(sortedNetworks);
       this.networks = sanitized;
       // Use StorageCache for automatic write batching (2s debounce)
       await storageCache.setItem(STORAGE_KEY, sanitized);

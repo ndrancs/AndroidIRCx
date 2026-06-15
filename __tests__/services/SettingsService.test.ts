@@ -87,6 +87,86 @@ describe('SettingsService', () => {
       expect(networks.some(n => n.name === 'OtherNetwork')).toBe(true);
     });
 
+    it('orders manual networks before DBase, Chatzona, then remaining IRC Database API order', async () => {
+      await storageCache.setItem('@AndroidIRCX:networks', [
+        {
+          id: 'ircdb-libera',
+          name: 'Libera',
+          nick: 'Nick',
+          realname: 'User',
+          servers: [
+            {
+              id: 'libera-1',
+              hostname: 'irc.libera.chat',
+              port: 6697,
+              ssl: true,
+            },
+          ],
+        },
+        {
+          id: 'DBase',
+          name: 'DBase',
+          nick: 'Nick',
+          realname: 'User',
+          servers: [
+            {
+              id: 'dbase-default',
+              hostname: 'irc.dbase.in.rs',
+              port: 6697,
+              ssl: true,
+            },
+          ],
+        },
+        {
+          id: 'manual-net',
+          name: 'ManualNet',
+          nick: 'Nick',
+          realname: 'User',
+          servers: [
+            {
+              id: 'manual-1',
+              hostname: 'irc.manual.net',
+              port: 6667,
+              ssl: false,
+            },
+          ],
+        },
+        {
+          id: 'ircdb-chatzona',
+          name: 'Chatzona',
+          nick: 'Nick',
+          realname: 'User',
+          servers: [
+            {
+              id: 'chatzona-1',
+              hostname: 'irc.chatzona.org',
+              port: 6667,
+              ssl: false,
+            },
+          ],
+        },
+        {
+          id: 'ircdb-rizon',
+          name: 'Rizon',
+          nick: 'Nick',
+          realname: 'User',
+          servers: [
+            { id: 'rizon-1', hostname: 'irc.rizon.net', port: 6697, ssl: true },
+          ],
+        },
+      ]);
+
+      const networks = await settingsService.loadNetworks();
+
+      expect(networks.map(n => n.name)).toEqual([
+        'ManualNet',
+        'DBase',
+        'Chatzona',
+        'Libera',
+        'Rizon',
+      ]);
+    });
+
     it('should ensure DBase has default servers', async () => {
       const savedNetworks = [
         {

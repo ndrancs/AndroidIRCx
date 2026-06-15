@@ -111,6 +111,7 @@ jest.mock('../../src/services/IrcDatabaseImportService', () => ({
   ircDatabaseImportService: {
     loadCatalog: jest.fn(),
     importFromIrcDatabase: jest.fn(),
+    importDefaultNetworksIfNeeded: jest.fn(),
   },
 }));
 
@@ -178,6 +179,9 @@ describe('NetworksListScreen', () => {
       totalApiNetworks: 3,
       failedPersistNetworks: 0,
     });
+    ircDatabaseImportService.importDefaultNetworksIfNeeded.mockResolvedValue(
+      null,
+    );
   });
 
   it('loads and renders networks with servers', async () => {

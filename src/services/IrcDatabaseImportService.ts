@@ -13,6 +13,7 @@ const IRC_DATABASE_PRESETS_URL =
   'https://irc.dbase.in.rs/api/irc/server-presets';
 const DEFAULT_FETCH_TIMEOUT_MS = 15000;
 const LAST_IMPORT_SETTING_KEY = 'ircDbLastImportAt';
+const DEFAULT_AUTO_IMPORT_SETTING_KEY = 'ircDbDefaultAutoImportCompleted';
 
 interface IrcDatabaseApiServer {
   hostname?: unknown;
@@ -136,6 +137,26 @@ class IrcDatabaseImportService {
         .map((record, index) => this.mapCatalogRecord(record, index))
         .filter((entry): entry is IrcDatabaseCatalogEntry => entry !== null),
     };
+  }
+
+  async importDefaultNetworksIfNeeded(
+    fetchImpl: typeof fetch = fetch,
+    options?: { timeoutMs?: number },
+  ): Promise<IrcDatabaseImportSummary | null> {
+    const alreadyCompleted = await settingsService
+      .getSetting<boolean>(DEFAULT_AUTO_IMPORT_SETTING_KEY, false)
+      .catch(() => false);
+    if (alreadyCompleted) {
+      return null;
+    }
+
+    const summary = await this.importFromIrcDatabase(fetchImpl, options);
+    if (summary.failedPersistNetworks === 0) {
+      await settingsService
+        .setSetting(DEFAULT_AUTO_IMPORT_SETTING_KEY, true)
+        .catch(() => undefined);
+    }
+    return summary;
   }
 
   async importFromIrcDatabase(

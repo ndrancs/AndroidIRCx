@@ -8,6 +8,7 @@ jest.mock('../../src/services/SettingsService', () => ({
     loadNetworks: jest.fn(),
     addNetwork: jest.fn(),
     updateNetwork: jest.fn(),
+    getSetting: jest.fn(),
     setSetting: jest.fn(),
   },
 }));
@@ -45,6 +46,7 @@ describe('IrcDatabaseImportService', () => {
     ]);
     (settingsService.addNetwork as jest.Mock).mockResolvedValue(undefined);
     (settingsService.updateNetwork as jest.Mock).mockResolvedValue(undefined);
+    (settingsService.getSetting as jest.Mock).mockResolvedValue(false);
     (settingsService.setSetting as jest.Mock).mockResolvedValue(undefined);
   });
 
@@ -372,6 +374,50 @@ describe('IrcDatabaseImportService', () => {
     );
     expect(summary.importedNetworks).toBe(1);
     expect(settingsService.addNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it('imports default IRC Database networks once and records completion', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            network_name: 'Chatzona',
+            server_list: [
+              { hostname: 'irc.chatzona.org', port: 6667, use_ssl: false },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const summary =
+      await ircDatabaseImportService.importDefaultNetworksIfNeeded(
+        fetchMock as any,
+      );
+
+    expect(summary?.importedNetworks).toBe(1);
+    expect(settingsService.getSetting).toHaveBeenCalledWith(
+      'ircDbDefaultAutoImportCompleted',
+      false,
+    );
+    expect(settingsService.setSetting).toHaveBeenCalledWith(
+      'ircDbDefaultAutoImportCompleted',
+      true,
+    );
+  });
+
+  it('skips default IRC Database import after it was completed', async () => {
+    (settingsService.getSetting as jest.Mock).mockResolvedValueOnce(true);
+    const fetchMock = jest.fn();
+
+    const summary =
+      await ircDatabaseImportService.importDefaultNetworksIfNeeded(
+        fetchMock as any,
+      );
+
+    expect(summary).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('loads catalog preview metadata including average users and last scanned time', async () => {
