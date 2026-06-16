@@ -119,7 +119,7 @@ const styles = {
 };
 
 describe('NotificationsSection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     mockCheckPermission.mockResolvedValue(true);
@@ -128,7 +128,7 @@ describe('NotificationsSection', () => {
   });
 
   it('refreshes prefs on mount', async () => {
-    render(
+    await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -144,7 +144,7 @@ describe('NotificationsSection', () => {
     mockCheckPermission.mockResolvedValueOnce(false);
     mockRequestPermission.mockResolvedValueOnce(true);
 
-    render(
+    await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -168,7 +168,7 @@ describe('NotificationsSection', () => {
       .mockResolvedValueOnce(false);
     mockRequestPermission.mockResolvedValueOnce(false);
 
-    render(
+    await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -187,7 +187,7 @@ describe('NotificationsSection', () => {
   });
 
   it('enables notifications directly when permission already granted', async () => {
-    render(
+    await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -204,7 +204,7 @@ describe('NotificationsSection', () => {
   });
 
   it('updates non-enabled notification toggles without permission flow', async () => {
-    render(
+    await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -235,7 +235,7 @@ describe('NotificationsSection', () => {
         },
       },
     ]);
-    const { getByText, getByPlaceholderText, queryByText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -252,8 +252,8 @@ describe('NotificationsSection', () => {
     );
     expect(getByText('No channel overrides set.')).toBeTruthy();
 
-    fireEvent.changeText(getByPlaceholderText('#channel'), '#dev');
-    fireEvent.press(getByText('Add'));
+    await fireEvent.changeText(getByPlaceholderText('#channel'), '#dev');
+    await fireEvent.press(getByText('Add'));
     await waitFor(() =>
       expect(mockUpdateChannelPreferences).toHaveBeenCalledWith('#dev', {
         enabled: true,
@@ -265,17 +265,17 @@ describe('NotificationsSection', () => {
     );
 
     await waitFor(() => expect(getByText('#dev')).toBeTruthy());
-    fireEvent.press(getByText('Delete'));
+    await fireEvent.press(getByText('Delete'));
     expect(mockRemoveChannelPreferences).toHaveBeenCalledWith('#dev');
 
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
     await waitFor(() =>
       expect(queryByText('Per-Channel Notifications')).toBeNull(),
     );
   });
 
   it('opens and closes sound settings screen', async () => {
-    const { getByTestId, queryByTestId } = render(
+    const { getByTestId, queryByTestId } = await render(
       <NotificationsSection
         colors={colors}
         styles={styles as any}
@@ -289,7 +289,7 @@ describe('NotificationsSection', () => {
     mockCapturedItems.get('notifications-sounds').onPress();
     await waitFor(() => expect(getByTestId('sound-settings')).toBeTruthy());
 
-    fireEvent.press(getByTestId('sound-close'));
+    await fireEvent.press(getByTestId('sound-close'));
     await waitFor(() => expect(queryByTestId('sound-settings')).toBeNull());
   });
 });

@@ -108,7 +108,7 @@ describe('SoundSettingsScreen', () => {
     resetAllToDefaults: jest.fn(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     useSoundSettings.mockReturnValue(baseHookState);
@@ -117,13 +117,13 @@ describe('SoundSettingsScreen', () => {
     ]);
   });
 
-  it('renders loading state', () => {
+  it('renders loading state', async () => {
     useSoundSettings.mockReturnValue({
       ...baseHookState,
       isLoading: true,
     });
 
-    const { UNSAFE_getByType } = render(
+    const { UNSAFE_getByType } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
@@ -133,15 +133,15 @@ describe('SoundSettingsScreen', () => {
   });
 
   it('renders settings and handles top-level toggles', async () => {
-    const { findByText, getAllByRole } = render(
+    const { findByText, getAllByRole } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
     expect(await findByText('Sound Settings')).toBeTruthy();
-    fireEvent(getAllByRole('switch')[0], 'valueChange', false);
-    fireEvent.press(await findByText('Mock Slider'));
-    fireEvent(getAllByRole('switch')[1], 'valueChange', false);
-    fireEvent(getAllByRole('switch')[2], 'valueChange', true);
+    await fireEvent(getAllByRole('switch')[0], 'valueChange', false);
+    await fireEvent.press(await findByText('Mock Slider'));
+    await fireEvent(getAllByRole('switch')[1], 'valueChange', false);
+    await fireEvent(getAllByRole('switch')[2], 'valueChange', true);
 
     expect(baseHookState.setEnabled).toHaveBeenCalledWith(false);
     expect(baseHookState.setMasterVolume).toHaveBeenCalledWith(0.7);
@@ -150,30 +150,30 @@ describe('SoundSettingsScreen', () => {
   });
 
   it('changes scheme, previews event sound and toggles category event', async () => {
-    const { findByText, getAllByRole, getAllByText } = render(
+    const { findByText, getAllByRole, getAllByText } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Quiet'));
+    await fireEvent.press(await findByText('Quiet'));
     expect(baseHookState.setActiveScheme).toHaveBeenCalledWith('quiet');
 
-    fireEvent.press(await findByText('Other'));
-    fireEvent(getAllByRole('switch')[4], 'valueChange', false);
-    fireEvent.press(getAllByText('play')[1].parent as any);
+    await fireEvent.press(await findByText('Other'));
+    await fireEvent(getAllByRole('switch')[4], 'valueChange', false);
+    await fireEvent.press(getAllByText('play')[1].parent as any);
 
     expect(baseHookState.setEventEnabled).toHaveBeenCalledWith('join', false);
     expect(baseHookState.previewSound).toHaveBeenCalled();
   });
 
   it('picks custom sound and confirms usage', async () => {
-    const { findByText, getAllByText } = render(
+    const { findByText, getAllByText } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Other'));
-    fireEvent.press(getAllByText('folder-open')[1].parent as any);
+    await fireEvent.press(await findByText('Other'));
+    await fireEvent.press(getAllByText('folder-open')[1].parent as any);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(baseHookState.previewCustomSound).toHaveBeenCalledWith(
         'file:///tmp/copied.mp3',
       );
@@ -190,18 +190,18 @@ describe('SoundSettingsScreen', () => {
   });
 
   it('resets individual and all sounds through confirmation alerts', async () => {
-    const { findByText, getAllByText } = render(
+    const { findByText, getAllByText } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Other'));
-    fireEvent.press(getAllByText('undo')[0].parent as any);
+    await fireEvent.press(await findByText('Other'));
+    await fireEvent.press(getAllByText('undo')[0].parent as any);
 
     let buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
     buttons?.[1]?.onPress?.();
     expect(baseHookState.resetEventToDefault).toHaveBeenCalledWith('join');
 
-    fireEvent.press(await findByText('Reset All to Defaults'));
+    await fireEvent.press(await findByText('Reset All to Defaults'));
     buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
     buttons?.[1]?.onPress?.();
     expect(baseHookState.resetAllToDefaults).toHaveBeenCalled();
@@ -210,14 +210,14 @@ describe('SoundSettingsScreen', () => {
   it('handles file picker error when picking custom sound fails', async () => {
     pick.mockRejectedValue(new Error('boom'));
 
-    const { findByText, getAllByText } = render(
+    const { findByText, getAllByText } = await render(
       <SoundSettingsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Other'));
-    fireEvent.press(getAllByText('folder-open')[1].parent as any);
+    await fireEvent.press(await findByText('Other'));
+    await fireEvent.press(getAllByText('folder-open')[1].parent as any);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Failed to select sound file.',

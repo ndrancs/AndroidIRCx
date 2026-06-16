@@ -28,13 +28,13 @@ jest.mock('../../src/stores/uiStore', () => ({
 }));
 
 describe('useHeaderActions', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockUIStore.showUserList = false;
   });
 
-  it('should return all action handlers', () => {
-    const { result } = renderHook(() => useHeaderActions());
+  it('should return all action handlers', async () => {
+    const { result } = await renderHook(() => useHeaderActions());
 
     expect(result.current.handleDropdownPress).toBeDefined();
     expect(result.current.handleMenuPress).toBeDefined();
@@ -44,59 +44,59 @@ describe('useHeaderActions', () => {
     expect(typeof result.current.handleToggleUserList).toBe('function');
   });
 
-  it('should open options menu on dropdown press', () => {
-    const { result } = renderHook(() => useHeaderActions());
+  it('should open options menu on dropdown press', async () => {
+    const { result } = await renderHook(() => useHeaderActions());
 
-    act(() => {
+    await act(() => {
       result.current.handleDropdownPress();
     });
 
     expect(mockSetShowOptionsMenu).toHaveBeenCalledWith(true);
   });
 
-  it('should open settings on menu press', () => {
-    const { result } = renderHook(() => useHeaderActions());
+  it('should open settings on menu press', async () => {
+    const { result } = await renderHook(() => useHeaderActions());
 
-    act(() => {
+    await act(() => {
       result.current.handleMenuPress();
     });
 
     expect(mockSetShowSettings).toHaveBeenCalledWith(true);
   });
 
-  it('should toggle user list from false to true', () => {
+  it('should toggle user list from false to true', async () => {
     mockUIStore.showUserList = false;
-    const { result } = renderHook(() => useHeaderActions());
+    const { result } = await renderHook(() => useHeaderActions());
 
-    act(() => {
+    await act(() => {
       result.current.handleToggleUserList();
     });
 
     expect(mockSetShowUserList).toHaveBeenCalledWith(true);
   });
 
-  it('should toggle user list from true to false', () => {
+  it('should toggle user list from true to false', async () => {
     mockUIStore.showUserList = true;
-    const { result } = renderHook(() => useHeaderActions());
+    const { result } = await renderHook(() => useHeaderActions());
 
-    act(() => {
+    await act(() => {
       result.current.handleToggleUserList();
     });
 
     expect(mockSetShowUserList).toHaveBeenCalledWith(false);
   });
 
-  it('should read latest user list state on each toggle call', () => {
-    const { result } = renderHook(() => useHeaderActions());
+  it('should read latest user list state on each toggle call', async () => {
+    const { result } = await renderHook(() => useHeaderActions());
 
     mockUIStore.showUserList = false;
-    act(() => {
+    await act(() => {
       result.current.handleToggleUserList();
     });
     expect(mockSetShowUserList).toHaveBeenCalledWith(true);
 
     mockUIStore.showUserList = true;
-    act(() => {
+    await act(() => {
       result.current.handleToggleUserList();
     });
     expect(mockSetShowUserList).toHaveBeenLastCalledWith(false);

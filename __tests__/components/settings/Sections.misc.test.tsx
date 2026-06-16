@@ -126,14 +126,14 @@ const styles = {
 };
 
 describe('Sections misc', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
   });
 
-  it('AdvancedSection renders null when empty', () => {
-    const { queryByTestId } = render(
+  it('AdvancedSection renders null when empty', async () => {
+    const { queryByTestId } = await render(
       <AdvancedSection
         colors={colors}
         styles={styles as any}
@@ -143,14 +143,14 @@ describe('Sections misc', () => {
     expect(queryByTestId('setting-any')).toBeNull();
   });
 
-  it('HelpSection triggers all help entrypoint callbacks', () => {
-    const { getByText } = render(<HelpSection />);
-    fireEvent.press(getByText('Troubleshooting Guide'));
-    fireEvent.press(getByText('IRC Connection Guide'));
-    fireEvent.press(getByText('Commands Reference'));
-    fireEvent.press(getByText('Encryption Guide'));
-    fireEvent.press(getByText('Media Sharing Guide'));
-    fireEvent.press(getByText('Channel Management'));
+  it('HelpSection triggers all help entrypoint callbacks', async () => {
+    const { getByText } = await render(<HelpSection />);
+    await fireEvent.press(getByText('Troubleshooting Guide'));
+    await fireEvent.press(getByText('IRC Connection Guide'));
+    await fireEvent.press(getByText('Commands Reference'));
+    await fireEvent.press(getByText('Encryption Guide'));
+    await fireEvent.press(getByText('Media Sharing Guide'));
+    await fireEvent.press(getByText('Channel Management'));
 
     expect(mockSetShowHelpTroubleshooting).toHaveBeenCalledWith(true);
     expect(mockSetShowHelpConnection).toHaveBeenCalledWith(true);
@@ -161,7 +161,7 @@ describe('Sections misc', () => {
   });
 
   it('MessageHistorySection persists input/switch updates', async () => {
-    render(
+    await render(
       <MessageHistorySection
         colors={colors}
         styles={styles as any}
@@ -213,7 +213,7 @@ describe('Sections misc', () => {
       { nick: 'alice', network: 'net', alias: 'ali' },
     ]);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <UsersServicesSection
         colors={colors}
         styles={styles as any}
@@ -252,7 +252,7 @@ describe('Sections misc', () => {
     await removeAliasButtons.find((b: any) => b.text === 'Delete')?.onPress?.();
     expect(mockRemoveUserAlias).toHaveBeenCalledWith('alice', 'net');
 
-    fireEvent.press(getByText('Blacklist'));
+    await fireEvent.press(getByText('Blacklist'));
     expect(Alert.alert).toHaveBeenCalled();
   });
 });

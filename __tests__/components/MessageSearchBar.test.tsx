@@ -27,8 +27,8 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('MessageSearchBar', () => {
-  it('does not render when hidden', () => {
-    const { toJSON } = render(
+  it('does not render when hidden', async () => {
+    const { toJSON } = await render(
       <MessageSearchBar
         visible={false}
         onClose={jest.fn()}
@@ -38,9 +38,9 @@ describe('MessageSearchBar', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('calls onSearch on text change and shows count text', () => {
+  it('calls onSearch on text change and shows count text', async () => {
     const onSearch = jest.fn();
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText } = await render(
       <MessageSearchBar
         visible
         onClose={jest.fn()}
@@ -50,7 +50,7 @@ describe('MessageSearchBar', () => {
     );
 
     const input = getByPlaceholderText('Search messages...');
-    fireEvent.changeText(input, 'hello');
+    await fireEvent.changeText(input, 'hello');
 
     expect(onSearch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -61,17 +61,17 @@ describe('MessageSearchBar', () => {
     expect(getByText('3 result(s) found')).toBeTruthy();
   });
 
-  it('supports filter toggle and message type changes', () => {
+  it('supports filter toggle and message type changes', async () => {
     const onSearch = jest.fn();
-    const { UNSAFE_getAllByType, getByText } = render(
+    const { UNSAFE_getAllByType, getByText } = await render(
       <MessageSearchBar visible onClose={jest.fn()} onSearch={onSearch} />,
     );
 
     const buttonsBefore = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(buttonsBefore[0]);
+    await fireEvent.press(buttonsBefore[0]);
 
     expect(getByText('Message Types:')).toBeTruthy();
-    fireEvent.press(getByText('join'));
+    await fireEvent.press(getByText('join'));
 
     expect(onSearch).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -80,10 +80,10 @@ describe('MessageSearchBar', () => {
     );
   });
 
-  it('handles clear and close actions', () => {
+  it('handles clear and close actions', async () => {
     const onClose = jest.fn();
     const onSearch = jest.fn();
-    const { getByPlaceholderText, UNSAFE_getAllByType } = render(
+    const { getByPlaceholderText, UNSAFE_getAllByType } = await render(
       <MessageSearchBar
         visible
         onClose={onClose}
@@ -93,16 +93,16 @@ describe('MessageSearchBar', () => {
     );
 
     const input = getByPlaceholderText('Search messages...');
-    fireEvent.changeText(input, 'abc');
+    await fireEvent.changeText(input, 'abc');
 
     const buttonsWithClear = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(buttonsWithClear[0]);
+    await fireEvent.press(buttonsWithClear[0]);
     expect(onSearch).toHaveBeenCalledWith(
       expect.objectContaining({ searchTerm: '' }),
     );
 
     const buttonsAfterClear = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(buttonsAfterClear[buttonsAfterClear.length - 1]);
+    await fireEvent.press(buttonsAfterClear[buttonsAfterClear.length - 1]);
     expect(onClose).toHaveBeenCalled();
   });
 });

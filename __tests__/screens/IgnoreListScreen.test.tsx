@@ -33,7 +33,7 @@ const {
 const { connectionManager } = require('../../src/services/ConnectionManager');
 
 describe('IgnoreListScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
 
@@ -61,8 +61,8 @@ describe('IgnoreListScreen', () => {
     connectionManager.getConnection.mockReturnValue(null);
   });
 
-  it('renders nothing when hidden', () => {
-    const { queryByText } = render(
+  it('renders nothing when hidden', async () => {
+    const { queryByText } = await render(
       <IgnoreListScreen visible={false} onClose={jest.fn()} />,
     );
 
@@ -70,7 +70,7 @@ describe('IgnoreListScreen', () => {
   });
 
   it('loads and renders ignored users', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <IgnoreListScreen visible onClose={jest.fn()} />,
     );
 
@@ -81,35 +81,35 @@ describe('IgnoreListScreen', () => {
   });
 
   it('filters entries by search query', async () => {
-    const { findByPlaceholderText, findByText, queryByText } = render(
+    const { findByPlaceholderText, findByText, queryByText } = await render(
       <IgnoreListScreen visible onClose={jest.fn()} />,
     );
 
     const input = await findByPlaceholderText('Search by mask or reason...');
-    fireEvent.changeText(input, 'flood');
+    await fireEvent.changeText(input, 'flood');
 
     expect(await findByText('quiet!*@host')).toBeTruthy();
     expect(queryByText('bad!*@*')).toBeNull();
   });
 
   it('adds a new ignored user', async () => {
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <IgnoreListScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('+ Add'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('+ Add'));
+    await fireEvent.changeText(
       await findByPlaceholderText('nick or mask (e.g., *!*@host.com)'),
       'new!*@*',
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Reason (optional)'),
       'annoying',
     );
 
-    fireEvent.press(await findByText('Add'));
+    await fireEvent.press(await findByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(userManagementService.ignoreUser).toHaveBeenCalledWith(
         'new!*@*',
         'annoying',
@@ -124,12 +124,12 @@ describe('IgnoreListScreen', () => {
   });
 
   it('removes an ignored user after confirmation', async () => {
-    const { findAllByText } = render(
+    const { findAllByText } = await render(
       <IgnoreListScreen visible onClose={jest.fn()} />,
     );
 
     const removeButtons = await findAllByText('Remove');
-    fireEvent.press(removeButtons[0]);
+    await fireEvent.press(removeButtons[0]);
 
     const removeDialog = (Alert.alert as jest.Mock).mock.calls.find(
       call => call[0] === 'Remove from Ignore List',
@@ -151,13 +151,13 @@ describe('IgnoreListScreen', () => {
   });
 
   it('filters by selected network', async () => {
-    const { findAllByText, findByText, queryByText } = render(
+    const { findAllByText, findByText, queryByText } = await render(
       <IgnoreListScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('All Networks'));
+    await fireEvent.press(await findByText('All Networks'));
     const pickerOptions = await findAllByText('net-b');
-    fireEvent.press(pickerOptions[pickerOptions.length - 1]);
+    await fireEvent.press(pickerOptions[pickerOptions.length - 1]);
 
     expect(await findByText('quiet!*@host')).toBeTruthy();
     expect(queryByText('bad!*@*')).toBeNull();
@@ -165,12 +165,12 @@ describe('IgnoreListScreen', () => {
 
   it('closes from header button', async () => {
     const onClose = jest.fn();
-    const { findAllByText } = render(
+    const { findAllByText } = await render(
       <IgnoreListScreen visible onClose={onClose} />,
     );
 
     const closeButtons = await findAllByText('Close');
-    fireEvent.press(closeButtons[0]);
+    await fireEvent.press(closeButtons[0]);
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

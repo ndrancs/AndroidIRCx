@@ -26,14 +26,14 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('CertificateFingerprintModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockFormatFingerprint.mockImplementation((fp: string) => fp.toUpperCase());
   });
 
-  it('copies fingerprint and command', () => {
-    const { getByText } = render(
+  it('copies fingerprint and command', async () => {
+    const { getByText } = await render(
       <CertificateFingerprintModal
         visible
         onClose={jest.fn()}
@@ -41,18 +41,18 @@ describe('CertificateFingerprintModal', () => {
       />,
     );
 
-    fireEvent.press(getByText('Copy Fingerprint'));
-    fireEvent.press(getByText('Copy Command'));
+    await fireEvent.press(getByText('Copy Fingerprint'));
+    await fireEvent.press(getByText('Copy Command'));
 
     expect(mockSetString).toHaveBeenCalledWith('AABBCC');
     expect(mockSetString).toHaveBeenCalledWith('/msg NickServ CERT ADD AABBCC');
   });
 
-  it('sends command to selected service and closes', () => {
+  it('sends command to selected service and closes', async () => {
     const onSendToNickServ = jest.fn();
     const onClose = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <CertificateFingerprintModal
         visible
         onClose={onClose}
@@ -61,8 +61,8 @@ describe('CertificateFingerprintModal', () => {
       />,
     );
 
-    fireEvent.press(getByText('HostServ'));
-    fireEvent.press(getByText('Send to {{service}}:HostServ'));
+    await fireEvent.press(getByText('HostServ'));
+    await fireEvent.press(getByText('Send to {{service}}:HostServ'));
 
     expect(onSendToNickServ).toHaveBeenCalledWith(
       '/msg HostServ CERT ADD DDEE',
@@ -70,8 +70,8 @@ describe('CertificateFingerprintModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('hides qr section when disabled', () => {
-    const { queryByText } = render(
+  it('hides qr section when disabled', async () => {
+    const { queryByText } = await render(
       <CertificateFingerprintModal
         visible
         onClose={jest.fn()}

@@ -35,8 +35,8 @@ describe('SettingSwitch', () => {
     value: false,
   };
 
-  it('should render switch with title', () => {
-    const { getByText } = render(
+  it('should render switch with title', async () => {
+    const { getByText } = await render(
       <SettingSwitch
         item={baseItem}
         icon={undefined}
@@ -49,13 +49,13 @@ describe('SettingSwitch', () => {
     expect(getByText('Test Switch')).toBeTruthy();
   });
 
-  it('should render switch with description', () => {
+  it('should render switch with description', async () => {
     const item = {
       ...baseItem,
       description: 'This is a test description',
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSwitch
         item={item}
         icon={undefined}
@@ -69,13 +69,13 @@ describe('SettingSwitch', () => {
     expect(getByText('This is a test description')).toBeTruthy();
   });
 
-  it('should render with icon', () => {
+  it('should render with icon', async () => {
     const item = {
       ...baseItem,
       value: true,
     };
 
-    const { root } = render(
+    const { root } = await render(
       <SettingSwitch
         item={item}
         icon={{ name: 'bell', solid: true }}
@@ -88,14 +88,14 @@ describe('SettingSwitch', () => {
     expect(root).toBeTruthy();
   });
 
-  it('should call onValueChange when switch is toggled', () => {
+  it('should call onValueChange when switch is toggled', async () => {
     const mockOnValueChange = jest.fn();
     const item = {
       ...baseItem,
       value: false,
     };
 
-    const { getByRole } = render(
+    const { getByRole } = await render(
       <SettingSwitch
         item={item}
         icon={undefined}
@@ -106,19 +106,19 @@ describe('SettingSwitch', () => {
     );
 
     const switchElement = getByRole('switch');
-    fireEvent(switchElement, 'valueChange', true);
+    await fireEvent(switchElement, 'valueChange', true);
 
     expect(mockOnValueChange).toHaveBeenCalledWith(true);
   });
 
-  it('should render disabled state', () => {
+  it('should render disabled state', async () => {
     const item = {
       ...baseItem,
       disabled: true,
       value: true,
     };
 
-    const { getByRole, getByText } = render(
+    const { getByRole, getByText } = await render(
       <SettingSwitch
         item={item}
         icon={undefined}
@@ -133,13 +133,13 @@ describe('SettingSwitch', () => {
     expect(switchElement.props.disabled).toBe(true);
   });
 
-  it('should render with descriptionNode instead of description', () => {
+  it('should render with descriptionNode instead of description', async () => {
     const item = {
       ...baseItem,
       descriptionNode: <Text testID="custom-node">Custom Node</Text>,
     };
 
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingSwitch
         item={item}
         icon={undefined}
@@ -152,13 +152,13 @@ describe('SettingSwitch', () => {
     expect(getByTestId('custom-node')).toBeTruthy();
   });
 
-  it('should render with numeric description', () => {
+  it('should render with numeric description', async () => {
     const item = {
       ...baseItem,
       description: 42,
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSwitch
         item={item}
         icon={undefined}

@@ -259,7 +259,7 @@ describe('backupData Journey Test', () => {
     isMountedRef: { current: true },
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -322,7 +322,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate creating a backup
     const backup =
@@ -348,7 +348,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Mock a valid backup object
     const mockBackup = {
@@ -379,7 +379,7 @@ describe('backupData Journey Test', () => {
     expect(mockRestoreBackup).toHaveBeenCalledWith(mockBackup);
   });
 
-  it('should validate backup before restoration', () => {
+  it('should validate backup before restoration', async () => {
     const mockValidateBackup = jest.fn().mockReturnValue(true);
     require('../../src/services/DataBackupService').dataBackupService.validateBackup.mockImplementation(
       mockValidateBackup,
@@ -403,7 +403,7 @@ describe('backupData Journey Test', () => {
     expect(isValid).toBe(true);
   });
 
-  it('should handle invalid backup gracefully', () => {
+  it('should handle invalid backup gracefully', async () => {
     const mockValidateBackup = jest.fn().mockReturnValue(false);
     require('../../src/services/DataBackupService').dataBackupService.validateBackup.mockImplementation(
       mockValidateBackup,
@@ -427,7 +427,7 @@ describe('backupData Journey Test', () => {
     expect(isValid).toBe(false);
   });
 
-  it('should handle backup metadata retrieval', () => {
+  it('should handle backup metadata retrieval', async () => {
     const mockGetBackupMetadata = jest.fn().mockReturnValue({
       version: '1.0',
       timestamp: Date.now(),
@@ -473,7 +473,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate backing up settings
     await require('../../src/services/SettingsService').settingsService.loadSettings();
@@ -494,7 +494,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate backing up networks
     await require('../../src/services/SettingsService').settingsService.loadNetworks();
@@ -515,7 +515,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate backing up tabs for a network
     await require('../../src/services/TabService').tabService.getTabs(
@@ -538,7 +538,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate backing up message history
     await require('../../src/services/MessageHistoryService').messageHistoryService.loadMessages(
@@ -562,7 +562,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate restoring settings
     const settings = { theme: 'light', notifications: false };
@@ -586,7 +586,7 @@ describe('backupData Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate restoring networks
     const networks = [

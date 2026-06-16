@@ -74,7 +74,7 @@ describe('PurchaseScreen', () => {
   let purchaseUpdatedHandler: ((purchase: any) => Promise<void>) | undefined;
   let purchaseErrorHandler: ((error: any) => void) | undefined;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     const {
@@ -111,8 +111,8 @@ describe('PurchaseScreen', () => {
     inAppPurchaseService.processPurchase.mockResolvedValue(undefined);
   });
 
-  it('does not render content when hidden', () => {
-    const { queryByText } = render(
+  it('does not render content when hidden', async () => {
+    const { queryByText } = await render(
       <PurchaseScreen visible={false} onClose={jest.fn()} />,
     );
 
@@ -120,7 +120,7 @@ describe('PurchaseScreen', () => {
   });
 
   it('loads products and renders purchase cards when visible', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <PurchaseScreen visible onClose={jest.fn()} />,
     );
 
@@ -134,9 +134,11 @@ describe('PurchaseScreen', () => {
 
   it('calls onClose from header button', async () => {
     const onClose = jest.fn();
-    const { findByText } = render(<PurchaseScreen visible onClose={onClose} />);
+    const { findByText } = await render(
+      <PurchaseScreen visible onClose={onClose} />,
+    );
 
-    fireEvent.press(await findByText('✕'));
+    await fireEvent.press(await findByText('✕'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -153,13 +155,13 @@ describe('PurchaseScreen', () => {
       },
     ]);
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PurchaseScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Restore purchases'));
+    await fireEvent.press(await findByText('Restore purchases'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(inAppPurchaseService.processPurchase).toHaveBeenCalledWith(
         'remove_ads',
         'token-1',
@@ -175,9 +177,9 @@ describe('PurchaseScreen', () => {
     mockRNIap.initConnection.mockRejectedValueOnce(new Error('iap failed'));
     const errorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    render(<PurchaseScreen visible onClose={jest.fn()} />);
+    await render(<PurchaseScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Failed to load products. Please try again later.',
@@ -188,14 +190,14 @@ describe('PurchaseScreen', () => {
   });
 
   it('requests purchase when tapping a product', async () => {
-    const { findAllByText } = render(
+    const { findAllByText } = await render(
       <PurchaseScreen visible onClose={jest.fn()} />,
     );
 
     const purchaseButtons = await findAllByText('Purchase');
-    fireEvent.press(purchaseButtons[0]);
+    await fireEvent.press(purchaseButtons[0]);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockRNIap.requestPurchase).toHaveBeenCalled();
     });
   });
@@ -208,7 +210,7 @@ describe('PurchaseScreen', () => {
       (productId: string) => productId === 'remove_ads',
     );
 
-    const { findByText, queryAllByText } = render(
+    const { findByText, queryAllByText } = await render(
       <PurchaseScreen visible onClose={jest.fn()} />,
     );
 
@@ -220,9 +222,9 @@ describe('PurchaseScreen', () => {
     const {
       inAppPurchaseService,
     } = require('../../src/services/InAppPurchaseService');
-    render(<PurchaseScreen visible onClose={jest.fn()} />);
+    await render(<PurchaseScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(purchaseUpdatedHandler).toBeDefined();
     });
 
@@ -252,9 +254,9 @@ describe('PurchaseScreen', () => {
     );
     const errorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    render(<PurchaseScreen visible onClose={jest.fn()} />);
+    await render(<PurchaseScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(purchaseUpdatedHandler).toBeDefined();
     });
 
@@ -275,13 +277,13 @@ describe('PurchaseScreen', () => {
 
   it('ignores cancelled purchase errors from listener', async () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-    render(<PurchaseScreen visible onClose={jest.fn()} />);
+    await render(<PurchaseScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(purchaseErrorHandler).toBeDefined();
     });
 
-    act(() => {
+    await act(() => {
       purchaseErrorHandler?.({
         code: 'E_USER_CANCELLED',
         message: 'cancelled',
@@ -301,12 +303,12 @@ describe('PurchaseScreen', () => {
       new Error('restore failed'),
     );
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PurchaseScreen visible onClose={jest.fn()} />,
     );
-    fireEvent.press(await findByText('Restore purchases'));
+    await fireEvent.press(await findByText('Restore purchases'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Restore failed',
         'Please try again later.',

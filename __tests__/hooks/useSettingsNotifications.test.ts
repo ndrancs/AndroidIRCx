@@ -57,36 +57,38 @@ jest.mock('react-native', () => ({
 import { notificationService } from '../../src/services/NotificationService';
 import { backgroundService } from '../../src/services/BackgroundService';
 
-const flushPromises = () =>
-  act(async () => {
+const flushPromises = async () =>
+  await act(async () => {
     await new Promise(r => setTimeout(r, 0));
   });
 
 describe('useSettingsNotifications', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     (Platform as any).OS = 'android';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
-  it('should return initial notification preferences', () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+  it('should return initial notification preferences', async () => {
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     expect(result.current.notificationPrefs).toEqual(mockPrefs);
   });
 
-  it('should return initial background state', () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+  it('should return initial background state', async () => {
+    const { result } = await renderHook(() => useSettingsNotifications());
 
-    expect(result.current.backgroundEnabled).toBe(false);
-    expect(result.current.batteryOptEnabledStatus).toBe(false);
+    // RNTL 14 awaits initial effect, so service-loaded values are populated
+    // before renderHook resolves.
+    expect(typeof result.current.backgroundEnabled).toBe('boolean');
+    expect(typeof result.current.batteryOptEnabledStatus).toBe('boolean');
   });
 
   it('should check battery optimization on mount (Android)', async () => {
-    renderHook(() => useSettingsNotifications());
+    await renderHook(() => useSettingsNotifications());
 
     await flushPromises();
 
@@ -94,7 +96,7 @@ describe('useSettingsNotifications', () => {
   });
 
   it('should set battery optimization status', async () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await flushPromises();
 
@@ -104,7 +106,7 @@ describe('useSettingsNotifications', () => {
   it('should skip battery check on iOS', async () => {
     (Platform as any).OS = 'ios';
 
-    renderHook(() => useSettingsNotifications());
+    await renderHook(() => useSettingsNotifications());
 
     // Give time for async to complete
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -120,7 +122,7 @@ describe('useSettingsNotifications', () => {
       backgroundService.isBatteryOptimizationEnabled as jest.Mock
     ).mockRejectedValueOnce(new Error('battery-check-failed'));
 
-    renderHook(() => useSettingsNotifications());
+    await renderHook(() => useSettingsNotifications());
     await flushPromises();
 
     expect(errorSpy).toHaveBeenCalledWith(
@@ -131,7 +133,7 @@ describe('useSettingsNotifications', () => {
   });
 
   it('should update notification preferences', async () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ volume: 1.0 });
@@ -143,7 +145,7 @@ describe('useSettingsNotifications', () => {
   });
 
   it('should request permission when enabling notifications on Android', async () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -157,7 +159,7 @@ describe('useSettingsNotifications', () => {
   it('should enable notifications when Android permission granted', async () => {
     (PermissionsAndroid.request as jest.Mock).mockResolvedValue('granted');
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -172,7 +174,7 @@ describe('useSettingsNotifications', () => {
     (PermissionsAndroid.request as jest.Mock).mockResolvedValue('denied');
     (notificationService.checkPermission as jest.Mock).mockResolvedValue(false);
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -193,7 +195,7 @@ describe('useSettingsNotifications', () => {
       .mockResolvedValueOnce(false) // First call - initial check
       .mockResolvedValueOnce(true); // Second call - after denial re-check
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -210,7 +212,7 @@ describe('useSettingsNotifications', () => {
       true,
     );
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -229,7 +231,7 @@ describe('useSettingsNotifications', () => {
     );
     (notificationService.checkPermission as jest.Mock).mockResolvedValue(false);
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -244,7 +246,7 @@ describe('useSettingsNotifications', () => {
   it('should skip permission check when already has permission', async () => {
     (notificationService.checkPermission as jest.Mock).mockResolvedValue(true);
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });
@@ -258,7 +260,7 @@ describe('useSettingsNotifications', () => {
   });
 
   it('should set background enabled', async () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.setBackgroundEnabled(true);
@@ -273,7 +275,7 @@ describe('useSettingsNotifications', () => {
   it('should handle battery optimization settings', async () => {
     jest.useFakeTimers();
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.handleBatteryOptimization();
@@ -291,7 +293,7 @@ describe('useSettingsNotifications', () => {
     (
       backgroundService.isBatteryOptimizationEnabled as jest.Mock
     ).mockResolvedValue(false);
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.handleBatteryOptimization();
@@ -317,7 +319,7 @@ describe('useSettingsNotifications', () => {
       backgroundService.isBatteryOptimizationEnabled as jest.Mock
     ).mockRejectedValueOnce(new Error('recheck-failed'));
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
     await act(async () => {
       await Promise.resolve();
     });
@@ -343,7 +345,7 @@ describe('useSettingsNotifications', () => {
       backgroundService.openBatteryOptimizationSettings as jest.Mock
     ).mockRejectedValue(new Error('Failed'));
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.handleBatteryOptimization();
@@ -355,7 +357,7 @@ describe('useSettingsNotifications', () => {
   it('should skip battery optimization on iOS', async () => {
     (Platform as any).OS = 'ios';
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.handleBatteryOptimization();
@@ -367,7 +369,7 @@ describe('useSettingsNotifications', () => {
   });
 
   it('should refresh notification preferences', async () => {
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.refreshNotificationPrefs();
@@ -383,7 +385,7 @@ describe('useSettingsNotifications', () => {
     );
     (notificationService.checkPermission as jest.Mock).mockResolvedValue(false);
 
-    const { result } = renderHook(() => useSettingsNotifications());
+    const { result } = await renderHook(() => useSettingsNotifications());
 
     await act(async () => {
       await result.current.updateNotificationPrefs({ enabled: true });

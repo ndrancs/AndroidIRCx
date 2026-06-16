@@ -25,16 +25,16 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('HelpMediaScreen', () => {
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <HelpMediaScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('Media Sharing Guide')).toBeNull();
   });
 
-  it('renders media guide content when visible', () => {
-    const { getByText } = render(
+  it('renders media guide content when visible', async () => {
+    const { getByText } = await render(
       <HelpMediaScreen visible onClose={jest.fn()} />,
     );
 
@@ -49,13 +49,13 @@ describe('HelpMediaScreen', () => {
     expect(getByText("Media appears as 'Encrypted data'")).toBeTruthy();
   });
 
-  it('calls onClose when close button is pressed', () => {
+  it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = await render(
       <HelpMediaScreen visible onClose={onClose} />,
     );
 
-    fireEvent.press(getByLabelText('Close help screen'));
+    await fireEvent.press(getByLabelText('Close help screen'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

@@ -57,22 +57,22 @@ describe('useAppExit', () => {
     t: mockT,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     (Platform as any).OS = 'android';
   });
 
-  it('should return handleExit function', () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+  it('should return handleExit function', async () => {
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
     expect(result.current.handleExit).toBeDefined();
     expect(typeof result.current.handleExit).toBe('function');
   });
 
-  it('should show exit confirmation alert', () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+  it('should show exit confirmation alert', async () => {
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -86,10 +86,10 @@ describe('useAppExit', () => {
     );
   });
 
-  it('should use t function for translations', () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+  it('should use t function for translations', async () => {
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -99,11 +99,11 @@ describe('useAppExit', () => {
   });
 
   it('should not call disconnect when not connected', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useAppExit({ ...defaultProps, isConnected: false }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -121,9 +121,9 @@ describe('useAppExit', () => {
   });
 
   it('should flush message history on exit', async () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -139,9 +139,9 @@ describe('useAppExit', () => {
   });
 
   it('should cleanup background service on exit', async () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -157,9 +157,9 @@ describe('useAppExit', () => {
   });
 
   it('should load custom quit message from settings', async () => {
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -181,9 +181,9 @@ describe('useAppExit', () => {
   it('should use default quit message when settings fail', async () => {
     (settingsService.getSetting as jest.Mock).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -200,9 +200,9 @@ describe('useAppExit', () => {
 
   it('should exit app on Android after cleanup', async () => {
     (Platform as any).OS = 'android';
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -219,9 +219,9 @@ describe('useAppExit', () => {
 
   it('should show iOS close-from-switcher message instead of exiting app', async () => {
     (Platform as any).OS = 'ios';
-    const { result } = renderHook(() => useAppExit(defaultProps));
+    const { result } = await renderHook(() => useAppExit(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -248,8 +248,8 @@ describe('useAppExit', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const { result } = renderHook(() => useAppExit(defaultProps));
-    act(() => {
+    const { result } = await renderHook(() => useAppExit(defaultProps));
+    await act(() => {
       result.current.handleExit();
     });
 
@@ -276,8 +276,8 @@ describe('useAppExit', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const { result } = renderHook(() => useAppExit(defaultProps));
-    act(() => {
+    const { result } = await renderHook(() => useAppExit(defaultProps));
+    await act(() => {
       result.current.handleExit();
     });
 

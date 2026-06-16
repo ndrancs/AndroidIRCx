@@ -46,7 +46,7 @@ describe('useLazyMessageHistory', () => {
   const loadMessages = require('../../src/services/MessageHistoryService')
     .messageHistoryService.loadMessages as jest.Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     appStateChangeListener = null;
     mockStoreState = { tabs: [], setTabs: jest.fn() };
@@ -55,14 +55,12 @@ describe('useLazyMessageHistory', () => {
     loadMessages.mockResolvedValue([]);
   });
 
-  it('renders', () => {
-    expect(() =>
-      renderHook(() => useLazyMessageHistory({ activeTabId: null })),
-    ).not.toThrow();
+  it('renders', async () => {
+    await renderHook(() => useLazyMessageHistory({ activeTabId: null }));
   });
 
-  it('does not load without active tab', () => {
-    renderHook(() => useLazyMessageHistory({ activeTabId: null }));
+  it('does not load without active tab', async () => {
+    await renderHook(() => useLazyMessageHistory({ activeTabId: null }));
     expect(loadMessages).not.toHaveBeenCalled();
   });
 
@@ -92,7 +90,7 @@ describe('useLazyMessageHistory', () => {
       { id: 'h1', text: 'history', timestamp: 1 },
     ]);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
 
     expect(loadMessages).toHaveBeenCalledWith('net', '#a');
@@ -117,7 +115,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
     useTabStore.getState.mockImplementation(() => mockStoreState);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
 
     expect(loadMessages).not.toHaveBeenCalled();
@@ -140,7 +138,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
     useTabStore.getState.mockImplementation(() => mockStoreState);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
 
     expect(setTabs).not.toHaveBeenCalled();
@@ -174,7 +172,7 @@ describe('useLazyMessageHistory', () => {
         { id: 'h2', text: 'retry-history', timestamp: 2 },
       ]);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 300));
 
     expect(loadMessages.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -208,7 +206,7 @@ describe('useLazyMessageHistory', () => {
       { id: 'h3', text: 'from-bg', timestamp: 3 },
     ]);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
 
     // Simulate background -> active
@@ -240,7 +238,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.mockImplementation((selector: any) => selector(mockStoreState));
     useTabStore.getState.mockImplementation(() => mockStoreState);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
     loadMessages.mockClear();
 
@@ -273,9 +271,7 @@ describe('useLazyMessageHistory', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    expect(() =>
-      renderHook(() => useLazyMessageHistory({ activeTabId: 't1' })),
-    ).not.toThrow();
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 0));
 
     expect(consoleErrorSpy).toHaveBeenCalled();
@@ -305,7 +301,9 @@ describe('useLazyMessageHistory', () => {
       { id: 'server-history', text: 'connected', timestamp: 10 },
     ]);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 'server-net' }));
+    await renderHook(() =>
+      useLazyMessageHistory({ activeTabId: 'server-net' }),
+    );
     await new Promise(r => setTimeout(r, 0));
 
     expect(loadMessages).toHaveBeenCalledWith('net', 'server');
@@ -337,7 +335,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.getState.mockImplementation(() => mockStoreState);
     loadMessages.mockReturnValueOnce(historyPromise);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     mockStoreState.tabs = [];
     resolveHistory([{ id: 'late', text: 'late', timestamp: 11 }]);
     await new Promise(r => setTimeout(r, 0));
@@ -370,7 +368,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.getState.mockImplementation(() => mockStoreState);
     loadMessages.mockReturnValueOnce(historyPromise);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     mockStoreState.tabs = [
       { ...mockStoreState.tabs[0], messages: [{ id: 'live', text: 'live' }] },
     ];
@@ -402,7 +400,7 @@ describe('useLazyMessageHistory', () => {
     useTabStore.getState.mockImplementation(() => mockStoreState);
     loadMessages.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
-    renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
+    await renderHook(() => useLazyMessageHistory({ activeTabId: 't1' }));
     await new Promise(r => setTimeout(r, 300));
     setTabs.mockClear();
     loadMessages.mockResolvedValueOnce([
@@ -439,7 +437,7 @@ describe('useLazyMessageHistory', () => {
       cb(),
     );
 
-    const { rerender } = renderHook(
+    const { rerender } = await renderHook(
       ({ activeTabId }) => useLazyMessageHistory({ activeTabId }),
       { initialProps: { activeTabId: 't1' as string | null } },
     );
@@ -447,7 +445,7 @@ describe('useLazyMessageHistory', () => {
     loadMessages.mockClear();
 
     appStateChangeListener?.('background');
-    rerender({ activeTabId: null });
+    await rerender({ activeTabId: null });
     appStateChangeListener?.('active');
     await new Promise(r => setTimeout(r, 0));
 

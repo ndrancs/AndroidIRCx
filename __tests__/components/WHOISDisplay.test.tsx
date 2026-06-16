@@ -99,7 +99,7 @@ describe('WHOISDisplay', () => {
     isUserIgnored: jest.Mock;
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
 
@@ -143,8 +143,8 @@ describe('WHOISDisplay', () => {
     });
   });
 
-  it('does not render when hidden', () => {
-    const { toJSON } = render(
+  it('does not render when hidden', async () => {
+    const { toJSON } = await render(
       <WHOISDisplay visible={false} nick="alice" onClose={jest.fn()} />,
     );
     expect(toJSON()).toBeNull();
@@ -153,7 +153,7 @@ describe('WHOISDisplay', () => {
   it('loads and renders whois details with channel press', async () => {
     const onChannelPress = jest.fn();
 
-    const { getByText, getAllByText } = render(
+    const { getByText, getAllByText } = await render(
       <WHOISDisplay
         visible
         nick="alice"
@@ -163,7 +163,7 @@ describe('WHOISDisplay', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Alice Doe')).toBeTruthy();
       expect(getByText('alice@example.com')).toBeTruthy();
       expect(getByText('known user')).toBeTruthy();
@@ -175,7 +175,7 @@ describe('WHOISDisplay', () => {
       channelNodes.find(
         (node: any) => typeof node?.parent?.props?.onPress === 'function',
       ) || channelNodes[0];
-    fireEvent.press(
+    await fireEvent.press(
       (pressableChannelText as any).parent ?? pressableChannelText,
     );
     expect(onChannelPress).toHaveBeenCalledWith('#chat');
@@ -184,14 +184,14 @@ describe('WHOISDisplay', () => {
   it('handles ignore and unignore actions', async () => {
     mockUserService.isUserIgnored.mockReturnValue(true);
 
-    const { getByText, rerender } = render(
+    const { getByText, rerender } = await render(
       <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
     );
 
     await waitFor(() => expect(getByText('Unignore User')).toBeTruthy());
 
     await act(async () => {
-      fireEvent.press(getByText('Unignore User'));
+      await fireEvent.press(getByText('Unignore User'));
     });
     expect(mockUserService.unignoreUser).toHaveBeenCalledWith(
       'alice',
@@ -199,9 +199,9 @@ describe('WHOISDisplay', () => {
     );
 
     mockUserService.isUserIgnored.mockReturnValue(false);
-    rerender(<WHOISDisplay visible nick="alice" onClose={jest.fn()} />);
+    await rerender(<WHOISDisplay visible nick="alice" onClose={jest.fn()} />);
 
-    fireEvent.press(getByText('Ignore User'));
+    await fireEvent.press(getByText('Ignore User'));
     const ignoreAction = (Alert.alert as jest.Mock).mock.calls.find(
       c => c[0] === 'Ignore User',
     )?.[2]?.[1];
@@ -238,11 +238,11 @@ describe('WHOISDisplay', () => {
       specialStatus: 'network helper',
     });
 
-    const { getByText, getAllByText } = render(
+    const { getByText, getAllByText } = await render(
       <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('+iwx')).toBeTruthy();
       expect(getByText('gateway.example')).toBeTruthy();
       expect(getByText('Example IRCd')).toBeTruthy();
@@ -252,7 +252,7 @@ describe('WHOISDisplay', () => {
       expect(getAllByText('Yes').length).toBeGreaterThanOrEqual(6);
     });
 
-    fireEvent.press(getByText('Copy WHOIS Details'));
+    await fireEvent.press(getByText('Copy WHOIS Details'));
     expect(Clipboard.setString).toHaveBeenCalledWith(
       expect.stringContaining('WHOIS: alice'),
     );
@@ -266,19 +266,19 @@ describe('WHOISDisplay', () => {
     mockUserService.getUserNote.mockReturnValue('');
     mockUserService.getUserAlias.mockReturnValue('');
 
-    const { getByText, getByPlaceholderText, getAllByText } = render(
+    const { getByText, getByPlaceholderText, getAllByText } = await render(
       <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
     );
 
     await waitFor(() => expect(getByText('Add Note')).toBeTruthy());
 
-    fireEvent.press(getByText('Add Note'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Add Note'));
+    await fireEvent.changeText(
       getByPlaceholderText('Enter note about this user'),
       '  trusted  ',
     );
     await act(async () => {
-      fireEvent.press(getAllByText('Save')[0]);
+      await fireEvent.press(getAllByText('Save')[0]);
     });
     expect(mockUserService.addUserNote).toHaveBeenCalledWith(
       'alice',
@@ -286,26 +286,26 @@ describe('WHOISDisplay', () => {
       undefined,
     );
 
-    fireEvent.press(getByText('Edit Note'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Edit Note'));
+    await fireEvent.changeText(
       getByPlaceholderText('Enter note about this user'),
       '   ',
     );
     await act(async () => {
-      fireEvent.press(getAllByText('Save')[0]);
+      await fireEvent.press(getAllByText('Save')[0]);
     });
     expect(mockUserService.removeUserNote).toHaveBeenCalledWith(
       'alice',
       undefined,
     );
 
-    fireEvent.press(getByText('Add Alias'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Add Alias'));
+    await fireEvent.changeText(
       getByPlaceholderText('Enter alias for this user'),
       '  ally  ',
     );
     await act(async () => {
-      fireEvent.press(getAllByText('Save')[0]);
+      await fireEvent.press(getAllByText('Save')[0]);
     });
     expect(mockUserService.addUserAlias).toHaveBeenCalledWith(
       'alice',
@@ -313,13 +313,13 @@ describe('WHOISDisplay', () => {
       undefined,
     );
 
-    fireEvent.press(getByText('Edit Alias'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Edit Alias'));
+    await fireEvent.changeText(
       getByPlaceholderText('Enter alias for this user'),
       '   ',
     );
     await act(async () => {
-      fireEvent.press(getAllByText('Save')[0]);
+      await fireEvent.press(getAllByText('Save')[0]);
     });
     expect(mockUserService.removeUserAlias).toHaveBeenCalledWith(
       'alice',
@@ -339,18 +339,18 @@ describe('WHOISDisplay', () => {
       userManagementService: mockUserService,
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <WHOISDisplay visible nick="alice" onClose={jest.fn()} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'WHOIS Error',
         'Not connected or not registered yet.',
       );
     });
 
-    fireEvent.press(getByText('WHOWAS (History)'));
+    await fireEvent.press(getByText('WHOWAS (History)'));
     expect(disconnectedIrc.sendCommand).not.toHaveBeenCalled();
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',

@@ -58,7 +58,7 @@ jest.mock('../../src/utils/tabUtils', () => ({
 describe('useDccSessionSync', () => {
   const isMountedRef = { current: true };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     sessionCallback = null;
     messageCallback = null;
@@ -66,10 +66,10 @@ describe('useDccSessionSync', () => {
     isMountedRef.current = true;
   });
 
-  it('should subscribe to session updates and messages on mount', () => {
+  it('should subscribe to session updates and messages on mount', async () => {
     const { dccChatService } = require('../../src/services/DCCChatService');
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -79,19 +79,19 @@ describe('useDccSessionSync', () => {
     expect(dccChatService.onMessage).toHaveBeenCalledWith(expect.any(Function));
   });
 
-  it('should unsubscribe on unmount', () => {
-    const { unmount } = renderHook(() =>
+  it('should unsubscribe on unmount', async () => {
+    const { unmount } = await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
-    unmount();
+    await unmount();
 
     expect(mockUnsubSession).toHaveBeenCalled();
     expect(mockUnsubMsg).toHaveBeenCalled();
   });
 
-  it('should create a new DCC tab when session connects and tab does not exist', () => {
-    renderHook(() =>
+  it('should create a new DCC tab when session connects and tab does not exist', async () => {
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -118,7 +118,7 @@ describe('useDccSessionSync', () => {
     expect(mockSetNetworkName).toHaveBeenCalledWith('TestNet');
   });
 
-  it('should update existing DCC tab when session connects and tab exists', () => {
+  it('should update existing DCC tab when session connects and tab exists', async () => {
     mockTabs.push({
       id: 'dcc::TestNet::Alice',
       name: 'DCC: Alice',
@@ -128,7 +128,7 @@ describe('useDccSessionSync', () => {
       dccSessionId: 'old-sess',
     });
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -151,10 +151,10 @@ describe('useDccSessionSync', () => {
     );
   });
 
-  it('should not update tabs if component is unmounted', () => {
+  it('should not update tabs if component is unmounted', async () => {
     isMountedRef.current = false;
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -169,8 +169,8 @@ describe('useDccSessionSync', () => {
     expect(mockSetTabs).not.toHaveBeenCalled();
   });
 
-  it('should ignore closed/failed sessions (keep tab for history)', () => {
-    renderHook(() =>
+  it('should ignore closed/failed sessions (keep tab for history)', async () => {
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -186,7 +186,7 @@ describe('useDccSessionSync', () => {
     expect(mockSetActiveTabId).not.toHaveBeenCalled();
   });
 
-  it('should append message to existing DCC tab on onMessage', () => {
+  it('should append message to existing DCC tab on onMessage', async () => {
     mockTabs.push({
       id: 'dcc::TestNet::Bob',
       name: 'DCC: Bob',
@@ -194,7 +194,7 @@ describe('useDccSessionSync', () => {
       messages: [{ text: 'first' }],
     });
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -217,10 +217,10 @@ describe('useDccSessionSync', () => {
     );
   });
 
-  it('should not append message if component is unmounted', () => {
+  it('should not append message if component is unmounted', async () => {
     isMountedRef.current = false;
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: false }),
     );
 
@@ -236,10 +236,10 @@ describe('useDccSessionSync', () => {
     expect(mockSetTabs).not.toHaveBeenCalled();
   });
 
-  it('should use sortTabsGrouped when creating new tab', () => {
+  it('should use sortTabsGrouped when creating new tab', async () => {
     const { sortTabsGrouped } = require('../../src/utils/tabUtils');
 
-    renderHook(() =>
+    await renderHook(() =>
       useDccSessionSync({ isMountedRef, tabSortAlphabetical: true }),
     );
 

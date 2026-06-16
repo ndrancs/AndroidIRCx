@@ -61,7 +61,7 @@ jest.mock('react-native-webrtc', () => ({
 }));
 
 describe('WebRTCCallModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockGetSetting.mockImplementation((key: string, def: any) =>
       Promise.resolve(def),
@@ -89,13 +89,13 @@ describe('WebRTCCallModal', () => {
     });
   });
 
-  it('renders nothing when call is idle', () => {
-    const { queryByText } = render(<WebRTCCallModal />);
+  it('renders nothing when call is idle', async () => {
+    const { queryByText } = await render(<WebRTCCallModal />);
     expect(queryByText('Audio Call')).toBeNull();
     expect(queryByText('Video Call')).toBeNull();
   });
 
-  it('renders incoming call controls and handles accept/decline', () => {
+  it('renders incoming call controls and handles accept/decline', async () => {
     mockUseCallStore.mockReturnValue({
       ...mockUseCallStore(),
       phase: 'incoming',
@@ -105,19 +105,19 @@ describe('WebRTCCallModal', () => {
       statusText: 'Incoming call',
     });
 
-    const { UNSAFE_getAllByType } = render(<WebRTCCallModal />);
+    const { UNSAFE_getAllByType } = await render(<WebRTCCallModal />);
     const buttons = UNSAFE_getAllByType(
       require('react-native').TouchableOpacity,
     );
 
-    fireEvent.press(buttons[0]);
-    fireEvent.press(buttons[1]);
+    await fireEvent.press(buttons[0]);
+    await fireEvent.press(buttons[1]);
 
     expect(mockDeclineIncomingCall).toHaveBeenCalled();
     expect(mockAcceptIncomingCall).toHaveBeenCalled();
   });
 
-  it('renders minimized audio overlay actions', () => {
+  it('renders minimized audio overlay actions', async () => {
     mockUseCallStore.mockReturnValue({
       ...mockUseCallStore(),
       phase: 'connected',
@@ -127,9 +127,9 @@ describe('WebRTCCallModal', () => {
       statusText: 'Call in progress',
     });
 
-    const { getByText } = render(<WebRTCCallModal />);
+    const { getByText } = await render(<WebRTCCallModal />);
 
-    fireEvent.press(getByText('bob'));
+    await fireEvent.press(getByText('bob'));
     expect(mockRestoreCall).toHaveBeenCalled();
   });
 
@@ -151,17 +151,17 @@ describe('WebRTCCallModal', () => {
       statusText: 'Connected',
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <WebRTCCallModal
         activeTab={{ type: 'query', name: 'other', networkId: 'net-1' }}
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('CALL')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('CALL'));
+    await fireEvent.press(getByText('CALL'));
     expect(mockRestoreCall).toHaveBeenCalled();
   });
 });

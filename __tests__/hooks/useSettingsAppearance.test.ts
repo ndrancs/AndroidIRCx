@@ -58,19 +58,19 @@ jest.mock('../../src/i18n/config', () => ({
 import { settingsService } from '../../src/services/SettingsService';
 import { layoutService } from '../../src/services/LayoutService';
 
-const flushPromises = () =>
-  act(async () => {
+const flushPromises = async () =>
+  await act(async () => {
     await new Promise(r => setTimeout(r, 0));
   });
 
 describe('useSettingsAppearance', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     themeChangeCallback = null;
   });
 
-  it('should return initial theme state', () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+  it('should return initial theme state', async () => {
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     expect(result.current.currentTheme).toEqual(mockTheme);
     expect(result.current.availableThemes).toEqual(mockThemes);
@@ -78,14 +78,14 @@ describe('useSettingsAppearance', () => {
     expect(result.current.editingTheme).toBeUndefined();
   });
 
-  it('should return initial language as system', () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+  it('should return initial language as system', async () => {
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     expect(result.current.appLanguage).toBe('system');
   });
 
   it('should load settings on mount', async () => {
-    renderHook(() => useSettingsAppearance());
+    await renderHook(() => useSettingsAppearance());
 
     await flushPromises();
 
@@ -97,15 +97,15 @@ describe('useSettingsAppearance', () => {
   });
 
   it('should load layout config on mount', async () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     await flushPromises();
 
     expect(result.current.layoutConfig).toEqual(mockLayoutConfig);
   });
 
-  it('should update theme when themeService emits change', () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+  it('should update theme when themeService emits change', async () => {
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     const newTheme = {
       id: 'light',
@@ -113,7 +113,7 @@ describe('useSettingsAppearance', () => {
       colors: { primary: '#fff' },
     };
 
-    act(() => {
+    await act(() => {
       if (themeChangeCallback) {
         themeChangeCallback(newTheme);
       }
@@ -122,35 +122,35 @@ describe('useSettingsAppearance', () => {
     expect(result.current.currentTheme).toEqual(newTheme);
   });
 
-  it('should set showThemeEditor', () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+  it('should set showThemeEditor', async () => {
+    const { result } = await renderHook(() => useSettingsAppearance());
 
-    act(() => {
+    await act(() => {
       result.current.setShowThemeEditor(true);
     });
 
     expect(result.current.showThemeEditor).toBe(true);
   });
 
-  it('should set editingTheme', () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+  it('should set editingTheme', async () => {
+    const { result } = await renderHook(() => useSettingsAppearance());
 
-    act(() => {
+    await act(() => {
       result.current.setEditingTheme(mockTheme as any);
     });
 
     expect(result.current.editingTheme).toEqual(mockTheme);
   });
 
-  it('should refresh themes', () => {
+  it('should refresh themes', async () => {
     const { themeService } = require('../../src/services/ThemeService');
-    const { result } = renderHook(() => useSettingsAppearance());
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     // Clear initial calls from render
     themeService.getCurrentTheme.mockClear();
     themeService.getAvailableThemes.mockClear();
 
-    act(() => {
+    await act(() => {
       result.current.refreshThemes();
     });
 
@@ -159,7 +159,7 @@ describe('useSettingsAppearance', () => {
   });
 
   it('should set app language', async () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     await act(async () => {
       await result.current.setAppLanguage('sr');
@@ -173,7 +173,7 @@ describe('useSettingsAppearance', () => {
   });
 
   it('should update layout config', async () => {
-    const { result } = renderHook(() => useSettingsAppearance());
+    const { result } = await renderHook(() => useSettingsAppearance());
 
     await flushPromises();
 
@@ -187,10 +187,10 @@ describe('useSettingsAppearance', () => {
     expect(layoutService.getConfig).toHaveBeenCalled();
   });
 
-  it('should clean up theme listener on unmount', () => {
-    const { unmount } = renderHook(() => useSettingsAppearance());
+  it('should clean up theme listener on unmount', async () => {
+    const { unmount } = await renderHook(() => useSettingsAppearance());
 
-    unmount();
+    await unmount();
 
     // themeChangeCallback should be nulled out by the cleanup fn
     expect(themeChangeCallback).toBeNull();

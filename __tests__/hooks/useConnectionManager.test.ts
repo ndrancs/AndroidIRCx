@@ -52,20 +52,20 @@ const makeConnection = (networkId: string, isConnected: boolean) => ({
 // ─── Tests ─────────────────────────────────────────────
 
 describe('useConnectionManager', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
     mockConnectionManager.getAllConnections.mockReturnValue([]);
     mockConnectionManager.getActiveNetworkId.mockReturnValue(null);
     mockConnectionManager.getConnection.mockReturnValue(null);
-    act(() => {
+    await act(() => {
       useConnectionStore.getState().reset();
     });
   });
 
   describe('state subscriptions', () => {
-    it('should return initial state values', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('should return initial state values', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
       expect(result.current.isConnected).toBe(false);
       expect(result.current.networkName).toBe('default');
@@ -75,10 +75,10 @@ describe('useConnectionManager', () => {
       expect(result.current.ping).toBeUndefined();
     });
 
-    it('should reflect store changes', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('should reflect store changes', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setIsConnected(true);
         useConnectionStore.getState().setNetworkName('TestNet');
         useConnectionStore.getState().setPing(42);
@@ -91,10 +91,10 @@ describe('useConnectionManager', () => {
   });
 
   describe('setter callbacks', () => {
-    it('setIsConnected should update store', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('setIsConnected should update store', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setIsConnected(true);
       });
 
@@ -102,10 +102,10 @@ describe('useConnectionManager', () => {
       expect(result.current.isConnected).toBe(true);
     });
 
-    it('setSelectedNetworkName should update store', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('setSelectedNetworkName should update store', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         result.current.setSelectedNetworkName('MyNetwork');
       });
 
@@ -115,10 +115,10 @@ describe('useConnectionManager', () => {
       expect(result.current.selectedNetworkName).toBe('MyNetwork');
     });
 
-    it('updatePing should update store', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('updatePing should update store', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         result.current.updatePing(55);
       });
 
@@ -148,7 +148,7 @@ describe('useConnectionManager', () => {
     it('should connect via ConnectionManager', async () => {
       mockConnectionManager.connect.mockResolvedValue('DBase');
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let networkId: string | undefined;
       await act(async () => {
@@ -166,7 +166,7 @@ describe('useConnectionManager', () => {
     it('should update store state on successful connect', async () => {
       mockConnectionManager.connect.mockResolvedValue('DBase');
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.connect(network as any, config as any);
@@ -180,7 +180,7 @@ describe('useConnectionManager', () => {
     it('should set primaryNetworkId on first connection', async () => {
       mockConnectionManager.connect.mockResolvedValue('DBase');
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.connect(network as any, config as any);
@@ -192,11 +192,11 @@ describe('useConnectionManager', () => {
     it('should NOT override existing primaryNetworkId', async () => {
       mockConnectionManager.connect.mockResolvedValue('SecondNet');
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setPrimaryNetworkId('FirstNet');
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.connect(
@@ -212,7 +212,7 @@ describe('useConnectionManager', () => {
       const error = new Error('Connection refused');
       mockConnectionManager.connect.mockRejectedValue(error);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await expect(
         act(async () => {
@@ -226,7 +226,7 @@ describe('useConnectionManager', () => {
     it('should disconnect via ConnectionManager', async () => {
       mockConnectionManager.disconnect.mockResolvedValue(undefined);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.disconnect('DBase', 'Goodbye');
@@ -244,11 +244,11 @@ describe('useConnectionManager', () => {
         makeConnection('Libera', true),
       ]);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('DBase');
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.disconnect('DBase');
@@ -263,12 +263,12 @@ describe('useConnectionManager', () => {
       mockConnectionManager.disconnect.mockResolvedValue(undefined);
       mockConnectionManager.getAllConnections.mockReturnValue([]);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('DBase');
         useConnectionStore.getState().setIsConnected(true);
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.disconnect('DBase');
@@ -286,12 +286,12 @@ describe('useConnectionManager', () => {
       ]);
       mockConnectionManager.getActiveNetworkId.mockReturnValue('DBase');
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('DBase');
         useConnectionStore.getState().setIsConnected(true);
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.disconnect('Libera');
@@ -305,12 +305,12 @@ describe('useConnectionManager', () => {
     it('should clear primaryNetworkId when disconnecting primary', async () => {
       mockConnectionManager.disconnect.mockResolvedValue(undefined);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setPrimaryNetworkId('DBase');
         useConnectionStore.getState().setActiveConnectionId('Other');
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await act(async () => {
         await result.current.disconnect('DBase');
@@ -323,7 +323,7 @@ describe('useConnectionManager', () => {
       const error = new Error('Disconnect failed');
       mockConnectionManager.disconnect.mockRejectedValue(error);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       await expect(
         act(async () => {
@@ -334,14 +334,14 @@ describe('useConnectionManager', () => {
   });
 
   describe('switchConnection', () => {
-    it('should switch to existing connection', () => {
+    it('should switch to existing connection', async () => {
       mockConnectionManager.getConnection.mockReturnValue({
         ...makeConnection('Libera', true),
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         result.current.switchConnection('Libera');
       });
 
@@ -353,30 +353,30 @@ describe('useConnectionManager', () => {
       expect(useConnectionStore.getState().isConnected).toBe(true);
     });
 
-    it('should handle disconnected connection', () => {
+    it('should handle disconnected connection', async () => {
       mockConnectionManager.getConnection.mockReturnValue({
         ...makeConnection('Libera', false),
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         result.current.switchConnection('Libera');
       });
 
       expect(useConnectionStore.getState().isConnected).toBe(false);
     });
 
-    it('should do nothing if connection not found', () => {
+    it('should do nothing if connection not found', async () => {
       mockConnectionManager.getConnection.mockReturnValue(null);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('DBase');
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
-      act(() => {
+      await act(() => {
         result.current.switchConnection('NonExistent');
       });
 
@@ -387,18 +387,18 @@ describe('useConnectionManager', () => {
   });
 
   describe('getActiveConnection', () => {
-    it('should return connection when active', () => {
+    it('should return connection when active', async () => {
       const mockConnection = { networkId: 'DBase', isConnected: true };
       mockConnectionManager.getConnection.mockReturnValue(mockConnection);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('DBase');
       });
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let connection: any;
-      act(() => {
+      await act(() => {
         connection = result.current.getActiveConnection();
       });
 
@@ -406,11 +406,11 @@ describe('useConnectionManager', () => {
       expect(mockConnectionManager.getConnection).toHaveBeenCalledWith('DBase');
     });
 
-    it('should return null when no active connection', () => {
-      const { result } = renderHook(() => useConnectionManager());
+    it('should return null when no active connection', async () => {
+      const { result } = await renderHook(() => useConnectionManager());
 
       let connection: any;
-      act(() => {
+      await act(() => {
         connection = result.current.getActiveConnection();
       });
 
@@ -419,30 +419,30 @@ describe('useConnectionManager', () => {
   });
 
   describe('getAllConnections', () => {
-    it('should return all connections from ConnectionManager', () => {
+    it('should return all connections from ConnectionManager', async () => {
       const connections = [
         makeConnection('DBase', true),
         makeConnection('Libera', false),
       ];
       mockConnectionManager.getAllConnections.mockReturnValue(connections);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let allConnections: any;
-      act(() => {
+      await act(() => {
         allConnections = result.current.getAllConnections();
       });
 
       expect(allConnections).toBe(connections);
     });
 
-    it('should return empty array when no connections', () => {
+    it('should return empty array when no connections', async () => {
       mockConnectionManager.getAllConnections.mockReturnValue([]);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let allConnections: any;
-      act(() => {
+      await act(() => {
         allConnections = result.current.getAllConnections();
       });
 
@@ -451,43 +451,43 @@ describe('useConnectionManager', () => {
   });
 
   describe('isNetworkConnected', () => {
-    it('should return true for connected network', () => {
+    it('should return true for connected network', async () => {
       mockConnectionManager.getConnection.mockReturnValue(
         makeConnection('DBase', true),
       );
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let connected: boolean;
-      act(() => {
+      await act(() => {
         connected = result.current.isNetworkConnected('DBase');
       });
 
       expect(connected).toBe(true);
     });
 
-    it('should return false for disconnected network', () => {
+    it('should return false for disconnected network', async () => {
       mockConnectionManager.getConnection.mockReturnValue(
         makeConnection('DBase', false),
       );
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let connected: boolean;
-      act(() => {
+      await act(() => {
         connected = result.current.isNetworkConnected('DBase');
       });
 
       expect(connected).toBe(false);
     });
 
-    it('should return false for unknown network', () => {
+    it('should return false for unknown network', async () => {
       mockConnectionManager.getConnection.mockReturnValue(null);
 
-      const { result } = renderHook(() => useConnectionManager());
+      const { result } = await renderHook(() => useConnectionManager());
 
       let connected: boolean;
-      act(() => {
+      await act(() => {
         connected = result.current.isNetworkConnected('Unknown');
       });
 
@@ -496,48 +496,48 @@ describe('useConnectionManager', () => {
   });
 
   describe('mount sync', () => {
-    it('should sync active connection state on mount', () => {
+    it('should sync active connection state on mount', async () => {
       mockConnectionManager.getActiveNetworkId.mockReturnValue('DBase');
       mockConnectionManager.getAllConnections.mockReturnValue([
         makeConnection('DBase', true),
       ]);
 
-      renderHook(() => useConnectionManager());
+      await renderHook(() => useConnectionManager());
 
       expect(useConnectionStore.getState().activeConnectionId).toBe('DBase');
       expect(useConnectionStore.getState().networkName).toBe('DBase');
       expect(useConnectionStore.getState().isConnected).toBe(true);
     });
 
-    it('should set isConnected false when no connections', () => {
+    it('should set isConnected false when no connections', async () => {
       mockConnectionManager.getActiveNetworkId.mockReturnValue(null);
       mockConnectionManager.getAllConnections.mockReturnValue([]);
 
-      renderHook(() => useConnectionManager());
+      await renderHook(() => useConnectionManager());
 
       expect(useConnectionStore.getState().isConnected).toBe(false);
     });
 
-    it('should set isConnected false when all connections are disconnected', () => {
+    it('should set isConnected false when all connections are disconnected', async () => {
       mockConnectionManager.getActiveNetworkId.mockReturnValue('DBase');
       mockConnectionManager.getAllConnections.mockReturnValue([
         makeConnection('DBase', false),
       ]);
 
-      renderHook(() => useConnectionManager());
+      await renderHook(() => useConnectionManager());
 
       expect(useConnectionStore.getState().isConnected).toBe(false);
     });
 
-    it('should not update activeConnectionId when no active network', () => {
+    it('should not update activeConnectionId when no active network', async () => {
       mockConnectionManager.getActiveNetworkId.mockReturnValue(null);
       mockConnectionManager.getAllConnections.mockReturnValue([]);
 
-      act(() => {
+      await act(() => {
         useConnectionStore.getState().setActiveConnectionId('existing');
       });
 
-      renderHook(() => useConnectionManager());
+      await renderHook(() => useConnectionManager());
 
       // Should remain unchanged since getActiveNetworkId returned null
       expect(useConnectionStore.getState().activeConnectionId).toBe('existing');
@@ -545,8 +545,10 @@ describe('useConnectionManager', () => {
   });
 
   describe('callback stability', () => {
-    it('should return stable function references across re-renders', () => {
-      const { result, rerender } = renderHook(() => useConnectionManager());
+    it('should return stable function references across re-renders', async () => {
+      const { result, rerender } = await renderHook(() =>
+        useConnectionManager(),
+      );
 
       const first = {
         connect: result.current.connect,
@@ -559,7 +561,7 @@ describe('useConnectionManager', () => {
         setSelectedNetworkName: result.current.setSelectedNetworkName,
       };
 
-      rerender();
+      await rerender();
 
       expect(result.current.connect).toBe(first.connect);
       expect(result.current.disconnect).toBe(first.disconnect);

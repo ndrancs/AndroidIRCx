@@ -33,27 +33,27 @@ describe('DccTransfersMinimizedIndicator', () => {
     colors: mockColors,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should return null when not visible', () => {
-    const { UNSAFE_root } = render(
+  it('should return null when not visible', async () => {
+    const { UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} visible={false} />,
     );
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should return null when no active transfers', () => {
-    const { UNSAFE_root } = render(
+  it('should return null when no active transfers', async () => {
+    const { UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} transfers={[]} />,
     );
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should return null when all transfers are completed', () => {
+  it('should return null when all transfers are completed', async () => {
     const completedTransfer = createMockTransfer({ status: 'completed' });
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={[completedTransfer]}
@@ -62,16 +62,16 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should render when there are downloading transfers', () => {
-    const { getByText } = render(
+  it('should render when there are downloading transfers', async () => {
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} />,
     );
     expect(getByText('test-file.zip')).toBeTruthy();
   });
 
-  it('should render when there are sending transfers', () => {
+  it('should render when there are sending transfers', async () => {
     const sendingTransfer = createMockTransfer({ status: 'sending' });
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={[sendingTransfer]}
@@ -80,19 +80,19 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText('test-file.zip')).toBeTruthy();
   });
 
-  it('should display transfer count', () => {
-    const { getByText } = render(
+  it('should display transfer count', async () => {
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} />,
     );
     expect(getByText(/transfer/)).toBeTruthy();
   });
 
-  it('should display multiple transfers text', () => {
+  it('should display multiple transfers text', async () => {
     const transfers = [
       createMockTransfer({ offer: { filename: 'file1.zip', size: 1000000 } }),
       createMockTransfer({ offer: { filename: 'file2.zip', size: 1000000 } }),
     ];
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -101,7 +101,7 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText(/2 transfers/)).toBeTruthy();
   });
 
-  it('should show first filename with count for multiple transfers', () => {
+  it('should show first filename with count for multiple transfers', async () => {
     const transfers = [
       createMockTransfer({
         offer: { filename: 'first-file.zip', size: 1000000 },
@@ -113,7 +113,7 @@ describe('DccTransfersMinimizedIndicator', () => {
         offer: { filename: 'third-file.zip', size: 1000000 },
       }),
     ];
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -122,15 +122,15 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText('first-file.zip (+2 more)')).toBeTruthy();
   });
 
-  it('should render download icon', () => {
-    const { getByText } = render(
+  it('should render download icon', async () => {
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} />,
     );
     expect(getByText('📥')).toBeTruthy();
   });
 
-  it('should render progress bar', () => {
-    const { UNSAFE_getAllByType } = render(
+  it('should render progress bar', async () => {
+    const { UNSAFE_getAllByType } = await render(
       <DccTransfersMinimizedIndicator {...defaultProps} />,
     );
     const views = UNSAFE_getAllByType('View');
@@ -138,9 +138,9 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(views.length).toBeGreaterThan(1);
   });
 
-  it('should filter out failed transfers', () => {
+  it('should filter out failed transfers', async () => {
     const transfers = [createMockTransfer({ status: 'failed' })];
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -149,9 +149,9 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should filter out rejected transfers', () => {
+  it('should filter out rejected transfers', async () => {
     const transfers = [createMockTransfer({ status: 'rejected' })];
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -160,7 +160,7 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should show only active transfers in count', () => {
+  it('should show only active transfers in count', async () => {
     const transfers = [
       createMockTransfer({
         status: 'downloading',
@@ -169,7 +169,7 @@ describe('DccTransfersMinimizedIndicator', () => {
       createMockTransfer({ status: 'completed' }),
       createMockTransfer({ status: 'failed' }),
     ];
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -179,12 +179,12 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText(/1 transfer/)).toBeTruthy();
   });
 
-  it('should handle zero bytes received', () => {
+  it('should handle zero bytes received', async () => {
     const transfer = createMockTransfer({
       bytesReceived: 0,
       offer: { filename: 'test.zip', size: 1000000 },
     });
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={[transfer]}
@@ -193,11 +193,11 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText('1 transfer - 0%')).toBeTruthy();
   });
 
-  it('should handle undefined size gracefully', () => {
+  it('should handle undefined size gracefully', async () => {
     const transfer = createMockTransfer({
       offer: { filename: 'no-size.txt', size: undefined },
     });
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={[transfer]}
@@ -207,7 +207,7 @@ describe('DccTransfersMinimizedIndicator', () => {
     expect(getByText('1 transfer - 0%')).toBeTruthy();
   });
 
-  it('should call onPress and render computed progress width', () => {
+  it('should call onPress and render computed progress width', async () => {
     const onPress = jest.fn();
     const transfers = [
       createMockTransfer({
@@ -222,7 +222,7 @@ describe('DccTransfersMinimizedIndicator', () => {
       }),
     ];
 
-    const { getByText, UNSAFE_root } = render(
+    const { getByText, UNSAFE_root } = await render(
       <DccTransfersMinimizedIndicator
         {...defaultProps}
         transfers={transfers}
@@ -230,7 +230,7 @@ describe('DccTransfersMinimizedIndicator', () => {
       />,
     );
 
-    fireEvent.press(getByText('big.zip (+1 more)'));
+    await fireEvent.press(getByText('big.zip (+1 more)'));
     expect(onPress).toHaveBeenCalled();
 
     const widthNode = UNSAFE_root.find(node =>

@@ -28,16 +28,18 @@ jest.mock('../../src/services/MessageReactionsService', () => ({
 }));
 
 describe('MessageReactionsComponent', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockToggleReaction.mockResolvedValue(undefined);
     mockOnReactionsChange.mockImplementation(() => () => {});
   });
 
-  it('returns null when no reactions exist', () => {
+  it('returns null when no reactions exist', async () => {
     mockGetReactions.mockReturnValue({ reactions: [] });
 
-    const { toJSON } = render(<MessageReactionsComponent messageId="m1" />);
+    const { toJSON } = await render(
+      <MessageReactionsComponent messageId="m1" />,
+    );
     expect(toJSON()).toBeNull();
   });
 
@@ -48,7 +50,7 @@ describe('MessageReactionsComponent', () => {
     mockHasUserReacted.mockReturnValue(true);
 
     const onReactionPress = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <MessageReactionsComponent
         messageId="m1"
         currentUserNick="alice"
@@ -57,7 +59,7 @@ describe('MessageReactionsComponent', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('👍'));
+      await fireEvent.press(getByText('👍'));
     });
 
     expect(mockToggleReaction).toHaveBeenCalledWith('m1', '👍', 'alice');
@@ -70,16 +72,18 @@ describe('MessageReactionsComponent', () => {
       reactions: [{ emoji: '🔥', count: 1 }],
     });
 
-    const { getByText } = render(<MessageReactionsComponent messageId="m2" />);
+    const { getByText } = await render(
+      <MessageReactionsComponent messageId="m2" />,
+    );
 
     await act(async () => {
-      fireEvent.press(getByText('🔥'));
+      await fireEvent.press(getByText('🔥'));
     });
 
     expect(mockToggleReaction).not.toHaveBeenCalled();
   });
 
-  it('updates reactions when service emits message-specific changes', () => {
+  it('updates reactions when service emits message-specific changes', async () => {
     mockGetReactions.mockReturnValue({
       reactions: [{ emoji: '❤️', count: 1 }],
     });
@@ -90,13 +94,13 @@ describe('MessageReactionsComponent', () => {
       return () => {};
     });
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = await render(
       <MessageReactionsComponent messageId="m3" currentUserNick="bob" />,
     );
 
     expect(getByText('❤️')).toBeTruthy();
 
-    act(() => {
+    await act(() => {
       listener?.('m3', { reactions: [{ emoji: '🎉', count: 4 }] });
     });
 

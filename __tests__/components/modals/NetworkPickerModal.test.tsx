@@ -28,7 +28,7 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('NetworkPickerModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
@@ -40,7 +40,7 @@ describe('NetworkPickerModal', () => {
     ]);
 
     const onSelectNetwork = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <NetworkPickerModal
         visible
         onClose={jest.fn()}
@@ -49,13 +49,13 @@ describe('NetworkPickerModal', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('DBase')).toBeTruthy();
       expect(getByText('Alpha')).toBeTruthy();
       expect(getByText('Zeta')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('DBase'));
+    await fireEvent.press(getByText('DBase'));
     expect(onSelectNetwork).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'DBase' }),
     );
@@ -68,7 +68,7 @@ describe('NetworkPickerModal', () => {
     const onCreateNew = jest.fn();
     const onClose = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <NetworkPickerModal
         visible
         onClose={onClose}
@@ -77,12 +77,12 @@ describe('NetworkPickerModal', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('No Networks')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('Create New Network'));
-    fireEvent.press(getByText('Cancel'));
+    await fireEvent.press(getByText('Create New Network'));
+    await fireEvent.press(getByText('Cancel'));
 
     expect(onCreateNew).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();

@@ -39,8 +39,8 @@ const styles = {
 };
 
 describe('SettingInput', () => {
-  it('renders label, icon, description, value, and error text', () => {
-    const { getByText, getByDisplayValue } = render(
+  it('renders label, icon, description, value, and error text', async () => {
+    const { getByText, getByDisplayValue } = await render(
       <SettingInput
         item={{
           id: 'server-password',
@@ -66,9 +66,9 @@ describe('SettingInput', () => {
     expect(getByDisplayValue('secret').props.secureTextEntry).toBe(true);
   });
 
-  it('updates local text and reports changed values', () => {
+  it('updates local text and reports changed values', async () => {
     const onValueChange = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <SettingInput
         item={{
           id: 'quit-message',
@@ -85,15 +85,15 @@ describe('SettingInput', () => {
     );
 
     const input = getByPlaceholderText('Message');
-    fireEvent.changeText(input, 'Gone');
+    await fireEvent.changeText(input, 'Gone');
 
     expect(onValueChange).toHaveBeenCalledWith('Gone');
     expect(input.props.value).toBe('Gone');
     expect(input.props.keyboardType).toBe('email-address');
   });
 
-  it('keeps draft text while focused and resets to accepted value on blur', () => {
-    const { getByPlaceholderText, rerender } = render(
+  it('keeps draft text while focused and resets to accepted value on blur', async () => {
+    const { getByPlaceholderText, rerender } = await render(
       <SettingInput
         item={{
           id: 'part-message',
@@ -109,10 +109,10 @@ describe('SettingInput', () => {
     );
 
     const input = getByPlaceholderText('Message');
-    fireEvent(input, 'focus');
-    fireEvent.changeText(input, 'Draft');
+    await fireEvent(input, 'focus');
+    await fireEvent.changeText(input, 'Draft');
 
-    rerender(
+    await rerender(
       <SettingInput
         item={{
           id: 'part-message',
@@ -129,14 +129,14 @@ describe('SettingInput', () => {
 
     expect(getByPlaceholderText('Message').props.value).toBe('Draft');
 
-    fireEvent(getByPlaceholderText('Message'), 'blur');
+    await fireEvent(getByPlaceholderText('Message'), 'blur');
 
     expect(getByPlaceholderText('Message').props.value).toBe('Accepted');
   });
 
-  it('submits only enabled inputs with submit handlers', () => {
+  it('submits only enabled inputs with submit handlers', async () => {
     const onPress = jest.fn();
-    const { getByPlaceholderText, rerender } = render(
+    const { getByPlaceholderText, rerender } = await render(
       <SettingInput
         item={{
           id: 'nick',
@@ -152,10 +152,10 @@ describe('SettingInput', () => {
       />,
     );
 
-    fireEvent(getByPlaceholderText('Nick'), 'submitEditing');
+    await fireEvent(getByPlaceholderText('Nick'), 'submitEditing');
     expect(onPress).toHaveBeenCalledTimes(1);
 
-    rerender(
+    await rerender(
       <SettingInput
         item={{
           id: 'nick',
@@ -173,12 +173,12 @@ describe('SettingInput', () => {
     );
 
     expect(getByPlaceholderText('Nick').props.editable).toBe(false);
-    fireEvent(getByPlaceholderText('Nick'), 'submitEditing');
+    await fireEvent(getByPlaceholderText('Nick'), 'submitEditing');
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('renders custom description nodes', () => {
-    const { getByText } = render(
+  it('renders custom description nodes', async () => {
+    const { getByText } = await render(
       <SettingInput
         item={{
           id: 'proxy',

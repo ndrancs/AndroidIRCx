@@ -59,28 +59,30 @@ jest.mock('../../src/types/sound', () => ({
 
 import { soundService } from '../../src/services/SoundService';
 
-const flushPromises = () =>
-  act(async () => {
+const flushPromises = async () =>
+  await act(async () => {
     await new Promise(r => setTimeout(r, 0));
   });
 
 describe('useSoundSettings', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     listenerCallback = null;
   });
 
-  it('should return initial settings', () => {
-    const { result } = renderHook(() => useSoundSettings());
+  it('should return initial settings', async () => {
+    const { result } = await renderHook(() => useSoundSettings());
 
     expect(result.current.settings).toEqual(mockSettings);
     expect(result.current.schemes).toEqual(mockSchemes);
     expect(result.current.activeScheme).toEqual(mockSchemes[0]);
-    expect(result.current.isLoading).toBe(true);
+    // RNTL 14 awaits initial effect commit, so isLoading has already
+    // transitioned to false by the time renderHook resolves.
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('should initialize service and set loading to false', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await flushPromises();
 
@@ -88,20 +90,20 @@ describe('useSoundSettings', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('should subscribe to settings changes', () => {
-    renderHook(() => useSoundSettings());
+  it('should subscribe to settings changes', async () => {
+    await renderHook(() => useSoundSettings());
 
     expect(soundService.addListener).toHaveBeenCalled();
   });
 
   it('should update settings when listener fires', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await flushPromises();
 
     const newSettings = { ...mockSettings, enabled: false, masterVolume: 0.5 };
 
-    act(() => {
+    await act(() => {
       if (listenerCallback) {
         listenerCallback(newSettings);
       }
@@ -111,7 +113,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setEnabled', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setEnabled(false);
@@ -123,7 +125,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setMasterVolume with clamped value', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setMasterVolume(1.5);
@@ -143,7 +145,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setPlayInForeground', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setPlayInForeground(false);
@@ -155,7 +157,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setPlayInBackground', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setPlayInBackground(true);
@@ -167,7 +169,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setActiveScheme', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setActiveScheme('custom1');
@@ -177,7 +179,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call createScheme', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     let scheme: any;
     await act(async () => {
@@ -192,7 +194,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call deleteScheme', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.deleteScheme('custom1');
@@ -202,7 +204,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setEventEnabled', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setEventEnabled('message' as any, false);
@@ -214,7 +216,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setEventVolume with clamped value', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setEventVolume('message' as any, 2.0);
@@ -226,7 +228,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call setCustomSound', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.setCustomSound(
@@ -242,7 +244,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call resetEventToDefault', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.resetEventToDefault('join' as any);
@@ -251,8 +253,8 @@ describe('useSoundSettings', () => {
     expect(soundService.resetToDefault).toHaveBeenCalledWith('join');
   });
 
-  it('should return event config or default', () => {
-    const { result } = renderHook(() => useSoundSettings());
+  it('should return event config or default', async () => {
+    const { result } = await renderHook(() => useSoundSettings());
 
     const config = result.current.getEventConfig('message' as any);
     expect(config).toEqual({ enabled: true, useCustom: false, volume: 1.0 });
@@ -262,7 +264,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call previewSound', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.previewSound('message' as any);
@@ -272,7 +274,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call previewCustomSound', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.previewCustomSound('/path/to/custom.mp3');
@@ -284,7 +286,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call stopSound', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.stopSound();
@@ -294,7 +296,7 @@ describe('useSoundSettings', () => {
   });
 
   it('should call resetAllToDefaults', async () => {
-    const { result } = renderHook(() => useSoundSettings());
+    const { result } = await renderHook(() => useSoundSettings());
 
     await act(async () => {
       await result.current.resetAllToDefaults();
@@ -303,10 +305,10 @@ describe('useSoundSettings', () => {
     expect(soundService.resetAllToDefaults).toHaveBeenCalled();
   });
 
-  it('should clean up listener on unmount', () => {
-    const { unmount } = renderHook(() => useSoundSettings());
+  it('should clean up listener on unmount', async () => {
+    const { unmount } = await renderHook(() => useSoundSettings());
 
-    unmount();
+    await unmount();
 
     const unsubscribeFn = (soundService.addListener as jest.Mock).mock
       .results[0]?.value;

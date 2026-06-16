@@ -26,20 +26,22 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('CreditsScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <CreditsScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('Credits')).toBeNull();
   });
 
-  it('renders translation credits and help section when visible', () => {
-    const { getByText } = render(<CreditsScreen visible onClose={jest.fn()} />);
+  it('renders translation credits and help section when visible', async () => {
+    const { getByText } = await render(
+      <CreditsScreen visible onClose={jest.fn()} />,
+    );
 
     expect(getByText('Credits')).toBeTruthy();
     expect(getByText('Translators')).toBeTruthy();
@@ -66,22 +68,26 @@ describe('CreditsScreen', () => {
     expect(getByText('Thank you to all contributors!')).toBeTruthy();
   });
 
-  it('calls onClose when close button is pressed', () => {
+  it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByText } = render(<CreditsScreen visible onClose={onClose} />);
+    const { getByText } = await render(
+      <CreditsScreen visible onClose={onClose} />,
+    );
 
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('opens translation help email link', () => {
+  it('opens translation help email link', async () => {
     const openURLSpy = jest
       .spyOn(Linking, 'openURL')
       .mockResolvedValueOnce(true as never);
-    const { getByText } = render(<CreditsScreen visible onClose={jest.fn()} />);
+    const { getByText } = await render(
+      <CreditsScreen visible onClose={jest.fn()} />,
+    );
 
-    fireEvent.press(getByText('contact@androidircx.com'));
+    await fireEvent.press(getByText('contact@androidircx.com'));
 
     expect(openURLSpy).toHaveBeenCalledWith(
       'mailto:contact@androidircx.com?subject=Translation%20Help%20-%20AndroidIRCX',
@@ -93,11 +99,13 @@ describe('CreditsScreen', () => {
     jest
       .spyOn(Linking, 'openURL')
       .mockRejectedValueOnce(new Error('open failed'));
-    const { getByText } = render(<CreditsScreen visible onClose={jest.fn()} />);
+    const { getByText } = await render(
+      <CreditsScreen visible onClose={jest.fn()} />,
+    );
 
-    fireEvent.press(getByText('contact@androidircx.com'));
+    await fireEvent.press(getByText('contact@androidircx.com'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(errorSpy).toHaveBeenCalledWith(
         'Failed to open URL:',
         expect.any(Error),

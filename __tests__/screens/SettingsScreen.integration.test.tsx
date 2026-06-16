@@ -358,7 +358,7 @@ jest.mock('../../src/screens/ScriptingScreen', () => ({
     const { Text } = require('react-native');
     return visible ? (
       <>
-        {'ScriptingScreenMock'}
+        <Text>ScriptingScreenMock</Text>
         <Text onPress={() => onClose?.()}>ScriptingClose</Text>
         <Text onPress={() => onShowPurchaseScreen?.()}>ScriptingPurchase</Text>
       </>
@@ -370,7 +370,7 @@ jest.mock('../../src/screens/ScriptingHelpScreen', () => ({
     const { Text } = require('react-native');
     return visible ? (
       <>
-        {'ScriptingHelpScreenMock'}
+        <Text>ScriptingHelpScreenMock</Text>
         <Text onPress={() => onClose?.()}>ScriptingHelpClose</Text>
       </>
     ) : null;
@@ -381,7 +381,7 @@ jest.mock('../../src/screens/KeyManagementScreen', () => ({
     const { Text } = require('react-native');
     return visible ? (
       <>
-        {'KeyManagementScreenMock'}
+        <Text>KeyManagementScreenMock</Text>
         <Text onPress={() => onClose?.()}>KeyManagementClose</Text>
       </>
     ) : null;
@@ -392,7 +392,7 @@ jest.mock('../../src/screens/FirstRunSetupScreen', () => ({
     const { Text } = require('react-native');
     return (
       <>
-        {'FirstRunSetupScreenMock'}
+        <Text>FirstRunSetupScreenMock</Text>
         <Text onPress={() => onComplete?.({ id: 'net-1' })}>
           FirstRunComplete
         </Text>
@@ -406,7 +406,7 @@ jest.mock('../../src/screens/ConnectionProfilesScreen', () => ({
     const { Text } = require('react-native');
     return visible ? (
       <>
-        {'ConnectionProfilesScreenMock'}
+        <Text>ConnectionProfilesScreenMock</Text>
         <Text onPress={() => onClose?.()}>ConnectionProfilesClose</Text>
       </>
     ) : null;
@@ -417,7 +417,7 @@ jest.mock('../../src/screens/ThemeEditorScreen', () => ({
     const { Text } = require('react-native');
     return visible ? (
       <>
-        {'ThemeEditorScreenMock'}
+        <Text>ThemeEditorScreenMock</Text>
         <Text onPress={() => onClose?.()}>ThemeEditorClose</Text>
         <Text onPress={() => onSave?.()}>ThemeEditorSave</Text>
       </>
@@ -550,7 +550,7 @@ describe('SettingsScreen Integration', () => {
     });
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockCapturedSettingItems.clear();
     setPremiumHook();
@@ -580,7 +580,7 @@ describe('SettingsScreen Integration', () => {
   });
 
   it('should render settings screen with all sections', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
@@ -588,27 +588,27 @@ describe('SettingsScreen Integration', () => {
   });
 
   it('should handle closing the settings screen', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const closeButton = await findByText('Done');
-    fireEvent.press(closeButton);
+    await fireEvent.press(closeButton);
     expect(mockOnClose).toHaveBeenCalled();
   });
 
   it('should handle search functionality', async () => {
-    const { findByPlaceholderText } = render(
+    const { findByPlaceholderText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const searchInput = await findByPlaceholderText('Search settings...');
-    fireEvent.changeText(searchInput, 'notification');
+    await fireEvent.changeText(searchInput, 'notification');
     expect(searchInput.props.value).toBe('notification');
   });
 
   it('should render all section components', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
@@ -617,28 +617,28 @@ describe('SettingsScreen Integration', () => {
   });
 
   it('should handle search term clearing', async () => {
-    const { findByPlaceholderText } = render(
+    const { findByPlaceholderText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const searchInput = await findByPlaceholderText('Search settings...');
-    fireEvent.changeText(searchInput, 'test search');
-    fireEvent.changeText(searchInput, '');
+    await fireEvent.changeText(searchInput, 'test search');
+    await fireEvent.changeText(searchInput, '');
     expect(searchInput.props.value).toBe('');
   });
 
   it('should handle section expansion toggle', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const sectionHeader = await findByText('Appearance');
-    fireEvent.press(sectionHeader);
+    await fireEvent.press(sectionHeader);
     expect(settingsHelpers.toggleSectionExpansion).toHaveBeenCalled();
   });
 
   it('should maintain state consistency', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
@@ -653,45 +653,53 @@ describe('SettingsScreen Integration', () => {
         s.data?.some((d: any) => d.id === 'appearance-section'),
       ),
     );
-    let view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Appearance'));
-    fireEvent.press(view.getByTestId('sec-open-theme-editor'));
+    let view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Appearance'));
+    await fireEvent.press(view.getByTestId('sec-open-theme-editor'));
     expect(view.getByTestId('sec-open-theme-editor')).toBeTruthy();
-    view.unmount();
+    await view.unmount();
 
     fsMock.mockImplementation((sections: any[]) =>
       sections.filter(s =>
         s.data?.some((d: any) => d.id === 'security-section'),
       ),
     );
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Security'));
-    fireEvent.press(view.getByTestId('sec-open-key-management'));
-    fireEvent.press(view.getByTestId('sec-open-migration'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Security'));
+    await fireEvent.press(view.getByTestId('sec-open-key-management'));
+    await fireEvent.press(view.getByTestId('sec-open-migration'));
     expect(view.getByTestId('sec-open-key-management')).toBeTruthy();
-    view.unmount();
+    await view.unmount();
 
     fsMock.mockImplementation((sections: any[]) =>
       sections.filter(s =>
         s.data?.some((d: any) => d.id === 'privacy-legal-section'),
       ),
     );
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Privacy & Legal'));
-    fireEvent.press(view.getByTestId('sec-open-data-privacy'));
-    fireEvent.press(view.getByTestId('sec-open-privacy-ads'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Privacy & Legal'));
+    await fireEvent.press(view.getByTestId('sec-open-data-privacy'));
+    await fireEvent.press(view.getByTestId('sec-open-privacy-ads'));
     expect(view.getByTestId('sec-open-data-privacy')).toBeTruthy();
-    view.unmount();
+    await view.unmount();
 
     fsMock.mockImplementation((sections: any[]) =>
       sections.filter(s =>
         s.data?.some((d: any) => d.id === 'connection-network-section'),
       ),
     );
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Connection & Network'));
-    fireEvent.press(view.getByTestId('sec-open-first-run'));
-    fireEvent.press(view.getByTestId('sec-open-connection-profiles'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByTestId('sec-open-first-run'));
+    await fireEvent.press(view.getByTestId('sec-open-connection-profiles'));
     expect(view.getByTestId('sec-open-connection-profiles')).toBeTruthy();
   });
 
@@ -709,12 +717,12 @@ describe('SettingsScreen Integration', () => {
 
     jest.spyOn(Alert, 'alert');
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-stats')).toBeTruthy();
       expect(mockCapturedSettingItems.get('history-backup')).toBeTruthy();
       expect(mockCapturedSettingItems.get('history-clear')).toBeTruthy();
@@ -744,12 +752,12 @@ describe('SettingsScreen Integration', () => {
     );
 
     jest.spyOn(Alert, 'alert');
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('bouncer-config')).toBeTruthy();
     });
 
@@ -814,12 +822,12 @@ describe('SettingsScreen Integration', () => {
       fsMock.mockImplementation((sections: any[]) =>
         sections.filter(s => s.id === sec.id),
       );
-      const view = render(
+      const view = await render(
         <SettingsScreen visible={true} onClose={mockOnClose} />,
       );
-      fireEvent.press(view.getByText(sec.title));
+      await fireEvent.press(view.getByText(sec.title));
       expect(await view.findByText(sec.marker)).toBeTruthy();
-      view.unmount();
+      await view.unmount();
     }
   });
 
@@ -831,12 +839,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'connection-network'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('bouncer-config')).toBeTruthy();
     });
 
@@ -871,22 +879,22 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'connection-network'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('bouncer-config')).toBeTruthy();
     });
 
-    fireEvent.press(view.getByTestId('setting-item-bouncer-config'));
+    await fireEvent.press(view.getByTestId('setting-item-bouncer-config'));
 
     expect(view.getByText('Enable Bouncer Support')).toBeTruthy();
     expect(view.getByText('Playback Timeout (ms)')).toBeTruthy();
     expect(view.getByText('Request Playback (ZNC)')).toBeTruthy();
 
-    fireEvent.press(view.getAllByText('Close')[0]);
+    await fireEvent.press(view.getAllByText('Close')[0]);
   });
 
   // ========== PIN Modal Tests ==========
@@ -899,9 +907,9 @@ describe('SettingsScreen Integration', () => {
       'FaceID',
     );
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(biometricAuthService.getBiometryType).toHaveBeenCalled();
     });
   });
@@ -912,9 +920,9 @@ describe('SettingsScreen Integration', () => {
     } = require('../../src/services/BiometricAuthService');
     (biometricAuthService.getBiometryType as jest.Mock).mockResolvedValue(null);
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(biometricAuthService.getBiometryType).toHaveBeenCalled();
     });
   });
@@ -933,9 +941,9 @@ describe('SettingsScreen Integration', () => {
       },
     );
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.setSetting).toHaveBeenCalledWith(
         'biometricPasswordLock',
         false,
@@ -963,9 +971,9 @@ describe('SettingsScreen Integration', () => {
       },
     );
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.setSetting).toHaveBeenCalledWith(
         'pinPasswordLock',
         false,
@@ -994,9 +1002,9 @@ describe('SettingsScreen Integration', () => {
       },
     );
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.setSetting).toHaveBeenCalledWith(
         'pinPasswordLock',
         false,
@@ -1007,18 +1015,18 @@ describe('SettingsScreen Integration', () => {
   // ========== Search Functionality Tests ==========
 
   it('should clear search when search term is empty', async () => {
-    const { findByPlaceholderText } = render(
+    const { findByPlaceholderText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const searchInput = await findByPlaceholderText('Search settings...');
 
     // Type something
-    fireEvent.changeText(searchInput, 'test');
+    await fireEvent.changeText(searchInput, 'test');
     expect(searchInput.props.value).toBe('test');
 
     // Clear it
-    fireEvent.changeText(searchInput, '');
+    await fireEvent.changeText(searchInput, '');
     expect(searchInput.props.value).toBe('');
   });
 
@@ -1030,15 +1038,15 @@ describe('SettingsScreen Integration', () => {
       return sections;
     });
 
-    const { findByPlaceholderText } = render(
+    const { findByPlaceholderText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     const searchInput = await findByPlaceholderText('Search settings...');
-    fireEvent.changeText(searchInput, 'notification');
+    await fireEvent.changeText(searchInput, 'notification');
 
     // Search should trigger filterSettings with the search term
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(fsMock).toHaveBeenCalledWith(expect.any(Array), 'notification');
     });
   });
@@ -1051,22 +1059,22 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.data?.some((d: any) => d.id === 'about-section')),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     // Should find the About section
     const aboutButton = view.getByTestId('sec-open-about');
     expect(aboutButton).toBeTruthy();
-    fireEvent.press(aboutButton);
+    await fireEvent.press(aboutButton);
     expect(await view.findByText('AboutScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('AboutClose'));
+    await fireEvent.press(view.getByText('AboutClose'));
 
     const creditsButton = view.getByTestId('sec-open-credits');
     expect(creditsButton).toBeTruthy();
-    fireEvent.press(creditsButton);
+    await fireEvent.press(creditsButton);
     expect(await view.findByText('CreditsScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('CreditsClose'));
+    await fireEvent.press(view.getByText('CreditsClose'));
   });
 
   it('should open privacy and data privacy screens', async () => {
@@ -1077,22 +1085,22 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Privacy & Legal'));
+    await fireEvent.press(view.getByText('Privacy & Legal'));
 
     const dataPrivacyButton = view.getByTestId('sec-open-data-privacy');
     expect(dataPrivacyButton).toBeTruthy();
-    fireEvent.press(dataPrivacyButton);
+    await fireEvent.press(dataPrivacyButton);
     expect(await view.findByText('DataPrivacyScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('DataPrivacyClose'));
+    await fireEvent.press(view.getByText('DataPrivacyClose'));
 
     const privacyAdsButton = view.getByTestId('sec-open-privacy-ads');
     expect(privacyAdsButton).toBeTruthy();
-    fireEvent.press(privacyAdsButton);
+    await fireEvent.press(privacyAdsButton);
     expect(await view.findByText('PrivacyAdsScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('PrivacyAdsClose'));
+    await fireEvent.press(view.getByText('PrivacyAdsClose'));
   });
 
   it('should handle Connection & Network section actions', async () => {
@@ -1103,22 +1111,22 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
     const firstRunButton = view.getByTestId('sec-open-first-run');
     expect(firstRunButton).toBeTruthy();
-    fireEvent.press(firstRunButton);
+    await fireEvent.press(firstRunButton);
 
     const profilesButton = view.getByTestId('sec-open-connection-profiles');
     expect(profilesButton).toBeTruthy();
-    fireEvent.press(profilesButton);
+    await fireEvent.press(profilesButton);
 
     const networksButton = view.getByTestId('sec-open-networks-list');
     expect(networksButton).toBeTruthy();
-    fireEvent.press(networksButton);
+    await fireEvent.press(networksButton);
   });
 
   // ========== Performance Settings Tests ==========
@@ -1132,12 +1140,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'performance'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Performance'));
+    await fireEvent.press(view.getByText('Performance'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('perf-message-limit')).toBeTruthy();
       expect(mockCapturedSettingItems.get('perf-max-visible')).toBeTruthy();
     });
@@ -1176,17 +1184,17 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'connection-network'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
     // Should have bouncer info and config items
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('bouncer-info')).toBeTruthy();
       expect(mockCapturedSettingItems.get('bouncer-config')).toBeTruthy();
     });
@@ -1208,16 +1216,16 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'messages-history'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-storage')).toBeTruthy();
     });
   });
@@ -1233,9 +1241,9 @@ describe('SettingsScreen Integration', () => {
       { id: '2', name: 'Profile 2' },
     ]);
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(identityProfilesService.list).toHaveBeenCalled();
     });
   });
@@ -1257,16 +1265,16 @@ describe('SettingsScreen Integration', () => {
 
     jest.spyOn(Alert, 'alert');
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-export')).toBeTruthy();
     });
 
@@ -1287,20 +1295,20 @@ describe('SettingsScreen Integration', () => {
   // ========== Additional Coverage Tests ==========
 
   it('should handle section header toggles correctly', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
     // Toggle Appearance section
     const appearanceHeader = await findByText('Appearance');
-    fireEvent.press(appearanceHeader);
+    await fireEvent.press(appearanceHeader);
     expect(settingsHelpers.toggleSectionExpansion).toHaveBeenCalledWith(
       'Appearance',
       expect.any(Set),
     );
 
     // Toggle again to collapse
-    fireEvent.press(appearanceHeader);
+    await fireEvent.press(appearanceHeader);
   });
 
   it('should handle backup screen modal', async () => {
@@ -1309,23 +1317,23 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'messages-history'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-backup')).toBeTruthy();
     });
 
     // Open backup screen
     mockCapturedSettingItems.get('history-backup').onPress();
     expect(await view.findByText('BackupScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('BackupScreenClose'));
+    await fireEvent.press(view.getByText('BackupScreenClose'));
   });
 
   it('should handle history viewer screen', async () => {
@@ -1334,16 +1342,16 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'messages-history'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-viewer')).toBeTruthy();
     });
 
@@ -1352,7 +1360,7 @@ describe('SettingsScreen Integration', () => {
     expect(
       await view.findByText('MessageHistoryViewerScreenMock'),
     ).toBeTruthy();
-    fireEvent.press(view.getByText('MessageHistoryViewerClose'));
+    await fireEvent.press(view.getByText('MessageHistoryViewerClose'));
   });
 
   it('should handle when notification permission is granted', async () => {
@@ -1364,9 +1372,9 @@ describe('SettingsScreen Integration', () => {
     });
     (notificationService.checkPermission as jest.Mock).mockResolvedValue(true);
 
-    render(<SettingsScreen visible={true} onClose={mockOnClose} />);
+    await render(<SettingsScreen visible={true} onClose={mockOnClose} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(notificationService.checkPermission).toHaveBeenCalled();
     });
   });
@@ -1379,18 +1387,18 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Appearance'));
+    await fireEvent.press(view.getByText('Appearance'));
 
     const themeEditorButton = view.getByTestId('sec-open-theme-editor');
     expect(themeEditorButton).toBeTruthy();
-    fireEvent.press(themeEditorButton);
+    await fireEvent.press(themeEditorButton);
   });
 
-  it('should handle screen not visible state', () => {
-    const { queryByText } = render(
+  it('should handle screen not visible state', async () => {
+    const { queryByText } = await render(
       <SettingsScreen visible={false} onClose={mockOnClose} />,
     );
 
@@ -1399,7 +1407,7 @@ describe('SettingsScreen Integration', () => {
   });
 
   it('should handle multiple section toggles in sequence', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
 
@@ -1409,7 +1417,7 @@ describe('SettingsScreen Integration', () => {
     for (const section of sections) {
       try {
         const header = await findByText(section);
-        fireEvent.press(header);
+        await fireEvent.press(header);
       } catch {
         // Section might not be rendered due to mocking
       }
@@ -1421,7 +1429,7 @@ describe('SettingsScreen Integration', () => {
       messageHistoryService,
     } = require('../../src/services/MessageHistoryService');
 
-    render(
+    await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
@@ -1429,7 +1437,7 @@ describe('SettingsScreen Integration', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(messageHistoryService.getStats).toHaveBeenCalledWith(
         'test-network',
       );
@@ -1447,12 +1455,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'performance'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Performance'));
+    await fireEvent.press(view.getByText('Performance'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('perf-message-limit')).toBeTruthy();
       expect(mockCapturedSettingItems.get('perf-max-visible')).toBeTruthy();
     });
@@ -1499,7 +1507,7 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'premium'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
@@ -1507,9 +1515,9 @@ describe('SettingsScreen Integration', () => {
       />,
     );
 
-    fireEvent.press(view.getByText('💎 Premium'));
+    await fireEvent.press(view.getByText('💎 Premium'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('premium-upgrade')).toBeTruthy();
       expect(
         mockCapturedSettingItems.get('privacy-relay-subscription'),
@@ -1521,7 +1529,7 @@ describe('SettingsScreen Integration', () => {
 
     mockCapturedSettingItems.get('privacy-relay-subscription').onPress();
     expect(await view.findByText('PrivacyRelayScreenMock')).toBeTruthy();
-    fireEvent.press(view.getByText('PrivacyRelayClose'));
+    await fireEvent.press(view.getByText('PrivacyRelayClose'));
   });
 
   it('should open scripting and scripting help screens from the section component', async () => {
@@ -1530,12 +1538,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'scripting-ads'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    await fireEvent.press(view.getByText('Scripting & Ads'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('advanced-scripts')).toBeTruthy();
       expect(
         mockCapturedSettingItems.get('advanced-scripts-help'),
@@ -1553,12 +1561,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'scripting-ads'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    await fireEvent.press(view.getByText('Scripting & Ads'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockCapturedSettingItems.get('advanced-scripts-help'),
       ).toBeTruthy();
@@ -1566,8 +1574,8 @@ describe('SettingsScreen Integration', () => {
 
     mockCapturedSettingItems.get('advanced-scripts-help').onPress();
     expect(await view.findByText('ScriptingHelpClose')).toBeTruthy();
-    fireEvent.press(view.getByText('ScriptingHelpClose'));
-    await waitFor(() => {
+    await fireEvent.press(view.getByText('ScriptingHelpClose'));
+    await waitFor(async () => {
       expect(view.queryByText('ScriptingHelpClose')).toBeNull();
     });
   });
@@ -1579,31 +1587,31 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'scripting-ads'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         onShowPurchaseScreen={onShowPurchaseScreen}
       />,
     );
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    await fireEvent.press(view.getByText('Scripting & Ads'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('advanced-scripts')).toBeTruthy();
     });
 
     mockCapturedSettingItems.get('advanced-scripts').onPress();
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(view.getByText('ScriptingPurchase')).toBeTruthy();
     });
-    fireEvent.press(view.getByText('ScriptingPurchase'));
+    await fireEvent.press(view.getByText('ScriptingPurchase'));
     expect(onShowPurchaseScreen).toHaveBeenCalled();
 
     mockCapturedSettingItems.get('advanced-scripts').onPress();
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(view.getByText('ScriptingClose')).toBeTruthy();
     });
-    fireEvent.press(view.getByText('ScriptingClose'));
+    await fireEvent.press(view.getByText('ScriptingClose'));
   });
 
   it('should open key management and handle migration dialog states', async () => {
@@ -1625,41 +1633,41 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'security'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Security'));
+    await fireEvent.press(view.getByText('Security'));
 
-    fireEvent.press(view.getByTestId('sec-open-key-management'));
-    fireEvent.press(view.getByText('KeyManagementClose'));
+    await fireEvent.press(view.getByTestId('sec-open-key-management'));
+    await fireEvent.press(view.getByText('KeyManagementClose'));
 
-    fireEvent.press(view.getByTestId('sec-open-migration'));
+    await fireEvent.press(view.getByTestId('sec-open-migration'));
     expect(await view.findByText('Migrate Old Keys')).toBeTruthy();
 
     (
       encryptedDMService.migrateOldKeysToNetwork as jest.Mock
     ).mockResolvedValueOnce(2);
-    fireEvent.press(view.getByText('net-a'));
-    fireEvent.press(view.getByText('Migrate'));
+    await fireEvent.press(view.getByText('net-a'));
+    await fireEvent.press(view.getByText('Migrate'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(encryptedDMService.migrateOldKeysToNetwork).toHaveBeenCalledWith(
         'net-a',
       );
     });
 
-    fireEvent.press(view.getByTestId('sec-open-migration'));
-    fireEvent.press(view.getByText('Cancel'));
+    await fireEvent.press(view.getByTestId('sec-open-migration'));
+    await fireEvent.press(view.getByText('Cancel'));
     expect(view.queryByText('Migrate Old Keys')).toBeNull();
 
     (
       encryptedDMService.migrateOldKeysToNetwork as jest.Mock
     ).mockRejectedValueOnce(new Error('migration failed'));
-    fireEvent.press(view.getByTestId('sec-open-migration'));
-    fireEvent.press(view.getByText('net-b'));
-    fireEvent.press(view.getByText('Migrate'));
+    await fireEvent.press(view.getByTestId('sec-open-migration'));
+    await fireEvent.press(view.getByText('net-b'));
+    await fireEvent.press(view.getByText('Migrate'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Migration Error',
         'migration failed',
@@ -1698,15 +1706,15 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Appearance'));
-    fireEvent.press(view.getByTestId('sec-open-theme-editor'));
+    await fireEvent.press(view.getByText('Appearance'));
+    await fireEvent.press(view.getByTestId('sec-open-theme-editor'));
     expect(setShowThemeEditor).toHaveBeenCalledWith(true);
     expect(setEditingTheme).toHaveBeenCalledWith({ id: 'light' });
 
-    view.unmount();
+    await view.unmount();
 
     (useSettingsAppearance as jest.Mock).mockReturnValue({
       currentTheme: { id: 'light', name: 'Light' },
@@ -1724,11 +1732,11 @@ describe('SettingsScreen Integration', () => {
       setTheme: jest.fn(),
     });
 
-    const reopenedView = render(
+    const reopenedView = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(reopenedView.getByText('ThemeEditorClose'));
-    fireEvent.press(reopenedView.getByText('ThemeEditorSave'));
+    await fireEvent.press(reopenedView.getByText('ThemeEditorClose'));
+    await fireEvent.press(reopenedView.getByText('ThemeEditorSave'));
     expect(refreshThemes).toHaveBeenCalled();
   });
 
@@ -1740,16 +1748,20 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    let view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Connection & Network'));
-    fireEvent.press(view.getByTestId('sec-open-first-run'));
-    fireEvent.press(view.getByText('FirstRunSkip'));
-    view.unmount();
+    let view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByTestId('sec-open-first-run'));
+    await fireEvent.press(view.getByText('FirstRunSkip'));
+    await view.unmount();
 
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Connection & Network'));
-    fireEvent.press(view.getByTestId('sec-open-first-run'));
-    fireEvent.press(view.getByText('FirstRunComplete'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByTestId('sec-open-first-run'));
+    await fireEvent.press(view.getByText('FirstRunComplete'));
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -1761,13 +1773,13 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
-    fireEvent.press(view.getByTestId('sec-open-connection-profiles'));
+    await fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByTestId('sec-open-connection-profiles'));
     expect(await view.findByText('ConnectionProfilesClose')).toBeTruthy();
-    fireEvent.press(view.getByText('ConnectionProfilesClose'));
+    await fireEvent.press(view.getByText('ConnectionProfilesClose'));
   });
 
   it('should route networks list opening through ui store', async () => {
@@ -1787,11 +1799,11 @@ describe('SettingsScreen Integration', () => {
       ),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
-    fireEvent.press(view.getByTestId('sec-open-networks-list'));
+    await fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByTestId('sec-open-networks-list'));
 
     expect(setShowSettings).toHaveBeenCalledWith(false);
     expect(setShowNetworksList).toHaveBeenCalledWith(true);
@@ -1807,16 +1819,16 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'messages-history'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen
         visible={true}
         onClose={mockOnClose}
         currentNetwork="test-network"
       />,
     );
-    fireEvent.press(view.getByText('Messages & History'));
+    await fireEvent.press(view.getByText('Messages & History'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('history-export')).toBeTruthy();
     });
 
@@ -1841,12 +1853,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'performance'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Performance'));
+    await fireEvent.press(view.getByText('Performance'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('perf-message-limit')).toBeTruthy();
     });
 
@@ -1969,12 +1981,14 @@ describe('SettingsScreen Integration', () => {
       showingAd: false,
       handleWatchAd,
     });
-    let view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    let view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
     const requestAdText = await view.findByText('Request Ad');
-    fireEvent.press(requestAdText);
+    await fireEvent.press(requestAdText);
     expect(handleWatchAd).toHaveBeenCalled();
-    view.unmount();
+    await view.unmount();
 
     setPremiumHook({
       showWatchAdButton: true,
@@ -1983,12 +1997,14 @@ describe('SettingsScreen Integration', () => {
       adCooldown: false,
       showingAd: false,
     });
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
     expect(
       await view.findByText('Watch Ad (+60 min Scripting & No-Ads)'),
     ).toBeTruthy();
-    view.unmount();
+    await view.unmount();
 
     setPremiumHook({
       showWatchAdButton: true,
@@ -1998,10 +2014,12 @@ describe('SettingsScreen Integration', () => {
       cooldownSeconds: 45,
       showingAd: false,
     });
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
     expect(await view.findByText('Cooldown (45s)')).toBeTruthy();
-    view.unmount();
+    await view.unmount();
 
     setPremiumHook({
       showWatchAdButton: true,
@@ -2010,8 +2028,10 @@ describe('SettingsScreen Integration', () => {
       adCooldown: false,
       showingAd: false,
     });
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
     expect(await view.findByText('Loading Ad...')).toBeTruthy();
   });
 
@@ -2031,10 +2051,12 @@ describe('SettingsScreen Integration', () => {
       setWatchAdButtonEnabledForPremium,
     });
 
-    let view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    let view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockCapturedSettingItems.get('watch-ad-button-premium'),
       ).toBeTruthy();
@@ -2047,7 +2069,7 @@ describe('SettingsScreen Integration', () => {
       .get('watch-ad-button-premium')
       .onValueChange(true);
     expect(setWatchAdButtonEnabledForPremium).toHaveBeenCalledWith(true);
-    view.unmount();
+    await view.unmount();
 
     setPremiumHook({
       hasNoAds: true,
@@ -2056,10 +2078,12 @@ describe('SettingsScreen Integration', () => {
       setWatchAdButtonEnabledForPremium,
     });
 
-    view = render(<SettingsScreen visible={true} onClose={mockOnClose} />);
-    fireEvent.press(view.getByText('Scripting & Ads'));
+    view = await render(
+      <SettingsScreen visible={true} onClose={mockOnClose} />,
+    );
+    await fireEvent.press(view.getByText('Scripting & Ads'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockCapturedSettingItems.get('watch-ad-button-premium'),
       ).toBeTruthy();
@@ -2076,12 +2100,12 @@ describe('SettingsScreen Integration', () => {
       sections.filter(s => s.id === 'connection-network'),
     );
 
-    const view = render(
+    const view = await render(
       <SettingsScreen visible={true} onClose={mockOnClose} />,
     );
-    fireEvent.press(view.getByText('Connection & Network'));
+    await fireEvent.press(view.getByText('Connection & Network'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedSettingItems.get('bouncer-config')).toBeTruthy();
     });
 

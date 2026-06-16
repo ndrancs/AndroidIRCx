@@ -93,7 +93,7 @@ global.ErrorUtils = {
 };
 
 describe('useAppInitialization', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Reset mocks to default behavior
@@ -102,14 +102,12 @@ describe('useAppInitialization', () => {
     );
   });
 
-  it('should render without crashing', () => {
-    expect(() => {
-      renderHook(() => useAppInitialization());
-    }).not.toThrow();
+  it('should render without crashing', async () => {
+    await renderHook(() => useAppInitialization());
   });
 
   it('should initialize all services on mount', async () => {
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
 
     // Wait for useEffect to run
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -147,7 +145,7 @@ describe('useAppInitialization', () => {
       false,
     );
 
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -163,7 +161,7 @@ describe('useAppInitialization', () => {
       true,
     );
 
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -174,7 +172,7 @@ describe('useAppInitialization', () => {
   });
 
   it('should set global error handler', async () => {
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -182,10 +180,10 @@ describe('useAppInitialization', () => {
   });
 
   it('should restore original global error handler on unmount', async () => {
-    const { unmount } = renderHook(() => useAppInitialization());
+    const { unmount } = await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
-    unmount();
+    await unmount();
 
     expect(global.ErrorUtils.setGlobalHandler).toHaveBeenLastCalledWith(
       mockOriginalHandler,
@@ -193,7 +191,7 @@ describe('useAppInitialization', () => {
   });
 
   it('should report and hide bootsplash for fatal global errors', async () => {
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
     await new Promise(resolve => setTimeout(resolve, 0));
 
     const error = new Error('fatal test');
@@ -213,7 +211,7 @@ describe('useAppInitialization', () => {
   });
 
   it('should report non-fatal errors without hiding bootsplash', async () => {
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
     await new Promise(resolve => setTimeout(resolve, 0));
 
     const error = new Error('non fatal test');
@@ -236,13 +234,11 @@ describe('useAppInitialization', () => {
       new Error('Consent init failed'),
     );
 
-    expect(() => {
-      renderHook(() => useAppInitialization());
-    }).not.toThrow();
+    await renderHook(() => useAppInitialization());
   });
 
   it('should initialize Firebase App Check', async () => {
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -257,9 +253,7 @@ describe('useAppInitialization', () => {
     const originalErrorUtils = (global as any).ErrorUtils;
     delete (global as any).ErrorUtils;
 
-    expect(() => {
-      renderHook(() => useAppInitialization());
-    }).not.toThrow();
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(
@@ -278,9 +272,7 @@ describe('useAppInitialization', () => {
       new Error('app-check failed'),
     );
 
-    expect(() => {
-      renderHook(() => useAppInitialization());
-    }).not.toThrow();
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -299,9 +291,7 @@ describe('useAppInitialization', () => {
       new Error('relay init failed'),
     );
 
-    expect(() => {
-      renderHook(() => useAppInitialization());
-    }).not.toThrow();
+    await renderHook(() => useAppInitialization());
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -320,7 +310,7 @@ describe('useAppInitialization', () => {
       initialize: jest.fn().mockResolvedValue([{ state: 0 }]),
     });
 
-    renderHook(() => useAppInitialization());
+    await renderHook(() => useAppInitialization());
     await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(

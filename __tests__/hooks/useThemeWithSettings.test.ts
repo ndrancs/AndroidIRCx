@@ -48,33 +48,33 @@ import { themeService } from '../../src/services/ThemeService';
 import { settingsService } from '../../src/services/SettingsService';
 
 describe('useThemeWithSettings', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     themeChangeCallback = null;
   });
 
-  it('should return current theme and colors', () => {
-    const { result } = renderHook(() => useThemeWithSettings());
+  it('should return current theme and colors', async () => {
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     expect(result.current.theme).toEqual(mockTheme);
     expect(result.current.colors).toEqual(mockTheme.colors);
   });
 
-  it('should return hasRecommendedSettings and recommendedSettings', () => {
-    const { result } = renderHook(() => useThemeWithSettings());
+  it('should return hasRecommendedSettings and recommendedSettings', async () => {
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     expect(result.current.hasRecommendedSettings).toBe(false);
     expect(result.current.recommendedSettings).toBeUndefined();
   });
 
-  it('should subscribe to theme changes', () => {
-    renderHook(() => useThemeWithSettings());
+  it('should subscribe to theme changes', async () => {
+    await renderHook(() => useThemeWithSettings());
 
     expect(themeService.onThemeChange).toHaveBeenCalled();
   });
 
-  it('should update theme when listener fires', () => {
-    const { result } = renderHook(() => useThemeWithSettings());
+  it('should update theme when listener fires', async () => {
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     const newTheme = {
       id: 'light',
@@ -82,7 +82,7 @@ describe('useThemeWithSettings', () => {
       colors: { primary: '#fff', background: '#eee', text: '#000' },
     };
 
-    act(() => {
+    await act(() => {
       if (themeChangeCallback) {
         themeChangeCallback(newTheme);
       }
@@ -93,7 +93,7 @@ describe('useThemeWithSettings', () => {
   });
 
   it('should set theme without applying settings', async () => {
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('light');
@@ -112,7 +112,7 @@ describe('useThemeWithSettings', () => {
 
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('light', true);
@@ -136,7 +136,7 @@ describe('useThemeWithSettings', () => {
   it('should not apply settings when applySettings is true but no recommended settings', async () => {
     (themeService.setTheme as jest.Mock).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('dark', true);
@@ -152,7 +152,7 @@ describe('useThemeWithSettings', () => {
 
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('custom', true);
@@ -168,7 +168,7 @@ describe('useThemeWithSettings', () => {
     const recommendedSettings = { bannerPosition: 'below_header' };
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('custom', true);
@@ -184,7 +184,7 @@ describe('useThemeWithSettings', () => {
     const recommendedSettings = { bannerPosition: 'bottom' };
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('custom', true);
@@ -200,7 +200,7 @@ describe('useThemeWithSettings', () => {
     const recommendedSettings = { bannerPosition: 'input_above' };
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('custom', true);
@@ -224,7 +224,7 @@ describe('useThemeWithSettings', () => {
       jest.clearAllMocks();
       (themeService.setTheme as jest.Mock).mockResolvedValue({ fontSize });
 
-      const { result } = renderHook(() => useThemeWithSettings());
+      const { result } = await renderHook(() => useThemeWithSettings());
 
       await act(async () => {
         await result.current.setTheme('theme-id', true);
@@ -257,7 +257,7 @@ describe('useThemeWithSettings', () => {
 
     (themeService.setTheme as jest.Mock).mockResolvedValue(recommendedSettings);
 
-    const { result } = renderHook(() => useThemeWithSettings());
+    const { result } = await renderHook(() => useThemeWithSettings());
 
     await act(async () => {
       await result.current.setTheme('full-theme', true);
@@ -321,10 +321,10 @@ describe('useThemeWithSettings', () => {
     );
   });
 
-  it('should clean up theme listener on unmount', () => {
-    const { unmount } = renderHook(() => useThemeWithSettings());
+  it('should clean up theme listener on unmount', async () => {
+    const { unmount } = await renderHook(() => useThemeWithSettings());
 
-    unmount();
+    await unmount();
 
     const unsubscribeFn = (themeService.onThemeChange as jest.Mock).mock
       .results[0]?.value;

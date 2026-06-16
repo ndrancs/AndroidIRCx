@@ -178,7 +178,7 @@ const {
 } = require('../../src/services/IdentityProfilesService');
 
 describe('ConnectionProfilesScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
@@ -204,7 +204,7 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('renders loaded networks list', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
     expect(await findByText('Connection Profiles')).toBeTruthy();
@@ -212,14 +212,14 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('opens network editor and saves through callback', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Add'));
-    fireEvent.press(await findByText('Save Mock Network'));
+    await fireEvent.press(await findByText('Add'));
+    await fireEvent.press(await findByText('Save Mock Network'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.addNetwork).toHaveBeenCalled();
     });
 
@@ -227,7 +227,7 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('renders networks without delete flow regressions', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
     expect(await findByText('Libera')).toBeTruthy();
@@ -235,7 +235,7 @@ describe('ConnectionProfilesScreen', () => {
 
   it('shows empty and load error states', async () => {
     settingsService.getAllNetworks.mockResolvedValue([]);
-    const { findByText, rerender } = render(
+    const { findByText, rerender } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
     expect(
@@ -245,10 +245,12 @@ describe('ConnectionProfilesScreen', () => {
     ).toBeTruthy();
 
     settingsService.getAllNetworks.mockRejectedValueOnce(new Error('boom'));
-    rerender(<ConnectionProfilesScreen visible={false} onClose={jest.fn()} />);
-    rerender(<ConnectionProfilesScreen visible onClose={jest.fn()} />);
+    await rerender(
+      <ConnectionProfilesScreen visible={false} onClose={jest.fn()} />,
+    );
+    await rerender(<ConnectionProfilesScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Failed to load networks and profiles',
@@ -257,7 +259,7 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('renders identity profiles data in loaded state', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
     expect(await findByText('Libera')).toBeTruthy();
@@ -265,17 +267,17 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('expands a network and updates connection type and identity profile', async () => {
-    const { findByText, getByText } = render(
+    const { findByText, getByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
 
     await findByText('Libera');
-    fireEvent.press((getByText('Libera') as any).parent?.parent);
+    await fireEvent.press((getByText('Libera') as any).parent?.parent);
     await waitFor(() => expect(getByText('Connection Type')).toBeTruthy());
     expect(getByText('Current Profile: Main Profile')).toBeTruthy();
 
-    fireEvent.press(getByText('ZNC'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('ZNC'));
+    await waitFor(async () => {
       expect(settingsService.updateNetworkProfile).toHaveBeenCalledWith(
         'net1',
         'znc',
@@ -283,8 +285,8 @@ describe('ConnectionProfilesScreen', () => {
       );
     });
 
-    fireEvent.press(getByText('Alt Profile'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Alt Profile'));
+    await waitFor(async () => {
       expect(settingsService.updateNetworkProfile).toHaveBeenCalledWith(
         'net1',
         undefined,
@@ -294,27 +296,27 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('adds and edits servers through the mocked server editor', async () => {
-    const { findByText, getByText, getAllByText } = render(
+    const { findByText, getByText, getAllByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
 
     await findByText('Libera');
-    fireEvent.press((getByText('Libera') as any).parent?.parent);
+    await fireEvent.press((getByText('Libera') as any).parent?.parent);
     await waitFor(() => expect(getByText('+ Add Server')).toBeTruthy());
 
-    fireEvent.press(getByText('+ Add Server'));
+    await fireEvent.press(getByText('+ Add Server'));
     expect(getByText('Mock Server Editor')).toBeTruthy();
-    fireEvent.press(getByText('Save Mock Server'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Save Mock Server'));
+    await waitFor(async () => {
       expect(settingsService.addServerToNetwork).toHaveBeenCalledWith(
         'net1',
         expect.objectContaining({ id: 'srv-added' }),
       );
     });
 
-    fireEvent.press(getAllByText('Edit')[2]);
-    fireEvent.press(getByText('Save Mock Server'));
-    await waitFor(() => {
+    await fireEvent.press(getAllByText('Edit')[2]);
+    await fireEvent.press(getByText('Save Mock Server'));
+    await waitFor(async () => {
       expect(settingsService.updateServerInNetwork).toHaveBeenCalledWith(
         'net1',
         'srv-added',
@@ -324,61 +326,64 @@ describe('ConnectionProfilesScreen', () => {
   });
 
   it('confirms network and server delete actions', async () => {
-    const { findByText, getByText, getAllByText } = render(
+    const { findByText, getByText, getAllByText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
 
     await findByText('Libera');
-    fireEvent.press((getByText('Libera') as any).parent?.parent);
+    await fireEvent.press((getByText('Libera') as any).parent?.parent);
     await waitFor(() =>
       expect(getAllByText('Delete').length).toBeGreaterThan(0),
     );
 
-    fireEvent.press(getAllByText('Delete')[0]);
+    await fireEvent.press(getAllByText('Delete')[0]);
     let buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)[2];
     await buttons[1].onPress();
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.deleteServerFromNetwork).toHaveBeenCalledWith(
         'net1',
         'srv1',
       );
     });
 
-    fireEvent.press(getByText('Delete Network'));
+    await fireEvent.press(getByText('Delete Network'));
     buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)[2];
     await buttons[1].onPress();
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.deleteNetwork).toHaveBeenCalledWith('net1');
     });
   });
 
   it('validates and saves a new identity profile, assigning it to the network', async () => {
-    const { findByText, getByText, getByPlaceholderText } = render(
+    const { findByText, getByText, getByPlaceholderText } = await render(
       <ConnectionProfilesScreen visible onClose={jest.fn()} />,
     );
 
     await findByText('Libera');
-    fireEvent.press((getByText('Libera') as any).parent?.parent);
+    await fireEvent.press((getByText('Libera') as any).parent?.parent);
     await waitFor(() =>
       expect(getByText('+ Add / Edit Identity')).toBeTruthy(),
     );
-    fireEvent.press(getByText('+ Add / Edit Identity'));
+    await fireEvent.press(getByText('+ Add / Edit Identity'));
 
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
       'Profile name and nick are required',
     );
 
-    fireEvent.changeText(getByPlaceholderText('Profile Name'), 'New Profile');
-    fireEvent.changeText(getByPlaceholderText('Nick'), 'newNick');
-    fireEvent.changeText(
+    await fireEvent.changeText(
+      getByPlaceholderText('Profile Name'),
+      'New Profile',
+    );
+    await fireEvent.changeText(getByPlaceholderText('Nick'), 'newNick');
+    await fireEvent.changeText(
       getByPlaceholderText('Example on-connect commands'),
       'JOIN #a\n\nMODE newNick +i',
     );
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(identityProfilesService.add).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'New Profile',
@@ -396,28 +401,31 @@ describe('ConnectionProfilesScreen', () => {
 
   it('edits and deletes an existing identity profile with network fallback reassignment', async () => {
     const { findByText, getByText, getAllByText, getByPlaceholderText } =
-      render(<ConnectionProfilesScreen visible onClose={jest.fn()} />);
+      await render(<ConnectionProfilesScreen visible onClose={jest.fn()} />);
 
     await findByText('Libera');
-    fireEvent.press((getByText('Libera') as any).parent?.parent);
+    await fireEvent.press((getByText('Libera') as any).parent?.parent);
     await waitFor(() => expect(getAllByText('Edit').length).toBeGreaterThan(0));
-    fireEvent.press(getAllByText('Edit')[0]);
+    await fireEvent.press(getAllByText('Edit')[0]);
 
-    fireEvent.changeText(getByPlaceholderText('Profile Name'), 'Main Edited');
-    fireEvent.press(getByText('Save'));
-    await waitFor(() => {
+    await fireEvent.changeText(
+      getByPlaceholderText('Profile Name'),
+      'Main Edited',
+    );
+    await fireEvent.press(getByText('Save'));
+    await waitFor(async () => {
       expect(identityProfilesService.update).toHaveBeenCalledWith(
         'profile-1',
         expect.objectContaining({ name: 'Main Edited', nick: 'majstor' }),
       );
     });
 
-    fireEvent.press(getAllByText('Edit')[0]);
-    fireEvent.press(getAllByText('Delete').at(-1));
+    await fireEvent.press(getAllByText('Edit')[0]);
+    await fireEvent.press(getAllByText('Delete').at(-1));
     const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)[2];
     await buttons[1].onPress();
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.updateNetworkProfile).toHaveBeenCalledWith(
         'net1',
         undefined,

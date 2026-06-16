@@ -43,84 +43,92 @@ describe('TypingIndicator', () => {
     return new Map(entries);
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers();
   });
 
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    await act(() => {
       jest.runOnlyPendingTimers();
     });
     jest.useRealTimers();
   });
 
-  it('should return null when no typing users', () => {
+  it('should return null when no typing users', async () => {
     const typingUsers = createTypingMap([]);
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should return null when all users are done typing', () => {
+  it('should return null when all users are done typing', async () => {
     const typingUsers = createTypingMap([
       ['user1', { status: 'done', timestamp: Date.now() }],
     ]);
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should return null when all users are paused', () => {
+  it('should return null when all users are paused', async () => {
     const typingUsers = createTypingMap([
       ['user1', { status: 'paused', timestamp: Date.now() }],
     ]);
-    const { UNSAFE_root } = render(
+    const { UNSAFE_root } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     expect(UNSAFE_root.children).toHaveLength(0);
   });
 
-  it('should render for single typing user', () => {
+  it('should render for single typing user', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('John is typing...')).toBeTruthy();
   });
 
-  it('should render for two typing users', () => {
+  it('should render for two typing users', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
       ['Jane', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('John and Jane are typing...')).toBeTruthy();
   });
 
-  it('should render for three typing users', () => {
+  it('should render for three typing users', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
       ['Jane', { status: 'active', timestamp: Date.now() }],
       ['Bob', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('John, Jane, and Bob are typing...')).toBeTruthy();
   });
 
-  it('should render for four or more typing users', () => {
+  it('should render for four or more typing users', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
       ['Jane', { status: 'active', timestamp: Date.now() }],
       ['Bob', { status: 'active', timestamp: Date.now() }],
       ['Alice', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('John, Jane, and 2 others are typing...')).toBeTruthy();
   });
 
-  it('should render five typing users with correct count', () => {
+  it('should render five typing users with correct count', async () => {
     const typingUsers = createTypingMap([
       ['User1', { status: 'active', timestamp: Date.now() }],
       ['User2', { status: 'active', timestamp: Date.now() }],
@@ -128,36 +136,40 @@ describe('TypingIndicator', () => {
       ['User4', { status: 'active', timestamp: Date.now() }],
       ['User5', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('User1, User2, and 3 others are typing...')).toBeTruthy();
   });
 
-  it('should only show active typers ignoring paused ones', () => {
+  it('should only show active typers ignoring paused ones', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
       ['Jane', { status: 'paused', timestamp: Date.now() }],
       ['Bob', { status: 'done', timestamp: Date.now() }],
     ]);
-    const { getByText } = render(<TypingIndicator typingUsers={typingUsers} />);
+    const { getByText } = await render(
+      <TypingIndicator typingUsers={typingUsers} />,
+    );
     expect(getByText('John is typing...')).toBeTruthy();
   });
 
-  it('should render container View elements', () => {
+  it('should render container View elements', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     const views = UNSAFE_getAllByType('View');
     expect(views.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('should render dots for typing indicator', () => {
+  it('should render dots for typing indicator', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     // Get all View components (dots container + dots)
@@ -165,11 +177,11 @@ describe('TypingIndicator', () => {
     expect(views.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('should apply correct styling to container', () => {
+  it('should apply correct styling to container', async () => {
     const typingUsers = createTypingMap([
       ['John', { status: 'active', timestamp: Date.now() }],
     ]);
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <TypingIndicator typingUsers={typingUsers} />,
     );
     const views = UNSAFE_getAllByType('View');

@@ -62,7 +62,7 @@ const mockStyles = {
 const mockSettingIcons = {};
 
 describe('HighlightingSection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     (highlightService.getHighlightWords as jest.Mock).mockReturnValue([]);
     (highlightService.addHighlightWord as jest.Mock).mockResolvedValue(
@@ -73,8 +73,8 @@ describe('HighlightingSection', () => {
     );
   });
 
-  it('should render add highlight word input', () => {
-    const { getByPlaceholderText } = render(
+  it('should render add highlight word input', async () => {
+    const { getByPlaceholderText } = await render(
       <HighlightingSection
         colors={mockColors}
         styles={mockStyles}
@@ -85,13 +85,13 @@ describe('HighlightingSection', () => {
     expect(getByPlaceholderText(/Enter a word to highlight/i)).toBeTruthy();
   });
 
-  it('should display existing highlight words', () => {
+  it('should display existing highlight words', async () => {
     (highlightService.getHighlightWords as jest.Mock).mockReturnValue([
       'test',
       'hello',
     ]);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <HighlightingSection
         colors={mockColors}
         styles={mockStyles}
@@ -104,7 +104,7 @@ describe('HighlightingSection', () => {
   });
 
   it.skip('should add highlight word when input is submitted', async () => {
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <HighlightingSection
         colors={mockColors}
         styles={mockStyles}
@@ -113,17 +113,17 @@ describe('HighlightingSection', () => {
     );
 
     const input = getByPlaceholderText(/Enter a word to highlight/i);
-    fireEvent.changeText(input, 'newword');
+    await fireEvent.changeText(input, 'newword');
 
     // Find and press the add button (assuming it's rendered as part of the input)
     // This depends on how SettingInput handles onPress
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(highlightService.addHighlightWord).toHaveBeenCalledWith('newword');
     });
   });
 
   it('should not add empty highlight word', async () => {
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <HighlightingSection
         colors={mockColors}
         styles={mockStyles}
@@ -132,16 +132,16 @@ describe('HighlightingSection', () => {
     );
 
     const input = getByPlaceholderText(/Enter a word to highlight/i);
-    fireEvent.changeText(input, '   '); // Only whitespace
+    await fireEvent.changeText(input, '   '); // Only whitespace
 
     // Should not call addHighlightWord for empty/whitespace
     expect(highlightService.addHighlightWord).not.toHaveBeenCalled();
   });
 
-  it('should show alert when removing highlight word', () => {
+  it('should show alert when removing highlight word', async () => {
     (highlightService.getHighlightWords as jest.Mock).mockReturnValue(['test']);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <HighlightingSection
         colors={mockColors}
         styles={mockStyles}
@@ -150,7 +150,7 @@ describe('HighlightingSection', () => {
     );
 
     const removeButton = getByText('test');
-    fireEvent.press(removeButton);
+    await fireEvent.press(removeButton);
 
     expect(Alert.alert).toHaveBeenCalled();
   });

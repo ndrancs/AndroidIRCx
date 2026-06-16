@@ -69,7 +69,7 @@ import { bannerAdService } from '../../src/services/BannerAdService';
 import { inAppPurchaseService } from '../../src/services/InAppPurchaseService';
 
 describe('useBannerAds', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     purchaseListener = null;
@@ -79,55 +79,55 @@ describe('useBannerAds', () => {
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(false);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
-  it('should initialize scripting time from service', () => {
-    renderHook(() => useBannerAds());
+  it('should initialize scripting time from service', async () => {
+    await renderHook(() => useBannerAds());
 
     expect(adRewardService.getRemainingTime).toHaveBeenCalled();
     expect(mockSetScriptingTimeMs).toHaveBeenCalledWith(0);
   });
 
-  it('should subscribe to ad reward and banner listeners', () => {
-    renderHook(() => useBannerAds());
+  it('should subscribe to ad reward and banner listeners', async () => {
+    await renderHook(() => useBannerAds());
 
     expect(adRewardService.addListener).toHaveBeenCalled();
     expect(bannerAdService.addListener).toHaveBeenCalled();
   });
 
-  it('should subscribe to purchase changes', () => {
-    renderHook(() => useBannerAds());
+  it('should subscribe to purchase changes', async () => {
+    await renderHook(() => useBannerAds());
 
     expect(inAppPurchaseService.addListener).toHaveBeenCalled();
   });
 
-  it('should show banner when not tracking and no premium', () => {
-    renderHook(() => useBannerAds());
+  it('should show banner when not tracking and no premium', async () => {
+    await renderHook(() => useBannerAds());
 
     expect(bannerAdService.setBannerVisible).toHaveBeenCalledWith(true);
   });
 
-  it('should hide banner when scripting is tracking', () => {
+  it('should hide banner when scripting is tracking', async () => {
     (adRewardService.isTracking as jest.Mock).mockReturnValue(true);
 
-    renderHook(() => useBannerAds());
+    await renderHook(() => useBannerAds());
 
     // The effect sees isScriptingTracking=true after poll
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(1000);
     });
 
     expect(bannerAdService.stopShowHideCycle).toHaveBeenCalled();
   });
 
-  it('should hide banner when user has no-ads purchase', () => {
+  it('should hide banner when user has no-ads purchase', async () => {
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(true);
 
-    renderHook(() => useBannerAds());
+    await renderHook(() => useBannerAds());
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(1000);
     });
 
@@ -135,13 +135,13 @@ describe('useBannerAds', () => {
     expect(bannerAdService.setBannerVisible).toHaveBeenCalledWith(false);
   });
 
-  it('should poll tracking status every second', () => {
-    renderHook(() => useBannerAds());
+  it('should poll tracking status every second', async () => {
+    await renderHook(() => useBannerAds());
 
     const initialCalls = (adRewardService.isTracking as jest.Mock).mock.calls
       .length;
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(3000);
     });
 
@@ -151,10 +151,10 @@ describe('useBannerAds', () => {
     ).toBeGreaterThanOrEqual(initialCalls + 3);
   });
 
-  it('should update scripting time when listener fires', () => {
-    renderHook(() => useBannerAds());
+  it('should update scripting time when listener fires', async () => {
+    await renderHook(() => useBannerAds());
 
-    act(() => {
+    await act(() => {
       if (scriptingListener) {
         scriptingListener(60000);
       }
@@ -163,10 +163,10 @@ describe('useBannerAds', () => {
     expect(mockSetScriptingTimeMs).toHaveBeenCalledWith(60000);
   });
 
-  it('should update banner visibility when banner listener fires', () => {
-    renderHook(() => useBannerAds());
+  it('should update banner visibility when banner listener fires', async () => {
+    await renderHook(() => useBannerAds());
 
-    act(() => {
+    await act(() => {
       if (bannerListener) {
         bannerListener(false);
       }
@@ -175,15 +175,15 @@ describe('useBannerAds', () => {
     expect(mockSetBannerVisible).toHaveBeenCalledWith(false);
   });
 
-  it('should update hasNoAds when purchase listener fires', () => {
+  it('should update hasNoAds when purchase listener fires', async () => {
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(false);
 
-    renderHook(() => useBannerAds());
+    await renderHook(() => useBannerAds());
 
     // Simulate purchase
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(true);
 
-    act(() => {
+    await act(() => {
       if (purchaseListener) {
         purchaseListener();
       }
@@ -193,10 +193,10 @@ describe('useBannerAds', () => {
     // Next effect run should hide banner
   });
 
-  it('should clean up intervals and listeners on unmount', () => {
-    const { unmount } = renderHook(() => useBannerAds());
+  it('should clean up intervals and listeners on unmount', async () => {
+    const { unmount } = await renderHook(() => useBannerAds());
 
-    unmount();
+    await unmount();
 
     // Verify listeners were unsubscribed
     const adListenerUnsub = (adRewardService.addListener as jest.Mock).mock

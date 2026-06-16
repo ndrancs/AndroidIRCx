@@ -280,29 +280,29 @@ import { BackHandler, DeviceEventEmitter, Platform } from 'react-native';
 import { webRtcCallService } from '../../src/services/WebRTCCallService';
 
 describe('useStartupServices', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     initializedServices.length = 0;
     jest.useFakeTimers();
     (Platform as any).OS = 'android';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
-  it('should initialize theme service on mount', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize theme service on mount', async () => {
+    await renderHook(() => useStartupServices());
     expect(themeService.initialize).toHaveBeenCalled();
   });
 
-  it('logs theme initialization errors', () => {
+  it('logs theme initialization errors', async () => {
     const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     (themeService.initialize as jest.Mock).mockImplementationOnce(() => {
       throw new Error('theme fail');
     });
 
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
 
     expect(errSpy).toHaveBeenCalledWith(
       'Error initializing theme service:',
@@ -311,88 +311,88 @@ describe('useStartupServices', () => {
     errSpy.mockRestore();
   });
 
-  it('should initialize message reactions service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize message reactions service', async () => {
+    await renderHook(() => useStartupServices());
     expect(messageReactionsService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize channel favorites service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize channel favorites service', async () => {
+    await renderHook(() => useStartupServices());
     expect(channelFavoritesService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize auto rejoin and auto voice services', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize auto rejoin and auto voice services', async () => {
+    await renderHook(() => useStartupServices());
     expect(autoRejoinService.initialize).toHaveBeenCalled();
     expect(autoVoiceService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize connection profiles service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize connection profiles service', async () => {
+    await renderHook(() => useStartupServices());
     expect(connectionProfilesService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize auto reconnect service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize auto reconnect service', async () => {
+    await renderHook(() => useStartupServices());
     expect(autoReconnectService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize connection quality service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize connection quality service', async () => {
+    await renderHook(() => useStartupServices());
     expect(connectionQualityService.setIRCService).toHaveBeenCalled();
     expect(connectionQualityService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize bouncer service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize bouncer service', async () => {
+    await renderHook(() => useStartupServices());
     expect(bouncerService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize layout service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize layout service', async () => {
+    await renderHook(() => useStartupServices());
     expect(layoutService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize ban service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize ban service', async () => {
+    await renderHook(() => useStartupServices());
     expect(banService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize command service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize command service', async () => {
+    await renderHook(() => useStartupServices());
     expect(commandService.setIRCService).toHaveBeenCalled();
     expect(commandService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize performance service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize performance service', async () => {
+    await renderHook(() => useStartupServices());
     expect(performanceService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize away service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize away service', async () => {
+    await renderHook(() => useStartupServices());
     expect(awayService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize protection service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize protection service', async () => {
+    await renderHook(() => useStartupServices());
     expect(protectionService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize preset import service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize preset import service', async () => {
+    await renderHook(() => useStartupServices());
     expect(presetImportService.initialize).toHaveBeenCalled();
   });
 
-  it('should initialize webrtc call service', () => {
-    renderHook(() => useStartupServices());
+  it('should initialize webrtc call service', async () => {
+    await renderHook(() => useStartupServices());
     expect(webRtcCallService.initialize).toHaveBeenCalled();
   });
 
-  it('should cleanup background service on unmount', () => {
-    const { unmount } = renderHook(() => useStartupServices());
+  it('should cleanup background service on unmount', async () => {
+    const { unmount } = await renderHook(() => useStartupServices());
 
-    unmount();
+    await unmount();
 
     expect(backgroundService.cleanup).toHaveBeenCalled();
   });
@@ -406,7 +406,7 @@ describe('useStartupServices', () => {
       .mockRejectedValueOnce(new Error('fade true fail'))
       .mockResolvedValueOnce(undefined);
 
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     await act(async () => {
       jest.advanceTimersByTime(800);
       await Promise.resolve();
@@ -432,7 +432,7 @@ describe('useStartupServices', () => {
       .mockRejectedValueOnce(new Error('fade false fail'))
       .mockResolvedValueOnce(undefined);
 
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     await act(async () => {
       jest.advanceTimersByTime(900);
       await Promise.resolve();
@@ -463,7 +463,7 @@ describe('useStartupServices', () => {
       return Promise.resolve(def);
     });
 
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
@@ -493,7 +493,7 @@ describe('useStartupServices', () => {
       new Error('seed fail'),
     );
 
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
@@ -507,7 +507,7 @@ describe('useStartupServices', () => {
   });
 
   it('registers android foreground disconnect listener and executes quit flow', async () => {
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     const cb = (DeviceEventEmitter.addListener as jest.Mock).mock.calls[0][1];
     (settingsService.getSetting as jest.Mock).mockResolvedValueOnce('Bye');
 
@@ -522,9 +522,9 @@ describe('useStartupServices', () => {
     expect(BackHandler.exitApp).toHaveBeenCalled();
   });
 
-  it('does not add foreground disconnect listener on iOS', () => {
+  it('does not add foreground disconnect listener on iOS', async () => {
     (Platform as any).OS = 'ios';
-    renderHook(() => useStartupServices());
+    await renderHook(() => useStartupServices());
     expect(DeviceEventEmitter.addListener).not.toHaveBeenCalledWith(
       'IRCForegroundServiceDisconnectQuit',
       expect.any(Function),

@@ -71,7 +71,7 @@ describe('useNetworkInitialization', () => {
     setInitialDataLoaded: mockSetInitialDataLoaded,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -104,19 +104,17 @@ describe('useNetworkInitialization', () => {
     });
   });
 
-  it('should render without crashing', () => {
-    expect(() => {
-      renderHook(() => useNetworkInitialization(defaultProps));
-    }).not.toThrow();
+  it('should render without crashing', async () => {
+    await renderHook(() => useNetworkInitialization(defaultProps));
   });
 
-  it('should not load initial data if checking first run', () => {
+  it('should not load initial data if checking first run', async () => {
     const props = {
       ...defaultProps,
       isCheckingFirstRun: true,
     };
 
-    renderHook(() => useNetworkInitialization(props));
+    await renderHook(() => useNetworkInitialization(props));
 
     expect(
       require('../../src/services/SettingsService').settingsService
@@ -124,13 +122,13 @@ describe('useNetworkInitialization', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('should not load initial data if showing first run setup', () => {
+  it('should not load initial data if showing first run setup', async () => {
     const props = {
       ...defaultProps,
       showFirstRunSetup: true,
     };
 
-    renderHook(() => useNetworkInitialization(props));
+    await renderHook(() => useNetworkInitialization(props));
 
     expect(
       require('../../src/services/SettingsService').settingsService
@@ -139,7 +137,7 @@ describe('useNetworkInitialization', () => {
   });
 
   it('should load initial data when not checking first run', async () => {
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -151,7 +149,7 @@ describe('useNetworkInitialization', () => {
   });
 
   it('should set default network name when no networks exist', async () => {
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -170,7 +168,7 @@ describe('useNetworkInitialization', () => {
       ],
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -193,7 +191,7 @@ describe('useNetworkInitialization', () => {
       null,
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -220,7 +218,7 @@ describe('useNetworkInitialization', () => {
       'freenode',
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -258,7 +256,7 @@ describe('useNetworkInitialization', () => {
       primaryNetworkId: 'undernet',
     };
 
-    renderHook(() => useNetworkInitialization(props));
+    await renderHook(() => useNetworkInitialization(props));
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -290,7 +288,7 @@ describe('useNetworkInitialization', () => {
       primaryNetworkId: 'Undernet',
     };
 
-    renderHook(() => useNetworkInitialization(props));
+    await renderHook(() => useNetworkInitialization(props));
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -320,7 +318,7 @@ describe('useNetworkInitialization', () => {
       null,
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -345,7 +343,7 @@ describe('useNetworkInitialization', () => {
       mockTabs,
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -356,7 +354,7 @@ describe('useNetworkInitialization', () => {
   });
 
   it('should clean up "Not connected" tabs from storage', async () => {
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -381,7 +379,7 @@ describe('useNetworkInitialization', () => {
       [],
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -422,7 +420,7 @@ describe('useNetworkInitialization', () => {
       mockHistory,
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -461,7 +459,7 @@ describe('useNetworkInitialization', () => {
 
     const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
     await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(mockSetTabs).toHaveBeenCalled();
@@ -481,7 +479,7 @@ describe('useNetworkInitialization', () => {
 
     const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -502,7 +500,7 @@ describe('useNetworkInitialization', () => {
   });
 
   it('should set primary network ID if not already set', async () => {
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -516,7 +514,7 @@ describe('useNetworkInitialization', () => {
       primaryNetworkId: 'existing-network',
     };
 
-    renderHook(() => useNetworkInitialization(props));
+    await renderHook(() => useNetworkInitialization(props));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -539,7 +537,7 @@ describe('useNetworkInitialization', () => {
       'server-Test Network',
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -579,7 +577,7 @@ describe('useNetworkInitialization', () => {
       mockTabs,
     );
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -587,7 +585,7 @@ describe('useNetworkInitialization', () => {
     expect(mockSetActiveTabId).toHaveBeenCalledWith('last-active-tab');
   });
 
-  it('should clean up invalid tabs from state on mount', () => {
+  it('should clean up invalid tabs from state on mount', async () => {
     require('../../src/stores/tabStore').useTabStore.getState.mockReturnValue({
       tabs: [
         { id: 'valid-tab', name: '#valid', networkId: 'Test Network' },
@@ -596,7 +594,7 @@ describe('useNetworkInitialization', () => {
       ],
     });
 
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Should call setTabs to remove invalid tabs
     expect(mockSetTabs).toHaveBeenCalledWith(
@@ -605,7 +603,7 @@ describe('useNetworkInitialization', () => {
   });
 
   it('should mark initial data as loaded', async () => {
-    renderHook(() => useNetworkInitialization(defaultProps));
+    await renderHook(() => useNetworkInitialization(defaultProps));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -630,7 +628,7 @@ describe('useNetworkInitialization', () => {
     // Use fake timers to control setTimeout behavior
     jest.useFakeTimers();
 
-    renderHook(() => useNetworkInitialization(propsWithTabs));
+    await renderHook(() => useNetworkInitialization(propsWithTabs));
 
     // Fast-forward time to trigger the setTimeout
     jest.advanceTimersByTime(600); // Longer than debounce time
@@ -657,7 +655,7 @@ describe('useNetworkInitialization', () => {
     });
 
     jest.useFakeTimers();
-    renderHook(() =>
+    await renderHook(() =>
       useNetworkInitialization({
         ...defaultProps,
         tabs: mixedTabs,
@@ -705,7 +703,7 @@ describe('useNetworkInitialization', () => {
 
     jest.useFakeTimers();
 
-    renderHook(() => useNetworkInitialization(propsWithTabs));
+    await renderHook(() => useNetworkInitialization(propsWithTabs));
 
     // Wait for the debounced save to occur
     jest.advanceTimersByTime(600); // Longer than debounce time

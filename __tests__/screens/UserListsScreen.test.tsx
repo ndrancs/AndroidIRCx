@@ -104,7 +104,7 @@ jest.mock('../../src/services/ConnectionManager', () => ({
 }));
 
 describe('UserListsScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockState.userListTarget = null;
@@ -152,20 +152,21 @@ describe('UserListsScreen', () => {
       listType: 'notify',
     };
 
-    const { findByDisplayValue, findByText, findByPlaceholderText } = render(
-      <UserListsScreen visible network="net1" onClose={jest.fn()} />,
-    );
+    const { findByDisplayValue, findByText, findByPlaceholderText } =
+      await render(
+        <UserListsScreen visible network="net1" onClose={jest.fn()} />,
+      );
 
     expect(await findByDisplayValue('prefilled!*@*')).toBeTruthy();
     expect(mockState.setUserListTarget).toHaveBeenCalledWith(null);
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('optional note'),
       'new note',
     );
-    fireEvent.press(await findByText('Add'));
+    await fireEvent.press(await findByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockConnectionScopedUserManagementService.addUserListEntry,
       ).toHaveBeenCalledWith(
@@ -185,34 +186,36 @@ describe('UserListsScreen', () => {
 
   it('filters, edits, removes, and switches to ignore tab', async () => {
     const { findByText, findByPlaceholderText, getByText, queryByText } =
-      render(<UserListsScreen visible network="net1" onClose={jest.fn()} />);
+      await render(
+        <UserListsScreen visible network="net1" onClose={jest.fn()} />,
+      );
 
     expect(await findByText('nick!*@*')).toBeTruthy();
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Search by mask or reason...'),
       'watch',
     );
     expect(getByText('nick!*@*')).toBeTruthy();
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Search by mask or reason...'),
       'missing',
     );
     expect(await findByText('No matching entries')).toBeTruthy();
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Search by mask or reason...'),
       '',
     );
-    fireEvent.press(getByText('Edit'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Edit'));
+    await fireEvent.changeText(
       await findByPlaceholderText('nick or mask'),
       'edited!*@*',
     );
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockConnectionScopedUserManagementService.removeUserListEntry,
       ).toHaveBeenCalledWith('notify', 'nick!*@*', 'net1');
@@ -230,39 +233,41 @@ describe('UserListsScreen', () => {
       );
     });
 
-    fireEvent.press(getByText('Remove'));
+    await fireEvent.press(getByText('Remove'));
     const removeButtons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
     await act(async () => {
       await removeButtons?.[1]?.onPress?.();
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockConnectionScopedUserManagementService.removeUserListEntry,
       ).toHaveBeenCalledWith('notify', 'nick!*@*', 'net1');
     });
 
-    fireEvent.press(getByText('Ignore'));
+    await fireEvent.press(getByText('Ignore'));
     expect(await findByText('badguy!*@evil.host')).toBeTruthy();
     expect(queryByText('nick!*@*')).toBeNull();
   });
 
   it('supports online-user picker and network filter', async () => {
     const { findByPlaceholderText, findByText, getByText, queryByText } =
-      render(<UserListsScreen visible network="net1" onClose={jest.fn()} />);
+      await render(
+        <UserListsScreen visible network="net1" onClose={jest.fn()} />,
+      );
 
-    fireEvent.press(await findByText('+ Add'));
-    fireEvent.press(getByText('Select from Online Users'));
-    fireEvent.press(await findByText('Alice'));
+    await fireEvent.press(await findByText('+ Add'));
+    await fireEvent.press(getByText('Select from Online Users'));
+    await fireEvent.press(await findByText('Alice'));
     expect(await findByPlaceholderText('nick or mask')).toHaveProp(
       'value',
       'Alice!alice@chat.host',
     );
 
-    fireEvent.press(getByText('All Networks'));
-    fireEvent.press(await findByText('Filter by Network'));
-    fireEvent.press(await findByText('net2'));
+    await fireEvent.press(getByText('All Networks'));
+    await fireEvent.press(await findByText('Filter by Network'));
+    await fireEvent.press(await findByText('net2'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(queryByText('nick!*@*')).toBeNull();
     });
     expect(getByText('No matching entries')).toBeTruthy();

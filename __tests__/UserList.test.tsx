@@ -229,13 +229,13 @@ jest.mock('react-native-nfc-manager', () => ({
 }));
 
 describe('UserList', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockNickContextMenuProps = null;
   });
 
   describe('copyNickToClipboard', () => {
-    it('writes to clipboard and returns message', () => {
+    it('writes to clipboard and returns message', async () => {
       const clipboardModule = require('@react-native-clipboard/clipboard');
       const spy = jest.spyOn(clipboardModule, 'setString');
 
@@ -245,7 +245,7 @@ describe('UserList', () => {
       expect(msg).toBe('Copied Bob');
     });
 
-    it('uses translation function when provided', () => {
+    it('uses translation function when provided', async () => {
       const t = (key: string) => `Translated: ${key}`;
       const msg = copyNickToClipboard('Alice', t);
       expect(msg).toBe('Translated: Copied {nick}'.replace('{nick}', 'Alice'));
@@ -1433,7 +1433,7 @@ describe('UserList', () => {
   });
 
   describe('Grouped View', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (performanceService.getConfig as jest.Mock).mockReturnValue({
         userListType: 'grouped',
         userListSearchDebounceMs: 300,
@@ -1522,7 +1522,7 @@ describe('UserList', () => {
   });
 
   describe('Simple List View', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (performanceService.getConfig as jest.Mock).mockReturnValue({
         userListType: 'simple',
         userListSearchDebounceMs: 300,
@@ -1551,7 +1551,7 @@ describe('UserList', () => {
   });
 
   describe('FlatList View', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (performanceService.getConfig as jest.Mock).mockReturnValue({
         userListType: 'flatlist',
         userListSearchDebounceMs: 300,
@@ -1847,7 +1847,7 @@ describe('UserList', () => {
   });
 
   describe('Chunk loading', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (performanceService.getConfig as jest.Mock).mockReturnValue({
         userListType: 'flashlist',
         userListSearchDebounceMs: 300,
@@ -2126,7 +2126,7 @@ describe('UserList', () => {
   });
 
   describe('Grouped view filtering', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (performanceService.getConfig as jest.Mock).mockReturnValue({
         userListType: 'grouped',
         userListSearchDebounceMs: 300,

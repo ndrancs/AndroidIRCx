@@ -15,12 +15,12 @@ const mockGetActiveUserManagementService = jest.fn().mockReturnValue({
 });
 
 describe('useUserManagementNetworkSync', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should set network when valid network name is provided', () => {
-    renderHook(() =>
+  it('should set network when valid network name is provided', async () => {
+    await renderHook(() =>
       useUserManagementNetworkSync({
         networkName: 'freenode',
         getActiveUserManagementService: mockGetActiveUserManagementService,
@@ -31,8 +31,8 @@ describe('useUserManagementNetworkSync', () => {
     expect(mockSetNetwork).toHaveBeenCalledWith('freenode');
   });
 
-  it('should not set network when networkName is empty', () => {
-    renderHook(() =>
+  it('should not set network when networkName is empty', async () => {
+    await renderHook(() =>
       useUserManagementNetworkSync({
         networkName: '',
         getActiveUserManagementService: mockGetActiveUserManagementService,
@@ -42,8 +42,8 @@ describe('useUserManagementNetworkSync', () => {
     expect(mockSetNetwork).not.toHaveBeenCalled();
   });
 
-  it('should not set network when networkName is "Not connected"', () => {
-    renderHook(() =>
+  it('should not set network when networkName is "Not connected"', async () => {
+    await renderHook(() =>
       useUserManagementNetworkSync({
         networkName: 'Not connected',
         getActiveUserManagementService: mockGetActiveUserManagementService,
@@ -53,8 +53,8 @@ describe('useUserManagementNetworkSync', () => {
     expect(mockSetNetwork).not.toHaveBeenCalled();
   });
 
-  it('should update network when networkName changes', () => {
-    const { rerender } = renderHook(
+  it('should update network when networkName changes', async () => {
+    const { rerender } = await renderHook(
       ({ networkName }) =>
         useUserManagementNetworkSync({
           networkName,
@@ -65,13 +65,13 @@ describe('useUserManagementNetworkSync', () => {
 
     expect(mockSetNetwork).toHaveBeenCalledWith('freenode');
 
-    rerender({ networkName: 'dalnet' });
+    await rerender({ networkName: 'dalnet' });
 
     expect(mockSetNetwork).toHaveBeenCalledWith('dalnet');
   });
 
-  it('should not call setNetwork when getActiveUserManagementService is not available', () => {
-    renderHook(() =>
+  it('should not call setNetwork when getActiveUserManagementService is not available', async () => {
+    await renderHook(() =>
       useUserManagementNetworkSync({
         networkName: 'freenode',
         getActiveUserManagementService: () => null as any,

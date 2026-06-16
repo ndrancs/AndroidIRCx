@@ -68,13 +68,13 @@ const sampleCommands = [
 ];
 
 describe('ServiceCommandPanel', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockGetCommands.mockReturnValue(sampleCommands);
   });
 
-  it('renders commands and allows service filtering', () => {
-    const { getByText, queryByText } = render(
+  it('renders commands and allows service filtering', async () => {
+    const { getByText, queryByText } = await render(
       <ServiceCommandPanel
         visible
         onClose={jest.fn()}
@@ -87,13 +87,13 @@ describe('ServiceCommandPanel', () => {
     expect(getByText('NickServ')).toBeTruthy();
     expect(getByText('ChanServ')).toBeTruthy();
 
-    fireEvent.press(getByText('nickserv'));
+    await fireEvent.press(getByText('nickserv'));
     expect(getByText('REGISTER')).toBeTruthy();
     expect(queryByText('OP')).toBeNull();
   });
 
-  it('filters commands via search and supports clearing search text', () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(
+  it('filters commands via search and supports clearing search text', async () => {
+    const { getByPlaceholderText, getByText, queryByText } = await render(
       <ServiceCommandPanel
         visible
         onClose={jest.fn()}
@@ -103,20 +103,20 @@ describe('ServiceCommandPanel', () => {
     );
 
     const searchInput = getByPlaceholderText('Search commands...');
-    fireEvent.changeText(searchInput, 'register');
+    await fireEvent.changeText(searchInput, 'register');
 
     expect(getByText('REGISTER')).toBeTruthy();
     expect(queryByText('OP')).toBeNull();
 
-    fireEvent.changeText(searchInput, '');
+    await fireEvent.changeText(searchInput, '');
     expect(getByText('OP')).toBeTruthy();
   });
 
-  it('expands a command and executes it', () => {
+  it('expands a command and executes it', async () => {
     const onClose = jest.fn();
     const onExecuteCommand = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <ServiceCommandPanel
         visible
         onClose={onClose}
@@ -126,20 +126,20 @@ describe('ServiceCommandPanel', () => {
       />,
     );
 
-    fireEvent.press(getByText('REGISTER'));
+    await fireEvent.press(getByText('REGISTER'));
     expect(getByText('Usage: REGISTER <password> <email>')).toBeTruthy();
     expect(getByText('Example: REGISTER pass test@example.com')).toBeTruthy();
 
-    fireEvent.press(getByText('Execute NickServ REGISTER'));
+    await fireEvent.press(getByText('Execute NickServ REGISTER'));
 
     expect(onExecuteCommand).toHaveBeenCalledWith('REGISTER', 'NickServ');
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows empty state when provider has no commands', () => {
+  it('shows empty state when provider has no commands', async () => {
     mockGetCommands.mockReturnValue([]);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <ServiceCommandPanel
         visible
         onClose={jest.fn()}

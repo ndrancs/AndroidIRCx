@@ -6,37 +6,59 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import { CommandsSection } from '../../../src/components/settings/sections/CommandsSection';
-import { commandService } from '../../../src/services/CommandService';
 
-// Mock dependencies
-jest.mock('../../../src/services/CommandService');
-jest.mock('react-native', () => {
+const mockCapturedItems = new Map<string, any>();
+
+const mockGetAliases = jest.fn(() => [] as any[]);
+const mockGetCustomCommands = jest.fn(() => [] as any[]);
+const mockGetHistory = jest.fn(() => [] as any[]);
+const mockAddAlias = jest.fn(async () => undefined);
+const mockAddCustomCommand = jest.fn(async () => undefined);
+const mockRemoveAlias = jest.fn(async () => undefined);
+const mockRemoveCustomCommand = jest.fn(async () => undefined);
+const mockDeleteHistoryEntry = jest.fn(async () => undefined);
+const mockClearHistory = jest.fn(async () => undefined);
+
+jest.mock('../../../src/i18n/transifex', () => ({
+  useT: () => (key: string) => key,
+}));
+
+jest.mock('../../../src/components/settings/SettingItem', () => {
   const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
   return {
-    Alert: {
-      alert: jest.fn(),
-    },
-    Platform: {
-      OS: 'android',
-    },
-    View: ({ children, ...props }: any) =>
-      React.createElement('View', props, children),
-    Text: ({ children, ...props }: any) =>
-      React.createElement('Text', props, children),
-    TextInput: (props: any) => React.createElement('TextInput', props),
-    TouchableOpacity: ({ children, ...props }: any) =>
-      React.createElement('TouchableOpacity', props, children),
-    ScrollView: ({ children, ...props }: any) =>
-      React.createElement('ScrollView', props, children),
-    FlatList: (props: any) => React.createElement('FlatList', props),
-    StyleSheet: {
-      create: (styles: any) => styles,
-      flatten: (style: any) => style,
+    SettingItem: ({ item, onPress }: any) => {
+      mockCapturedItems.set(item.id, item);
+      return React.createElement(
+        TouchableOpacity,
+        {
+          testID: `setting-${item.id}`,
+          onPress: () => {
+            item.onPress?.();
+            if (item.type === 'submenu') onPress?.(item.id);
+          },
+        },
+        React.createElement(Text, null, item.title || item.id),
+      );
     },
   };
 });
+
+jest.mock('../../../src/services/CommandService', () => ({
+  commandService: {
+    getAliases: (...args: any[]) => mockGetAliases(...args),
+    getCustomCommands: (...args: any[]) => mockGetCustomCommands(...args),
+    getHistory: (...args: any[]) => mockGetHistory(...args),
+    addAlias: (...args: any[]) => mockAddAlias(...args),
+    removeAlias: (...args: any[]) => mockRemoveAlias(...args),
+    addCustomCommand: (...args: any[]) => mockAddCustomCommand(...args),
+    removeCustomCommand: (...args: any[]) => mockRemoveCustomCommand(...args),
+    deleteHistoryEntry: (...args: any[]) => mockDeleteHistoryEntry(...args),
+    clearHistory: (...args: any[]) => mockClearHistory(...args),
+  },
+}));
 
 const mockColors = {
   text: '#000000',
@@ -56,33 +78,36 @@ const mockStyles = {
   disabledItem: {},
   disabledText: {},
   chevron: {},
+  input: {},
+  disabledInput: {},
+  submenuOverlay: {},
+  submenuContainer: {},
+  submenuHeader: {},
+  submenuTitle: {},
+  submenuItem: {},
+  submenuItemContent: {},
+  submenuItemText: {},
+  submenuItemDescription: {},
+  submenuInput: {},
+  closeButtonText: {},
 };
 
 const mockSettingIcons = {};
 
-describe.skip('CommandsSection', () => {
+describe('CommandsSection', () => {
   beforeEach(() => {
+    mockCapturedItems.clear();
     jest.clearAllMocks();
-    (commandService.getAliases as jest.Mock).mockReturnValue([]);
-    (commandService.getCustomCommands as jest.Mock).mockReturnValue([]);
-    (commandService.getHistory as jest.Mock).mockReturnValue([]);
-    (commandService.addAlias as jest.Mock).mockResolvedValue(undefined);
-    (commandService.removeAlias as jest.Mock).mockResolvedValue(undefined);
-    (commandService.addCustomCommand as jest.Mock).mockResolvedValue(undefined);
-    (commandService.removeCustomCommand as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (commandService.deleteHistoryEntry as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (commandService.clearHistory as jest.Mock).mockResolvedValue(undefined);
+    mockGetAliases.mockReturnValue([]);
+    mockGetCustomCommands.mockReturnValue([]);
+    mockGetHistory.mockReturnValue([]);
   });
 
-  it('should render command history section', () => {
-    const { getByText } = render(
+  it('should render command history section', async () => {
+    const { getByText } = await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
@@ -90,11 +115,11 @@ describe.skip('CommandsSection', () => {
     expect(getByText(/Command History/i)).toBeTruthy();
   });
 
-  it('should render command aliases section', () => {
-    const { getByText } = render(
+  it('should render command aliases section', async () => {
+    const { getByText } = await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
@@ -102,11 +127,11 @@ describe.skip('CommandsSection', () => {
     expect(getByText(/Command Aliases/i)).toBeTruthy();
   });
 
-  it('should render custom commands section', () => {
-    const { getByText } = render(
+  it('should render custom commands section', async () => {
+    const { getByText } = await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
@@ -114,7 +139,7 @@ describe.skip('CommandsSection', () => {
     expect(getByText(/Custom Commands/i)).toBeTruthy();
   });
 
-  it('should display command history entries', () => {
+  it('should display command history entries', async () => {
     const mockHistory = [
       {
         id: '1',
@@ -123,20 +148,28 @@ describe.skip('CommandsSection', () => {
         channel: '#test',
       },
     ];
-    (commandService.getHistory as jest.Mock).mockReturnValue(mockHistory);
+    mockGetHistory.mockReturnValue(mockHistory);
 
-    const { getByText } = render(
+    await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    expect(getByText('/join #test')).toBeTruthy();
+    await waitFor(() =>
+      expect(mockCapturedItems.has('commands-history')).toBe(true),
+    );
+
+    const historyEntry = mockCapturedItems
+      .get('commands-history')
+      .submenuItems.find((x: any) => x.id === 'history-1');
+    expect(historyEntry).toBeTruthy();
+    expect(historyEntry.title).toBe('/join #test');
   });
 
-  it('should display command aliases', () => {
+  it('should display command aliases', async () => {
     const mockAliases = [
       {
         alias: 'j',
@@ -144,20 +177,28 @@ describe.skip('CommandsSection', () => {
         description: 'Join channel',
       },
     ];
-    (commandService.getAliases as jest.Mock).mockReturnValue(mockAliases);
+    mockGetAliases.mockReturnValue(mockAliases);
 
-    const { getByText } = render(
+    await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    expect(getByText('/j')).toBeTruthy();
+    await waitFor(() =>
+      expect(mockCapturedItems.has('commands-aliases')).toBe(true),
+    );
+
+    const aliasEntry = mockCapturedItems
+      .get('commands-aliases')
+      .submenuItems.find((x: any) => x.id === 'alias-j');
+    expect(aliasEntry).toBeTruthy();
+    expect(aliasEntry.title).toBe('/j');
   });
 
-  it('should display custom commands', () => {
+  it('should display custom commands', async () => {
     const mockCommands = [
       {
         name: 'greet',
@@ -166,18 +207,24 @@ describe.skip('CommandsSection', () => {
         parameters: ['channel'],
       },
     ];
-    (commandService.getCustomCommands as jest.Mock).mockReturnValue(
-      mockCommands,
-    );
+    mockGetCustomCommands.mockReturnValue(mockCommands);
 
-    const { getByText } = render(
+    await render(
       <CommandsSection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    expect(getByText('/greet')).toBeTruthy();
+    await waitFor(() =>
+      expect(mockCapturedItems.has('commands-custom')).toBe(true),
+    );
+
+    const cmdEntry = mockCapturedItems
+      .get('commands-custom')
+      .submenuItems.find((x: any) => x.id === 'cmd-greet');
+    expect(cmdEntry).toBeTruthy();
+    expect(cmdEntry.title).toBe('/greet');
   });
 });

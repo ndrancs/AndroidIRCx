@@ -7,8 +7,8 @@ import { act } from '@testing-library/react-native';
 import { useCallStore } from '../../src/stores/callStore';
 
 describe('callStore', () => {
-  beforeEach(() => {
-    act(() => {
+  beforeEach(async () => {
+    await act(() => {
       useCallStore.getState().reset();
     });
   });
@@ -36,8 +36,8 @@ describe('callStore', () => {
     expect(state.videoOverlayWidth).toBe(168);
   });
 
-  it('setPartial merges updates without dropping existing state', () => {
-    act(() => {
+  it('setPartial merges updates without dropping existing state', async () => {
+    await act(() => {
       useCallStore.getState().setPartial({
         sessionId: 's1',
         networkId: 'net1',
@@ -65,8 +65,8 @@ describe('callStore', () => {
     expect(state.videoOverlayWidth).toBe(168);
   });
 
-  it('reset restores defaults after mutations', () => {
-    act(() => {
+  it('reset restores defaults after mutations', async () => {
+    await act(() => {
       useCallStore.getState().setPartial({
         sessionId: 's2',
         error: 'boom',
@@ -82,7 +82,7 @@ describe('callStore', () => {
     expect(useCallStore.getState().error).toBe('boom');
     expect(useCallStore.getState().usingRelay).toBe(true);
 
-    act(() => {
+    await act(() => {
       useCallStore.getState().reset();
     });
 

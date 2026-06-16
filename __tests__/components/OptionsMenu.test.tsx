@@ -60,7 +60,7 @@ const baseProps = {
 };
 
 describe('OptionsMenu', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockSortTabsGrouped.mockImplementation(tabs => tabs);
     mockGetActiveNetworkId.mockReturnValue('net-2');
@@ -72,17 +72,17 @@ describe('OptionsMenu', () => {
     });
   });
 
-  it('handles connected actions', () => {
+  it('handles connected actions', async () => {
     const ui = mockUseUIStoreGetState();
-    const { getByText } = render(<OptionsMenu {...baseProps} />);
+    const { getByText } = await render(<OptionsMenu {...baseProps} />);
 
-    fireEvent.press(getByText('Join Channel'));
-    fireEvent.press(getByText('Disconnect Libera'));
-    fireEvent.press(getByText('Connect Another Network'));
-    fireEvent.press(getByText('Browse Channels'));
-    fireEvent.press(getByText('DCC Transfers'));
-    fireEvent.press(getByText('Show RAW'));
-    fireEvent.press(getByText('Exit'));
+    await fireEvent.press(getByText('Join Channel'));
+    await fireEvent.press(getByText('Disconnect Libera'));
+    await fireEvent.press(getByText('Connect Another Network'));
+    await fireEvent.press(getByText('Browse Channels'));
+    await fireEvent.press(getByText('DCC Transfers'));
+    await fireEvent.press(getByText('Show RAW'));
+    await fireEvent.press(getByText('Exit'));
 
     expect(ui.setShowChannelModal).toHaveBeenCalledWith(true);
     expect(mockDisconnect).toHaveBeenCalledWith('net-1');
@@ -94,13 +94,13 @@ describe('OptionsMenu', () => {
     expect(baseProps.handleExit).toHaveBeenCalled();
   });
 
-  it('handles disconnected actions', () => {
-    const { getByText } = render(
+  it('handles disconnected actions', async () => {
+    const { getByText } = await render(
       <OptionsMenu {...baseProps} isConnected={false} />,
     );
 
-    fireEvent.press(getByText('Connect to Default'));
-    fireEvent.press(getByText('Choose Network'));
+    await fireEvent.press(getByText('Connect to Default'));
+    await fireEvent.press(getByText('Choose Network'));
 
     expect(baseProps.handleConnect).toHaveBeenCalled();
     expect(mockUseUIStoreGetState().setShowNetworksList).toHaveBeenCalledWith(
@@ -108,14 +108,14 @@ describe('OptionsMenu', () => {
     );
   });
 
-  it('applies close-all filters via setTabs updater', () => {
+  it('applies close-all filters via setTabs updater', async () => {
     const setTabs = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <OptionsMenu {...baseProps} setTabs={setTabs} />,
     );
 
-    fireEvent.press(getByText('Close All Channels'));
-    fireEvent.press(getByText('Close All Privates'));
+    await fireEvent.press(getByText('Close All Channels'));
+    await fireEvent.press(getByText('Close All Privates'));
 
     const updaterChannels = setTabs.mock.calls[0][0];
     const updaterPrivates = setTabs.mock.calls[1][0];

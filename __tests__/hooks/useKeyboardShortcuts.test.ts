@@ -63,13 +63,13 @@ describe('useKeyboardShortcuts', () => {
   const tabsRef = { current: tabs };
   const mockSetActiveTabId = jest.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockActiveTabId = 'channel::TestNetwork::#general';
   });
 
-  it('should register all 5 shortcuts on mount', () => {
-    renderHook(() =>
+  it('should register all 5 shortcuts on mount', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -96,18 +96,18 @@ describe('useKeyboardShortcuts', () => {
     );
   });
 
-  it('should unregister all shortcuts on unmount', () => {
-    const { unmount } = renderHook(() =>
+  it('should unregister all shortcuts on unmount', async () => {
+    const { unmount } = await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
-    unmount();
+    await unmount();
 
     expect(mockUnregisterShortcut).toHaveBeenCalledTimes(5);
   });
 
-  it('should switch to next tab on Ctrl+Tab', () => {
-    renderHook(() =>
+  it('should switch to next tab on Ctrl+Tab', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -123,10 +123,10 @@ describe('useKeyboardShortcuts', () => {
     );
   });
 
-  it('should wrap around to first tab on Ctrl+Tab at end', () => {
+  it('should wrap around to first tab on Ctrl+Tab at end', async () => {
     mockActiveTabId = 'channel::TestNetwork::#random';
 
-    renderHook(() =>
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -139,8 +139,8 @@ describe('useKeyboardShortcuts', () => {
     expect(mockSetActiveTabId).toHaveBeenCalledWith('server::TestNetwork');
   });
 
-  it('should switch to previous tab on Ctrl+Shift+Tab', () => {
-    renderHook(() =>
+  it('should switch to previous tab on Ctrl+Shift+Tab', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -154,8 +154,8 @@ describe('useKeyboardShortcuts', () => {
     expect(mockSetActiveTabId).toHaveBeenCalledWith('server::TestNetwork');
   });
 
-  it('should open channel modal on Ctrl+N', () => {
-    renderHook(() =>
+  it('should open channel modal on Ctrl+N', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -168,8 +168,8 @@ describe('useKeyboardShortcuts', () => {
     expect(mockSetShowChannelModal).toHaveBeenCalledWith(true);
   });
 
-  it('should open settings on Ctrl+S', () => {
-    renderHook(() =>
+  it('should open settings on Ctrl+S', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 
@@ -182,8 +182,8 @@ describe('useKeyboardShortcuts', () => {
     expect(mockSetShowSettings).toHaveBeenCalledWith(true);
   });
 
-  it('should activate kill switch on Ctrl+Shift+K', () => {
-    renderHook(() =>
+  it('should activate kill switch on Ctrl+Shift+K', async () => {
+    await renderHook(() =>
       useKeyboardShortcuts({ tabsRef, setActiveTabId: mockSetActiveTabId }),
     );
 

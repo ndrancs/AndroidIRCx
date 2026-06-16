@@ -168,7 +168,7 @@ const {
 } = require('../../src/screens/ZncSubscriptionScreen');
 
 describe('ZncSubscriptionScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockIsZncAccountActive = jest.fn(() => true);
@@ -248,7 +248,7 @@ describe('ZncSubscriptionScreen', () => {
   });
 
   it('renders accounts and handles credential actions', async () => {
-    const { findByText, getByText } = render(
+    const { findByText, getByText } = await render(
       <ZncSubscriptionScreen visible onClose={jest.fn()} />,
     );
 
@@ -256,8 +256,8 @@ describe('ZncSubscriptionScreen', () => {
     expect(await findByText('demo')).toBeTruthy();
     expect(getByText('Dec 1, 2026')).toBeTruthy();
 
-    fireEvent.press(getByText('Show'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Show'));
+    await waitFor(async () => {
       expect(mockSubscriptionService.getAccountPassword).toHaveBeenCalledWith(
         'acc1',
       );
@@ -268,15 +268,15 @@ describe('ZncSubscriptionScreen', () => {
     });
     expect(mockClipboard.setString).toHaveBeenCalled();
 
-    fireEvent.press(getByText('Copy'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Copy'));
+    await waitFor(async () => {
       expect(mockClipboard.setString).toHaveBeenCalled();
     });
   }, 10000);
 
   it('supports purchase, restore, network assignment, unlink, refresh, and delete', async () => {
     const onNavigateToNetworkSettings = jest.fn();
-    const { findByText, findByPlaceholderText, getByText } = render(
+    const { findByText, findByPlaceholderText, getByText } = await render(
       <ZncSubscriptionScreen
         visible
         onClose={jest.fn()}
@@ -285,24 +285,27 @@ describe('ZncSubscriptionScreen', () => {
     );
 
     await findByText('Purchase ZNC Account');
-    fireEvent.press(getByText('Purchase ZNC Account'));
-    fireEvent.changeText(await findByPlaceholderText('Username'), 'newznc');
-    fireEvent.press(getByText('Continue'));
+    await fireEvent.press(getByText('Purchase ZNC Account'));
+    await fireEvent.changeText(
+      await findByPlaceholderText('Username'),
+      'newznc',
+    );
+    await fireEvent.press(getByText('Continue'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockSubscriptionService.checkUsernameAvailability,
       ).toHaveBeenCalledWith('newznc');
     });
 
-    fireEvent.press(getByText('Restore Purchases'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Restore Purchases'));
+    await waitFor(async () => {
       expect(mockSubscriptionService.restorePurchases).toHaveBeenCalled();
     });
 
-    fireEvent.press(getByText('Add to Network'));
-    fireEvent.press(await findByText('Pick Network'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Add to Network'));
+    await fireEvent.press(await findByText('Pick Network'));
+    await waitFor(async () => {
       expect(mockSettingsService.updateNetwork).toHaveBeenCalled();
       expect(mockSubscriptionService.assignToNetwork).toHaveBeenCalledWith(
         'acc1',
@@ -320,33 +323,33 @@ describe('ZncSubscriptionScreen', () => {
         return jest.fn();
       },
     );
-    const secondRender = render(
+    const secondRender = await render(
       <ZncSubscriptionScreen visible onClose={jest.fn()} />,
     );
-    fireEvent.press(await secondRender.findByText('Unlink'));
+    await fireEvent.press(await secondRender.findByText('Unlink'));
     let buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
     await act(async () => {
       await buttons?.[1]?.onPress?.();
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSubscriptionService.unassignFromNetwork).toHaveBeenCalledWith(
         'acc1',
       );
     });
 
-    fireEvent.press((await secondRender.findAllByText('sync'))[0]);
-    await waitFor(() => {
+    await fireEvent.press((await secondRender.findAllByText('sync'))[0]);
+    await waitFor(async () => {
       expect(mockSubscriptionService.refreshAccountStatus).toHaveBeenCalledWith(
         'acc1',
       );
     });
 
-    fireEvent.press(await secondRender.findByText('trash'));
+    await fireEvent.press(await secondRender.findByText('trash'));
     buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
     await act(async () => {
       await buttons?.[1]?.onPress?.();
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSubscriptionService.deleteLocalAccount).toHaveBeenCalledWith(
         'acc1',
       );
@@ -368,7 +371,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Active')).toBeTruthy();
@@ -385,7 +388,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Grace')).toBeTruthy();
@@ -402,7 +405,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Expired')).toBeTruthy();
@@ -419,7 +422,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Cancelled')).toBeTruthy();
@@ -436,7 +439,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Pending')).toBeTruthy();
@@ -455,7 +458,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('No ZNC Accounts')).toBeTruthy();
@@ -477,7 +480,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Ready')).toBeTruthy();
@@ -494,7 +497,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Setting up...')).toBeTruthy();
@@ -511,7 +514,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Error')).toBeTruthy();
@@ -528,7 +531,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Suspended')).toBeTruthy();
@@ -544,7 +547,7 @@ describe('ZncSubscriptionScreen', () => {
         () => new Promise(() => {}),
       ); // Never resolves
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('Loading...')).toBeTruthy();
@@ -553,16 +556,19 @@ describe('ZncSubscriptionScreen', () => {
     it('shows purchasing state during purchase', async () => {
       mockRNIap.requestPurchase.mockImplementation(() => new Promise(() => {}));
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'newuser');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'newuser',
+      );
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.requestPurchase).toHaveBeenCalled();
       });
     });
@@ -572,15 +578,15 @@ describe('ZncSubscriptionScreen', () => {
         () => new Promise(() => {}),
       );
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
       // Should be in restoring state
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockSubscriptionService.restorePurchases).toHaveBeenCalled();
       });
     });
@@ -599,7 +605,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
       expect(await findByText('No ZNC Accounts')).toBeTruthy();
@@ -620,9 +626,9 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Connection failed'),
       );
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Store Error',
           'Failed to connect to the store. Please check your internet connection and try again.',
@@ -633,9 +639,9 @@ describe('ZncSubscriptionScreen', () => {
     it('handles subscription product not found', async () => {
       mockRNIap.fetchProducts.mockResolvedValue([]);
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Store Error',
           expect.stringContaining('ZNC subscription product'),
@@ -648,14 +654,14 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Restore failed'),
       );
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Restore failed');
       });
     });
@@ -665,7 +671,7 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Refresh failed'),
       );
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
       // Verify that the mock was set up correctly
       expect(
@@ -678,17 +684,17 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Delete failed'),
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('trash'));
+      await fireEvent.press(await findByText('trash'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[1]?.onPress?.();
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Delete failed');
       });
     });
@@ -698,14 +704,14 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Network update failed'),
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Add to Network'));
-      fireEvent.press(await findByText('Pick Network'));
+      await fireEvent.press(await findByText('Add to Network'));
+      await fireEvent.press(await findByText('Pick Network'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'Network update failed',
@@ -718,17 +724,20 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Check failed'),
       );
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'newuser');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'newuser',
+      );
+      await fireEvent.press(getByText('Continue'));
 
       // Should continue with purchase even if check fails
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.requestPurchase).toHaveBeenCalled();
       });
     });
@@ -739,16 +748,19 @@ describe('ZncSubscriptionScreen', () => {
   // ==========================================
   describe('Purchase Flow', () => {
     it('validates username format - special characters', async () => {
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'user@123');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'user@123',
+      );
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'Username can only contain letters, numbers, underscore and dash.',
@@ -757,16 +769,16 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('validates username length - too short', async () => {
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'ab');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(await findByPlaceholderText('Username'), 'ab');
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'Username must be between 3 and 20 characters.',
@@ -775,19 +787,19 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('validates username length - too long', async () => {
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
         await findByPlaceholderText('Username'),
         'a'.repeat(21),
       );
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'Username must be between 3 and 20 characters.',
@@ -796,17 +808,17 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('validates empty username', async () => {
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
 
       // Enter only whitespace and try to continue
       const usernameInput = await findByPlaceholderText('Username');
-      fireEvent.changeText(usernameInput, '   ');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.changeText(usernameInput, '   ');
+      await fireEvent.press(getByText('Continue'));
 
       // The validation logic checks for trimmed username
       const trimmed = '   '.trim();
@@ -817,16 +829,19 @@ describe('ZncSubscriptionScreen', () => {
     it('checks for existing local username', async () => {
       mockSubscriptionService.getAccountByUsername.mockReturnValue(mockAccount);
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'demo');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'demo',
+      );
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'You already have an account with this username.',
@@ -839,19 +854,19 @@ describe('ZncSubscriptionScreen', () => {
         false,
       );
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
         await findByPlaceholderText('Username'),
         'takenuser',
       );
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Username Taken',
           'This username already exists on our ZNC server. Please choose a different username.',
@@ -864,16 +879,19 @@ describe('ZncSubscriptionScreen', () => {
       error.code = 'user-cancelled';
       mockRNIap.requestPurchase.mockRejectedValue(error);
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'newuser');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'newuser',
+      );
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.requestPurchase).toHaveBeenCalled();
       });
 
@@ -889,16 +907,19 @@ describe('ZncSubscriptionScreen', () => {
     it('handles purchase error', async () => {
       mockRNIap.requestPurchase.mockRejectedValue(new Error('Purchase failed'));
 
-      const { findByText, findByPlaceholderText, getByText } = render(
+      const { findByText, findByPlaceholderText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
-      fireEvent.changeText(await findByPlaceholderText('Username'), 'newuser');
-      fireEvent.press(getByText('Continue'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.changeText(
+        await findByPlaceholderText('Username'),
+        'newuser',
+      );
+      await fireEvent.press(getByText('Continue'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Purchase failed');
       });
     });
@@ -909,15 +930,15 @@ describe('ZncSubscriptionScreen', () => {
         findByPlaceholderText,
         queryByPlaceholderText,
         getByText,
-      } = render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      } = await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
       await findByText('Purchase ZNC Account');
-      fireEvent.press(getByText('Purchase ZNC Account'));
+      await fireEvent.press(getByText('Purchase ZNC Account'));
       expect(await findByPlaceholderText('Username')).toBeTruthy();
 
-      fireEvent.press(getByText('Cancel'));
+      await fireEvent.press(getByText('Cancel'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(queryByPlaceholderText('Username')).toBeNull();
       });
     });
@@ -932,7 +953,7 @@ describe('ZncSubscriptionScreen', () => {
         mockAccount,
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
@@ -940,7 +961,7 @@ describe('ZncSubscriptionScreen', () => {
       await findByText('ZNC Subscription');
 
       // Simulate purchase update
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseUpdatedListener).toHaveBeenCalled();
       });
 
@@ -954,19 +975,19 @@ describe('ZncSubscriptionScreen', () => {
         });
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.finishTransaction).toHaveBeenCalled();
       });
     });
 
     it('ignores purchase updates for other products', async () => {
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('ZNC Subscription');
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseUpdatedListener).toHaveBeenCalled();
       });
 
@@ -984,13 +1005,13 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('handles purchase error', async () => {
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('ZNC Subscription');
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseErrorListener).toHaveBeenCalled();
       });
 
@@ -1003,7 +1024,7 @@ describe('ZncSubscriptionScreen', () => {
         });
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Purchase Failed',
           'Purchase error',
@@ -1012,13 +1033,13 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('ignores user cancelled purchase error', async () => {
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('ZNC Subscription');
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseErrorListener).toHaveBeenCalled();
       });
 
@@ -1040,13 +1061,13 @@ describe('ZncSubscriptionScreen', () => {
     });
 
     it('ignores purchase errors for other products', async () => {
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('ZNC Subscription');
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseErrorListener).toHaveBeenCalled();
       });
 
@@ -1118,14 +1139,14 @@ describe('ZncSubscriptionScreen', () => {
         .mockResolvedValueOnce('1234')
         .mockResolvedValueOnce(null);
 
-      const { findByPlaceholderText, findByText } = render(
+      const { findByPlaceholderText, findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
       const pinInput = await findByPlaceholderText('PIN');
-      fireEvent.changeText(pinInput, '1234');
-      fireEvent.press(await findByText('Confirm'));
+      await fireEvent.changeText(pinInput, '1234');
+      await fireEvent.press(await findByText('Confirm'));
 
       expect(await findByText('No PIN is set.')).toBeTruthy();
     });
@@ -1143,14 +1164,14 @@ describe('ZncSubscriptionScreen', () => {
       mockBiometricAuthService.getBiometryType.mockResolvedValue('Fingerprint');
       mockSecureStorageService.getSecret.mockResolvedValue('1234');
 
-      const { findByPlaceholderText, findByText } = render(
+      const { findByPlaceholderText, findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
       const pinInput = await findByPlaceholderText('PIN');
-      fireEvent.changeText(pinInput, '9999');
-      fireEvent.press(await findByText('Confirm'));
+      await fireEvent.changeText(pinInput, '9999');
+      await fireEvent.press(await findByText('Confirm'));
 
       expect(await findByText('Incorrect PIN.')).toBeTruthy();
     });
@@ -1160,7 +1181,7 @@ describe('ZncSubscriptionScreen', () => {
   // Biometric Authentication Tests
   // ==========================================
   describe('Biometric Authentication', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSettingsService.getSetting.mockImplementation((key: string) => {
         if (key === 'biometricPasswordLock') return Promise.resolve(true);
         return Promise.resolve(false);
@@ -1173,13 +1194,13 @@ describe('ZncSubscriptionScreen', () => {
         success: true,
       });
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockBiometricAuthService.authenticate).toHaveBeenCalled();
       });
     });
@@ -1195,13 +1216,13 @@ describe('ZncSubscriptionScreen', () => {
         return Promise.resolve(false);
       });
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockBiometricAuthService.authenticate).toHaveBeenCalled();
       });
     });
@@ -1212,13 +1233,13 @@ describe('ZncSubscriptionScreen', () => {
         errorMessage: 'Auth failed',
       });
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Authentication failed',
           'Auth failed',
@@ -1229,11 +1250,11 @@ describe('ZncSubscriptionScreen', () => {
     it('shows error when biometrics unavailable', async () => {
       mockBiometricAuthService.getBiometryType.mockResolvedValue(null);
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
     });
   });
 
@@ -1242,23 +1263,23 @@ describe('ZncSubscriptionScreen', () => {
   // ==========================================
   describe('Network Picker', () => {
     it('closes network picker', async () => {
-      const { findByText, queryByText, getByText } = render(
+      const { findByText, queryByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Add to Network'));
+      await fireEvent.press(await findByText('Add to Network'));
       expect(await findByText('Network Picker')).toBeTruthy();
 
-      fireEvent.press(getByText('Close Picker'));
+      await fireEvent.press(getByText('Close Picker'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(queryByText('Network Picker')).toBeNull();
       });
     });
 
     it('navigates to network settings when creating new network', async () => {
       const onNavigateToNetworkSettings = jest.fn();
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen
           visible
           onClose={jest.fn()}
@@ -1266,10 +1287,10 @@ describe('ZncSubscriptionScreen', () => {
         />,
       );
 
-      fireEvent.press(await findByText('Add to Network'));
-      fireEvent.press(await findByText('Create Network'));
+      await fireEvent.press(await findByText('Add to Network'));
+      await fireEvent.press(await findByText('Create Network'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(onNavigateToNetworkSettings).toHaveBeenCalled();
       });
     });
@@ -1303,7 +1324,7 @@ describe('ZncSubscriptionScreen', () => {
     it('handles pull-to-refresh', async () => {
       mockSubscriptionService.refreshAllAccounts.mockResolvedValue(undefined);
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
@@ -1320,10 +1341,10 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Refresh error'),
       );
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
       // Error handling is tested through the function
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockSubscriptionService.initialize).toHaveBeenCalled();
       });
     });
@@ -1344,11 +1365,11 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Unlink'));
+      await fireEvent.press(await findByText('Unlink'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[0]?.onPress?.(); // Cancel button
@@ -1378,17 +1399,17 @@ describe('ZncSubscriptionScreen', () => {
         servers: [{ id: 'srv-znc' }],
       });
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Unlink'));
+      await fireEvent.press(await findByText('Unlink'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[1]?.onPress?.(); // Remove button
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Unlink failed');
       });
     });
@@ -1399,14 +1420,14 @@ describe('ZncSubscriptionScreen', () => {
   // ==========================================
   describe('Store Connection', () => {
     it('refreshes store connection', async () => {
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Refresh Store');
-      fireEvent.press(getByText('Refresh Store'));
+      await fireEvent.press(getByText('Refresh Store'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.initConnection).toHaveBeenCalledTimes(2); // Once on mount, once on refresh
       });
     });
@@ -1416,9 +1437,9 @@ describe('ZncSubscriptionScreen', () => {
         new Error('Connection failed'),
       );
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Store Error',
           expect.any(String),
@@ -1443,7 +1464,7 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText, queryByText } = render(
+      const { findByText, queryByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
@@ -1452,7 +1473,7 @@ describe('ZncSubscriptionScreen', () => {
 
       // The Add to Network button should not be visible when account is not ready
       // because isZncAccountReady returns false
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(queryByText('Add to Network')).toBeNull();
       });
     });
@@ -1460,13 +1481,13 @@ describe('ZncSubscriptionScreen', () => {
     it('handles copy credentials without password', async () => {
       mockSubscriptionService.getAccountPassword.mockResolvedValue(null);
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Copy'));
+      await fireEvent.press(await findByText('Copy'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Error',
           'Credentials not available.',
@@ -1477,13 +1498,13 @@ describe('ZncSubscriptionScreen', () => {
     it('handles show credentials without password', async () => {
       mockSubscriptionService.getAccountPassword.mockResolvedValue(null);
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('Show'));
+      await fireEvent.press(await findByText('Show'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         // When password is null, it still shows the credentials dialog with "Not available" text
         // The component shows: Username: demo\nPassword: Not available\n\nServer: irc.androidircx.com\nPort: 16786 (SSL)
         expect(Alert.alert).toHaveBeenCalledWith(
@@ -1508,14 +1529,14 @@ describe('ZncSubscriptionScreen', () => {
         },
       ]);
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'No Purchases',
           'No ZNC subscriptions found to restore.',
@@ -1528,14 +1549,14 @@ describe('ZncSubscriptionScreen', () => {
         { productId: 'znc', transactionId: 'tx1' }, // No purchaseToken
       ]);
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'No Purchases',
           'No valid subscriptions found to restore.',
@@ -1552,14 +1573,14 @@ describe('ZncSubscriptionScreen', () => {
         restored: 2,
       });
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         // The translation mock returns the key with parameters, not the interpolated value
         expect(Alert.alert).toHaveBeenCalledWith(
           'Restored',
@@ -1573,14 +1594,14 @@ describe('ZncSubscriptionScreen', () => {
         restored: 0,
       });
 
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('Restore Purchases');
-      fireEvent.press(getByText('Restore Purchases'));
+      await fireEvent.press(getByText('Restore Purchases'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'No Purchases',
           'No valid subscriptions found to restore.',
@@ -1595,41 +1616,41 @@ describe('ZncSubscriptionScreen', () => {
   describe('Modal Close', () => {
     it('calls onClose when close button pressed', async () => {
       const onClose = jest.fn();
-      const { findByText, getByText } = render(
+      const { findByText, getByText } = await render(
         <ZncSubscriptionScreen visible onClose={onClose} />,
       );
 
       await findByText('Close');
-      fireEvent.press(getByText('Close'));
+      await fireEvent.press(getByText('Close'));
 
       expect(onClose).toHaveBeenCalled();
     });
 
     it('cleans up on unmount', async () => {
-      const { unmount, findByText } = render(
+      const { unmount, findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       // Wait for component to fully mount
       await findByText('ZNC Subscription');
 
-      unmount();
+      await unmount();
 
       // Cleanup is called via useEffect cleanup, but we need to ensure
       // the component has fully initialized IAP listeners first
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockRNIap.purchaseUpdatedListener).toHaveBeenCalled();
         expect(mockRNIap.purchaseErrorListener).toHaveBeenCalled();
       });
     });
 
     it('removes store listeners and ends connection on unmount', async () => {
-      const { unmount, findByText } = render(
+      const { unmount, findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
       await findByText('ZNC Subscription');
-      unmount();
+      await unmount();
 
       expect(mockPurchaseUpdateSubscription.remove).toHaveBeenCalled();
       expect(mockPurchaseErrorSubscription.remove).toHaveBeenCalled();
@@ -1661,7 +1682,7 @@ describe('ZncSubscriptionScreen', () => {
         mockAccount,
       );
 
-      render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
+      await render(<ZncSubscriptionScreen visible onClose={jest.fn()} />);
 
       // The sync button press triggers handleRefreshAccount which calls refreshAccountStatus
       // Since we can't easily distinguish between multiple sync icons, we test the function is available
@@ -1697,11 +1718,11 @@ describe('ZncSubscriptionScreen', () => {
   // ==========================================
   describe('Delete Account', () => {
     it('cancels delete operation', async () => {
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('trash'));
+      await fireEvent.press(await findByText('trash'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[0]?.onPress?.(); // Cancel button
@@ -1732,17 +1753,17 @@ describe('ZncSubscriptionScreen', () => {
         servers: [{ id: 'srv1', hostname: 'znc.example' }],
       });
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('trash'));
+      await fireEvent.press(await findByText('trash'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[1]?.onPress?.(); // Delete button
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockSettingsService.updateNetwork).toHaveBeenCalled();
         expect(mockSubscriptionService.deleteLocalAccount).toHaveBeenCalledWith(
           'acc1',
@@ -1759,17 +1780,17 @@ describe('ZncSubscriptionScreen', () => {
         },
       );
 
-      const { findByText } = render(
+      const { findByText } = await render(
         <ZncSubscriptionScreen visible onClose={jest.fn()} />,
       );
 
-      fireEvent.press(await findByText('trash'));
+      await fireEvent.press(await findByText('trash'));
       const buttons = (Alert.alert as jest.Mock).mock.calls.at(-1)?.[2];
       await act(async () => {
         await buttons?.[1]?.onPress?.(); // Delete button
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockSubscriptionService.deleteLocalAccount).toHaveBeenCalledWith(
           'acc1',
         );

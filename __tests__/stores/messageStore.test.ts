@@ -11,8 +11,8 @@ import { act } from '@testing-library/react-native';
 import { useMessageStore, TypingUser } from '../../src/stores/messageStore';
 
 describe('messageStore', () => {
-  beforeEach(() => {
-    act(() => {
+  beforeEach(async () => {
+    await act(() => {
       useMessageStore.getState().reset();
     });
   });
@@ -24,10 +24,10 @@ describe('messageStore', () => {
   });
 
   describe('setTypingUser', () => {
-    it('should add typing user to new network, target, and channel', () => {
+    it('should add typing user to new network, target, and channel', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -44,11 +44,11 @@ describe('messageStore', () => {
       ).toEqual(status);
     });
 
-    it('should add typing user to existing network and new target', () => {
+    it('should add typing user to existing network and new target', async () => {
       const status1: TypingUser = { status: 'active', timestamp: Date.now() };
       const status2: TypingUser = { status: 'paused', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'nick1', status1);
@@ -67,11 +67,11 @@ describe('messageStore', () => {
       ).toEqual(status2);
     });
 
-    it('should add typing user to existing target', () => {
+    it('should add typing user to existing target', async () => {
       const status1: TypingUser = { status: 'active', timestamp: Date.now() };
       const status2: TypingUser = { status: 'paused', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status1);
@@ -89,11 +89,11 @@ describe('messageStore', () => {
       expect(targetMap.get('nick2')).toEqual(status2);
     });
 
-    it('should update existing typing user status', () => {
+    it('should update existing typing user status', async () => {
       const status1: TypingUser = { status: 'active', timestamp: 1000 };
       const status2: TypingUser = { status: 'paused', timestamp: 2000 };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status1);
@@ -109,11 +109,11 @@ describe('messageStore', () => {
       expect(targetMap.get('nick1')).toEqual(status2);
     });
 
-    it('should remove typing user when status is done', () => {
+    it('should remove typing user when status is done', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
       const doneStatus: TypingUser = { status: 'done', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -128,11 +128,11 @@ describe('messageStore', () => {
       );
     });
 
-    it('should remove target map when last user is done typing', () => {
+    it('should remove target map when last user is done typing', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
       const doneStatus: TypingUser = { status: 'done', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -147,11 +147,11 @@ describe('messageStore', () => {
       );
     });
 
-    it('should remove network map when last target is empty', () => {
+    it('should remove network map when last target is empty', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
       const doneStatus: TypingUser = { status: 'done', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -165,14 +165,14 @@ describe('messageStore', () => {
       );
     });
 
-    it('should handle multiple users with some done and some active', () => {
+    it('should handle multiple users with some done and some active', async () => {
       const activeStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now(),
       };
       const doneStatus: TypingUser = { status: 'done', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', activeStatus);
@@ -195,10 +195,10 @@ describe('messageStore', () => {
   });
 
   describe('removeTypingUser', () => {
-    it('should remove typing user', () => {
+    it('should remove typing user', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -212,8 +212,8 @@ describe('messageStore', () => {
       );
     });
 
-    it('should handle removing non-existent user gracefully', () => {
-      act(() => {
+    it('should handle removing non-existent user gracefully', async () => {
+      await act(() => {
         useMessageStore
           .getState()
           .removeTypingUser('network1', '#channel', 'nick1');
@@ -222,8 +222,8 @@ describe('messageStore', () => {
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should handle removing from non-existent target', () => {
-      act(() => {
+    it('should handle removing from non-existent target', async () => {
+      await act(() => {
         useMessageStore
           .getState()
           .removeTypingUser('network1', '#channel', 'nick1');
@@ -232,8 +232,8 @@ describe('messageStore', () => {
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should handle removing from non-existent network', () => {
-      act(() => {
+    it('should handle removing from non-existent network', async () => {
+      await act(() => {
         useMessageStore
           .getState()
           .removeTypingUser('network1', '#channel', 'nick1');
@@ -242,10 +242,10 @@ describe('messageStore', () => {
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should keep other users when removing one', () => {
+    it('should keep other users when removing one', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -265,10 +265,10 @@ describe('messageStore', () => {
       expect(targetMap.has('nick2')).toBe(true);
     });
 
-    it('should clean up target map when last user removed', () => {
+    it('should clean up target map when last user removed', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -283,10 +283,10 @@ describe('messageStore', () => {
       );
     });
 
-    it('should clean up network map when last target removed', () => {
+    it('should clean up network map when last target removed', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -302,10 +302,10 @@ describe('messageStore', () => {
   });
 
   describe('clearTypingForTarget', () => {
-    it('should clear all typing users for a target', () => {
+    it('should clear all typing users for a target', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -320,26 +320,26 @@ describe('messageStore', () => {
       );
     });
 
-    it('should handle clearing non-existent target', () => {
-      act(() => {
+    it('should handle clearing non-existent target', async () => {
+      await act(() => {
         useMessageStore.getState().clearTypingForTarget('network1', '#channel');
       });
 
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should handle clearing from non-existent network', () => {
-      act(() => {
+    it('should handle clearing from non-existent network', async () => {
+      await act(() => {
         useMessageStore.getState().clearTypingForTarget('network1', '#channel');
       });
 
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should keep other targets when clearing one', () => {
+    it('should keep other targets when clearing one', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'nick1', status);
@@ -358,10 +358,10 @@ describe('messageStore', () => {
       expect(networkMap.has('#channel2')).toBe(true);
     });
 
-    it('should clean up network map when last target cleared', () => {
+    it('should clean up network map when last target cleared', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -375,10 +375,10 @@ describe('messageStore', () => {
   });
 
   describe('clearTypingForNetwork', () => {
-    it('should clear all typing users for a network', () => {
+    it('should clear all typing users for a network', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'nick1', status);
@@ -393,18 +393,18 @@ describe('messageStore', () => {
       );
     });
 
-    it('should handle clearing non-existent network', () => {
-      act(() => {
+    it('should handle clearing non-existent network', async () => {
+      await act(() => {
         useMessageStore.getState().clearTypingForNetwork('network1');
       });
 
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should keep other networks when clearing one', () => {
+    it('should keep other networks when clearing one', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -428,10 +428,10 @@ describe('messageStore', () => {
       expect(result.size).toBe(0);
     });
 
-    it('should return typing users for a target', () => {
+    it('should return typing users for a target', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -448,10 +448,10 @@ describe('messageStore', () => {
       expect(result.get('nick2')).toEqual(status);
     });
 
-    it('should return empty map for non-existent network', () => {
+    it('should return empty map for non-existent network', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -463,10 +463,10 @@ describe('messageStore', () => {
       expect(result.size).toBe(0);
     });
 
-    it('should return empty map for non-existent target', () => {
+    it('should return empty map for non-existent target', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -478,10 +478,10 @@ describe('messageStore', () => {
       expect(result.size).toBe(0);
     });
 
-    it('should only return users for specified target', () => {
+    it('should only return users for specified target', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'nick1', status);
@@ -506,10 +506,10 @@ describe('messageStore', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return array of nicknames for typing users', () => {
+    it('should return array of nicknames for typing users', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'alice', status);
@@ -533,10 +533,10 @@ describe('messageStore', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array for non-existent target', () => {
+    it('should return empty array for non-existent target', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -550,7 +550,7 @@ describe('messageStore', () => {
   });
 
   describe('cleanupStaleTyping', () => {
-    it('should remove stale typing indicators', () => {
+    it('should remove stale typing indicators', async () => {
       const oldStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now() - 20000,
@@ -560,7 +560,7 @@ describe('messageStore', () => {
         timestamp: Date.now(),
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'old', oldStatus);
@@ -569,7 +569,7 @@ describe('messageStore', () => {
           .setTypingUser('network1', '#channel', 'fresh', freshStatus);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(10000);
       });
 
@@ -582,19 +582,19 @@ describe('messageStore', () => {
       expect(targetMap.has('fresh')).toBe(true);
     });
 
-    it('should use default max age of 10000ms', () => {
+    it('should use default max age of 10000ms', async () => {
       const oldStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now() - 20000,
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'old', oldStatus);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping();
       });
 
@@ -603,19 +603,19 @@ describe('messageStore', () => {
       );
     });
 
-    it('should clean up empty target maps after removing stale entries', () => {
+    it('should clean up empty target maps after removing stale entries', async () => {
       const oldStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now() - 20000,
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'old', oldStatus);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(10000);
       });
 
@@ -623,19 +623,19 @@ describe('messageStore', () => {
       expect(networkMap?.has('#channel') || !networkMap).toBe(true);
     });
 
-    it('should clean up empty network maps after removing stale entries', () => {
+    it('should clean up empty network maps after removing stale entries', async () => {
       const oldStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now() - 20000,
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'old', oldStatus);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(10000);
       });
 
@@ -644,13 +644,13 @@ describe('messageStore', () => {
       );
     });
 
-    it('should keep fresh entries across multiple targets', () => {
+    it('should keep fresh entries across multiple targets', async () => {
       const freshStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now(),
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'nick1', freshStatus);
@@ -659,7 +659,7 @@ describe('messageStore', () => {
           .setTypingUser('network1', '#channel2', 'nick2', freshStatus);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(10000);
       });
 
@@ -671,27 +671,27 @@ describe('messageStore', () => {
       expect(networkMap.has('#channel2')).toBe(true);
     });
 
-    it('should handle empty typing users map', () => {
-      act(() => {
+    it('should handle empty typing users map', async () => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(10000);
       });
 
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should handle custom max age values', () => {
+    it('should handle custom max age values', async () => {
       const status: TypingUser = {
         status: 'active',
         timestamp: Date.now() - 5000,
       };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().cleanupStaleTyping(3000);
       });
 
@@ -702,10 +702,10 @@ describe('messageStore', () => {
   });
 
   describe('reset', () => {
-    it('should reset store to initial state', () => {
+    it('should reset store to initial state', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
@@ -714,24 +714,24 @@ describe('messageStore', () => {
           .setTypingUser('network2', '#other', 'nick2', status);
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore.getState().reset();
       });
 
       expect(useMessageStore.getState().typingUsers.size).toBe(0);
     });
 
-    it('should allow adding users after reset', () => {
+    it('should allow adding users after reset', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
         useMessageStore.getState().reset();
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network2', '#other', 'nick2', status);
@@ -742,10 +742,10 @@ describe('messageStore', () => {
   });
 
   describe('complex scenarios', () => {
-    it('should handle multiple networks, targets, and users', () => {
+    it('should handle multiple networks, targets, and users', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel1', 'alice', status);
@@ -767,10 +767,10 @@ describe('messageStore', () => {
       expect(typingUsers.get('network1')!.get('#channel1')!.size).toBe(2);
     });
 
-    it('should handle PM conversations (target is nick)', () => {
+    it('should handle PM conversations (target is nick)', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', 'alice', 'alice', status);
@@ -782,7 +782,7 @@ describe('messageStore', () => {
       expect(result).toContain('alice');
     });
 
-    it('should handle all three typing statuses', () => {
+    it('should handle all three typing statuses', async () => {
       const activeStatus: TypingUser = {
         status: 'active',
         timestamp: Date.now(),
@@ -793,7 +793,7 @@ describe('messageStore', () => {
       };
       const doneStatus: TypingUser = { status: 'done', timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'activeUser', activeStatus);
@@ -814,19 +814,19 @@ describe('messageStore', () => {
       expect(targetMap.has('doneUser')).toBe(false);
     });
 
-    it('should maintain immutable state updates', () => {
+    it('should maintain immutable state updates', async () => {
       const status: TypingUser = { status: 'active', timestamp: Date.now() };
 
       let previousTypingUsers: Map<string, any>;
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick1', status);
         previousTypingUsers = useMessageStore.getState().typingUsers;
       });
 
-      act(() => {
+      await act(() => {
         useMessageStore
           .getState()
           .setTypingUser('network1', '#channel', 'nick2', status);

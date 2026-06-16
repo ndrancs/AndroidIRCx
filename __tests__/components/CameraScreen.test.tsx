@@ -52,7 +52,7 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('CameraScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockHasPermission = true;
@@ -63,8 +63,8 @@ describe('CameraScreen', () => {
     mockWriteFile.mockResolvedValue(undefined);
   });
 
-  it('returns null when not visible', () => {
-    const { toJSON } = render(
+  it('returns null when not visible', async () => {
+    const { toJSON } = await render(
       <CameraScreen
         visible={false}
         onClose={jest.fn()}
@@ -78,12 +78,12 @@ describe('CameraScreen', () => {
     mockHasPermission = false;
     mockRequestPermission.mockResolvedValue(false);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <CameraScreen visible onClose={jest.fn()} onPhotoTaken={jest.fn()} />,
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Grant Permission'));
+      await fireEvent.press(getByText('Grant Permission'));
     });
 
     expect(mockRequestPermission).toHaveBeenCalled();
@@ -93,7 +93,7 @@ describe('CameraScreen', () => {
     const onPhotoTaken = jest.fn();
     const onClose = jest.fn();
 
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <CameraScreen visible onClose={onClose} onPhotoTaken={onPhotoTaken} />,
     );
 
@@ -103,7 +103,7 @@ describe('CameraScreen', () => {
     const captureButton = buttons[1];
 
     await act(async () => {
-      fireEvent.press(captureButton);
+      await fireEvent.press(captureButton);
     });
 
     expect(mockCapturePhotoToFile).toHaveBeenCalledWith(
@@ -118,16 +118,16 @@ describe('CameraScreen', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows camera unavailable state when no device is found', () => {
+  it('shows camera unavailable state when no device is found', async () => {
     const onClose = jest.fn();
     mockDevice = null;
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <CameraScreen visible onClose={onClose} onPhotoTaken={jest.fn()} />,
     );
 
     expect(getByText('Camera not available')).toBeTruthy();
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -136,7 +136,7 @@ describe('CameraScreen', () => {
     const onClose = jest.fn();
     mockCapturePhotoToFile.mockRejectedValue(new Error('boom'));
 
-    const { UNSAFE_getAllByType, getByText } = render(
+    const { UNSAFE_getAllByType, getByText } = await render(
       <CameraScreen visible onClose={onClose} onPhotoTaken={onPhotoTaken} />,
     );
 
@@ -146,7 +146,7 @@ describe('CameraScreen', () => {
     const captureButton = buttons[1];
 
     await act(async () => {
-      fireEvent.press(captureButton);
+      await fireEvent.press(captureButton);
     });
 
     expect(getByText('boom')).toBeTruthy();

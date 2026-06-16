@@ -501,24 +501,24 @@ jest.mock('../src/i18n/transifex', () => ({
 import { useUIState as mockedUseUIState } from '../src/hooks/useUIState';
 
 describe('App', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     // Set up mock return values for hooks that reference mockUIStore
     (mockedUseUIState as jest.Mock).mockReturnValue(mockUIStore);
   });
 
   it('renders without crashing', async () => {
-    const { unmount } = render(<App />);
-    await waitFor(() => {
+    const { unmount } = await render(<App />);
+    await waitFor(async () => {
       // Wait for UI to be ready (after requestAnimationFrame)
     });
-    unmount();
+    await unmount();
   });
 
   it('initializes Transifex on mount', async () => {
     const { initTransifex } = require('../src/i18n/transifex');
-    render(<App />);
-    await waitFor(() => {
+    await render(<App />);
+    await waitFor(async () => {
       expect(initTransifex).toHaveBeenCalled();
     });
   });
@@ -528,15 +528,15 @@ describe('App', () => {
     const { listenToLocaleChanges } = require('../src/i18n/transifex');
     (listenToLocaleChanges as jest.Mock).mockReturnValue(mockUnsubscribe);
 
-    const { unmount } = render(<App />);
-    unmount();
+    const { unmount } = await render(<App />);
+    await unmount();
 
     expect(mockUnsubscribe).toHaveBeenCalled();
   });
 });
 
 describe('AppContent', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
@@ -544,19 +544,19 @@ describe('AppContent', () => {
     require('../src/components/AppLayout');
     require('../src/components/AppModals');
 
-    render(<App />);
+    await render(<App />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       // Component should be rendered after uiReady is true
     });
   });
 
   it('shows loading view before UI is ready', async () => {
     // The component shows a loading view initially, then switches to main UI
-    render(<App />);
+    await render(<App />);
 
     // Initially, a View with background color is rendered
-    await waitFor(() => {
+    await waitFor(async () => {
       // After requestAnimationFrame, the main UI should be shown
       expect(true).toBe(true);
     });

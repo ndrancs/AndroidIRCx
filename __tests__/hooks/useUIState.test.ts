@@ -109,12 +109,12 @@ jest.mock('../../src/stores/messageStore', () => ({
 }));
 
 describe('useUIState', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should return connection state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return connection state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.isConnected).toBe(true);
     expect(result.current.networkName).toBe('TestNetwork');
@@ -123,15 +123,15 @@ describe('useUIState', () => {
     expect(result.current.ping).toBe(42);
   });
 
-  it('should return tab state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return tab state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.tabs).toEqual(mockTabState.tabs);
     expect(result.current.activeTabId).toBe('server::TestNetwork');
   });
 
-  it('should return UI visibility state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return UI visibility state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showFirstRunSetup).toBe(false);
     expect(result.current.isCheckingFirstRun).toBe(false);
@@ -143,14 +143,14 @@ describe('useUIState', () => {
     expect(result.current.hideIrcServiceListenerMessages).toBe(true);
   });
 
-  it('should return message state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return message state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.typingUsers).toEqual({});
   });
 
-  it('should return app lock state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return app lock state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.appLockEnabled).toBe(false);
     expect(result.current.appLockUseBiometric).toBe(false);
@@ -164,16 +164,16 @@ describe('useUIState', () => {
     expect(result.current.appPinError).toBe('');
   });
 
-  it('should return banner/ad state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return banner/ad state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.bannerVisible).toBe(false);
     expect(result.current.scriptingTimeMs).toBe(0);
     expect(result.current.adFreeTimeMs).toBe(0);
   });
 
-  it('should return modal states', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return modal states', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showChannelModal).toBe(false);
     expect(result.current.channelName).toBe('');
@@ -193,16 +193,16 @@ describe('useUIState', () => {
     expect(result.current.showOptionsMenu).toBe(false);
   });
 
-  it('should return rename modal state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return rename modal state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showRenameModal).toBe(false);
     expect(result.current.renameTargetTabId).toBe('');
     expect(result.current.renameValue).toBe('');
   });
 
-  it('should return DCC state', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return DCC state', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showDccTransfers).toBe(false);
     expect(result.current.dccTransfersMinimized).toBe(false);
@@ -211,8 +211,8 @@ describe('useUIState', () => {
     expect(result.current.dccSendPath).toBe('');
   });
 
-  it('should return help modal states', () => {
-    const { result } = renderHook(() => useUIState());
+  it('should return help modal states', async () => {
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showHelpConnection).toBe(false);
     expect(result.current.showHelpCommands).toBe(false);
@@ -222,12 +222,12 @@ describe('useUIState', () => {
     expect(result.current.showHelpTroubleshooting).toBe(false);
   });
 
-  it('should reflect updated connection state', () => {
+  it('should reflect updated connection state', async () => {
     mockConnectionState.isConnected = false;
     mockConnectionState.networkName = 'OtherNetwork';
     mockConnectionState.ping = 100;
 
-    const { result } = renderHook(() => useUIState());
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.isConnected).toBe(false);
     expect(result.current.networkName).toBe('OtherNetwork');
@@ -239,13 +239,13 @@ describe('useUIState', () => {
     mockConnectionState.ping = 42;
   });
 
-  it('should reflect updated UI state', () => {
+  it('should reflect updated UI state', async () => {
     mockUIState.showSettings = true;
     mockUIState.appLocked = true;
     mockUIState.showUserLists = true;
     mockUIState.userListsInitialTab = 'quiet';
 
-    const { result } = renderHook(() => useUIState());
+    const { result } = await renderHook(() => useUIState());
 
     expect(result.current.showSettings).toBe(true);
     expect(result.current.appLocked).toBe(true);

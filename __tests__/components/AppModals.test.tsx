@@ -311,7 +311,7 @@ const baseProps = {
 };
 
 describe('AppModals', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     const uiStoreState = createUIStoreState();
@@ -331,8 +331,8 @@ describe('AppModals', () => {
     mockDccSendFile.mockResolvedValue(undefined);
   });
 
-  it('always renders core modal wrappers', () => {
-    render(<AppModals {...baseProps} />);
+  it('always renders core modal wrappers', async () => {
+    await render(<AppModals {...baseProps} />);
 
     expect(mockOptionsMenu).toHaveBeenCalledTimes(1);
     expect(mockSettingsScreen).toHaveBeenCalledTimes(1);
@@ -342,7 +342,7 @@ describe('AppModals', () => {
     expect(mockDccTransfersMinimizedIndicator).toHaveBeenCalledTimes(1);
   });
 
-  it('presents only the highest-priority modal when several states are active', () => {
+  it('presents only the highest-priority modal when several states are active', async () => {
     mockUseUIStore.mockImplementation((selector: (s: any) => any) =>
       selector({ showOptionsMenu: true, showSettings: true }),
     );
@@ -355,7 +355,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     expect(mockAppUnlockModal.mock.calls[0][0].visible).toBe(true);
     expect(mockPurchaseScreen.mock.calls[0][0].visible).toBe(false);
@@ -364,12 +364,12 @@ describe('AppModals', () => {
     expect(mockOptionsMenu.mock.calls[0][0].visible).toBe(false);
   });
 
-  it('handles join channel callbacks and resets modal state', () => {
+  it('handles join channel callbacks and resets modal state', async () => {
     const uiStoreState = createUIStoreState();
     mockUseUIStore.getState = jest.fn(() => uiStoreState);
     mockUseUIState.mockReturnValue(createUIState({ showChannelModal: true }));
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     const props = mockJoinChannelModal.mock.calls[0][0];
     props.onJoin('#android');
@@ -380,7 +380,7 @@ describe('AppModals', () => {
     expect(uiStoreState.setShowChannelModal).toHaveBeenCalledWith(false);
   });
 
-  it('normalizes WHOIS channel join and opens query tab', () => {
+  it('normalizes WHOIS channel join and opens query tab', async () => {
     const uiStoreState = createUIStoreState();
     const sendRaw = jest.fn();
     const setTabs = jest.fn();
@@ -397,7 +397,7 @@ describe('AppModals', () => {
       setActiveTabId,
     });
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     const props = mockWHOISDisplay.mock.calls[0][0];
     props.onChannelPress('@#room');
@@ -421,7 +421,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     const props = mockDccSendModal.mock.calls[0][0];
     await props.onSend();
@@ -441,7 +441,7 @@ describe('AppModals', () => {
     expect(baseProps.safeAlert).toHaveBeenCalled();
   });
 
-  it('renders all help screens and toggles minimized DCC panel', () => {
+  it('renders all help screens and toggles minimized DCC panel', async () => {
     const setters = createSetters();
     const uiStoreState = createUIStoreState();
 
@@ -459,7 +459,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     expect(mockHelpConnectionScreen).toHaveBeenCalledTimes(1);
     expect(mockHelpCommandsScreen).toHaveBeenCalledTimes(1);
@@ -475,7 +475,7 @@ describe('AppModals', () => {
     expect(uiStoreState.setShowDccTransfers).toHaveBeenCalledWith(true);
   });
 
-  it('handles first-run setup callbacks and settings launcher callbacks', () => {
+  it('handles first-run setup callbacks and settings launcher callbacks', async () => {
     const uiStoreState = createUIStoreState();
     mockUseUIStore.getState = jest.fn(() => uiStoreState);
     mockUseUIState.mockReturnValue(
@@ -484,7 +484,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     const firstRunProps = mockFirstRunSetupScreen.mock.calls[0][0];
     firstRunProps.onSkip();
@@ -522,7 +522,7 @@ describe('AppModals', () => {
     );
 
     const setTabs = jest.fn();
-    render(<AppModals {...baseProps} setTabs={setTabs} />);
+    await render(<AppModals {...baseProps} setTabs={setTabs} />);
 
     const noteProps = mockChannelNoteModal.mock.calls[0][0];
     await noteProps.onSave();
@@ -548,7 +548,7 @@ describe('AppModals', () => {
     expect(renamed[1].name).toBe('alice');
   });
 
-  it('handles dcc transfers accept/cancel/minimize callbacks', () => {
+  it('handles dcc transfers accept/cancel/minimize callbacks', async () => {
     const uiStoreState = createUIStoreState();
     const getActiveIRCService = jest.fn(() => ({ id: 'irc' }));
     mockUseUIStore.getState = jest.fn(() => uiStoreState);
@@ -558,7 +558,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(
+    await render(
       <AppModals {...baseProps} getActiveIRCService={getActiveIRCService} />,
     );
 
@@ -577,7 +577,7 @@ describe('AppModals', () => {
     expect(uiStoreState.setDccTransfersMinimized).toHaveBeenCalledWith(true);
   });
 
-  it('renders query encryption menu only for active query tab and closes it', () => {
+  it('renders query encryption menu only for active query tab and closes it', async () => {
     const uiStoreState = createUIStoreState();
     mockUseUIStore.getState = jest.fn(() => uiStoreState);
     mockUseUIState.mockReturnValue(
@@ -586,7 +586,7 @@ describe('AppModals', () => {
       }),
     );
 
-    render(
+    await render(
       <AppModals
         {...baseProps}
         activeTab={{
@@ -609,7 +609,7 @@ describe('AppModals', () => {
     mockUseUIState.mockReturnValue(
       createUIState({ showQueryEncryptionMenu: true }),
     );
-    render(
+    await render(
       <AppModals
         {...baseProps}
         activeTab={{
@@ -624,7 +624,7 @@ describe('AppModals', () => {
     expect(mockQueryEncryptionMenu).not.toHaveBeenCalled();
   });
 
-  it('handles channel list and app unlock modal callbacks', () => {
+  it('handles channel list and app unlock modal callbacks', async () => {
     const uiStoreState = createUIStoreState();
     mockUseUIStore.getState = jest.fn(() => uiStoreState);
     mockUseUIState.mockReturnValue(
@@ -642,7 +642,7 @@ describe('AppModals', () => {
     const setters = createSetters();
     mockUseStoreSetters.mockReturnValue(setters);
 
-    render(<AppModals {...baseProps} />);
+    await render(<AppModals {...baseProps} />);
 
     const channelListProps = mockChannelListScreen.mock.calls[0][0];
     channelListProps.onJoinChannel('#x');
@@ -665,12 +665,12 @@ describe('AppModals', () => {
     expect(baseProps.onKillSwitchFromUnlock).toHaveBeenCalled();
   });
 
-  it('renders IRCv3 info with focused network fallback and closes it', () => {
+  it('renders IRCv3 info with focused network fallback and closes it', async () => {
     const setters = createSetters();
     mockUseStoreSetters.mockReturnValue(setters);
     mockUseUIState.mockReturnValue(createUIState({ showIRCv3Info: true }));
 
-    render(<AppModals {...baseProps} activeTab={null} />);
+    await render(<AppModals {...baseProps} activeTab={null} />);
 
     expect(mockIRCv3InfoScreen).toHaveBeenCalledTimes(1);
     const ircv3Props = mockIRCv3InfoScreen.mock.calls[0][0];

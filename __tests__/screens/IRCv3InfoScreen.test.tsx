@@ -54,12 +54,12 @@ const makeIrcService = (overrides = {}) => ({
 });
 
 describe('IRCv3InfoScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('renders nothing when hidden', () => {
-    const { toJSON } = render(
+  it('renders nothing when hidden', async () => {
+    const { toJSON } = await render(
       <IRCv3InfoScreen visible={false} onClose={jest.fn()} />,
     );
     expect(toJSON()).toBeNull();
@@ -68,11 +68,11 @@ describe('IRCv3InfoScreen', () => {
   it('shows disconnected state when no IRC service is available', async () => {
     mockConnectionManager.getActiveConnection.mockReturnValue(undefined as any);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <IRCv3InfoScreen visible onClose={jest.fn()} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Not Connected')).toBeTruthy();
       expect(
         getByText(
@@ -90,11 +90,11 @@ describe('IRCv3InfoScreen', () => {
       ircService,
     } as any);
 
-    const { getByText, getAllByText } = render(
+    const { getByText, getAllByText } = await render(
       <IRCv3InfoScreen visible networkId="libera" onClose={onClose} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getAllByText('Libera').length).toBeGreaterThan(0);
       expect(getByText('IRCv3 Features')).toBeTruthy();
       expect(getByText('typing = client')).toBeTruthy();

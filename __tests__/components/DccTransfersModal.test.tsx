@@ -36,15 +36,15 @@ const mk = (overrides: Partial<DccTransfer>): DccTransfer => ({
 });
 
 describe('DccTransfersModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockExists.mockResolvedValue(true);
     mockShareOpen.mockResolvedValue(undefined);
   });
 
-  it('renders empty state', () => {
-    const { getByText } = render(
+  it('renders empty state', async () => {
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -61,7 +61,7 @@ describe('DccTransfersModal', () => {
   it('accepts pending incoming transfer', async () => {
     const onAccept = jest.fn().mockResolvedValue(undefined);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -73,7 +73,7 @@ describe('DccTransfersModal', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Accept'));
+      await fireEvent.press(getByText('Accept'));
     });
 
     expect(onAccept).toHaveBeenCalledWith('p1', '/doc/song.mp3');
@@ -83,7 +83,7 @@ describe('DccTransfersModal', () => {
     const onAccept = jest.fn().mockResolvedValue(undefined);
     const onCancel = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -98,9 +98,9 @@ describe('DccTransfersModal', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Resume'));
+      await fireEvent.press(getByText('Resume'));
     });
-    fireEvent.press(getByText('Cancel'));
+    await fireEvent.press(getByText('Cancel'));
 
     expect(onAccept).toHaveBeenCalledWith('f1', '/x/old.txt');
     expect(onCancel).toHaveBeenCalledWith('d1');
@@ -114,7 +114,7 @@ describe('DccTransfersModal', () => {
       offer: { filename: 'file.pdf' },
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -126,7 +126,7 @@ describe('DccTransfersModal', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Open File'));
+      await fireEvent.press(getByText('Open File'));
     });
 
     expect(mockExists).toHaveBeenCalledWith(
@@ -143,7 +143,7 @@ describe('DccTransfersModal', () => {
   it('shows alert when completed file path is missing', async () => {
     const transfer = mk({ id: 'c2', status: 'completed', filePath: undefined });
 
-    const { queryByText } = render(
+    const { queryByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -157,9 +157,9 @@ describe('DccTransfersModal', () => {
     expect(queryByText('Open File')).toBeNull();
   });
 
-  it('renders minimize action only for active transfers and calls it', () => {
+  it('renders minimize action only for active transfers and calls it', async () => {
     const onMinimize = jest.fn();
-    const { getByText, rerender, queryByText } = render(
+    const { getByText, rerender, queryByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -171,10 +171,10 @@ describe('DccTransfersModal', () => {
       />,
     );
 
-    fireEvent.press(getByText('Minimize'));
+    await fireEvent.press(getByText('Minimize'));
     expect(onMinimize).toHaveBeenCalled();
 
-    rerender(
+    await rerender(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -200,7 +200,7 @@ describe('DccTransfersModal', () => {
       offer: { filename: 'file.txt' },
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -212,7 +212,7 @@ describe('DccTransfersModal', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Open File'));
+      await fireEvent.press(getByText('Open File'));
     });
 
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -229,7 +229,7 @@ describe('DccTransfersModal', () => {
       offer: { filename: 'file.mp3' },
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -242,7 +242,7 @@ describe('DccTransfersModal', () => {
 
     mockShareOpen.mockRejectedValueOnce(new Error('null object reference Uri'));
     await act(async () => {
-      fireEvent.press(getByText('Open File'));
+      await fireEvent.press(getByText('Open File'));
     });
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
@@ -252,7 +252,7 @@ describe('DccTransfersModal', () => {
     (Alert.alert as jest.Mock).mockClear();
     mockShareOpen.mockRejectedValueOnce(new Error('User did not share'));
     await act(async () => {
-      fireEvent.press(getByText('Open File'));
+      await fireEvent.press(getByText('Open File'));
     });
     expect(Alert.alert).not.toHaveBeenCalled();
   });
@@ -265,7 +265,7 @@ describe('DccTransfersModal', () => {
       offer: { filename: 'file.bin' },
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}
@@ -278,7 +278,7 @@ describe('DccTransfersModal', () => {
 
     mockShareOpen.mockRejectedValueOnce(new Error('generic failure'));
     await act(async () => {
-      fireEvent.press(getByText('Open File'));
+      await fireEvent.press(getByText('Open File'));
     });
 
     expect(mockShareOpen).toHaveBeenCalledWith(
@@ -293,8 +293,8 @@ describe('DccTransfersModal', () => {
     );
   });
 
-  it('keeps modal content responder active', () => {
-    const { UNSAFE_root } = render(
+  it('keeps modal content responder active', async () => {
+    const { UNSAFE_root } = await render(
       <DccTransfersModal
         visible
         onClose={jest.fn()}

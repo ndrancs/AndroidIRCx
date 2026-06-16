@@ -31,8 +31,8 @@ describe('SettingSubmenu', () => {
     title: 'Test Submenu',
   };
 
-  it('renders with title', () => {
-    const { getByText } = render(
+  it('renders with title', async () => {
+    const { getByText } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={undefined}
@@ -44,8 +44,8 @@ describe('SettingSubmenu', () => {
     expect(getByText('Test Submenu')).toBeTruthy();
   });
 
-  it('renders chevron', () => {
-    const { getByText } = render(
+  it('renders chevron', async () => {
+    const { getByText } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={undefined}
@@ -57,9 +57,9 @@ describe('SettingSubmenu', () => {
     expect(getByText('›')).toBeTruthy();
   });
 
-  it('calls onPress when pressed', () => {
+  it('calls onPress when pressed', async () => {
     const mockOnPress = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={undefined}
@@ -68,15 +68,15 @@ describe('SettingSubmenu', () => {
         onPress={mockOnPress}
       />,
     );
-    fireEvent.press(
+    await fireEvent.press(
       getByText('Test Submenu').parent?.parent || getByText('Test Submenu'),
     );
     expect(mockOnPress).toHaveBeenCalled();
   });
 
-  it('renders with string description', () => {
+  it('renders with string description', async () => {
     const item = { ...baseItem, description: 'Select an option' };
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSubmenu
         item={item}
         icon={undefined}
@@ -88,12 +88,12 @@ describe('SettingSubmenu', () => {
     expect(getByText('Select an option')).toBeTruthy();
   });
 
-  it('renders with descriptionNode', () => {
+  it('renders with descriptionNode', async () => {
     const item = {
       ...baseItem,
       descriptionNode: <Text testID="custom-desc">Custom Description</Text>,
     };
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingSubmenu
         item={item}
         icon={undefined}
@@ -105,13 +105,13 @@ describe('SettingSubmenu', () => {
     expect(getByTestId('custom-desc')).toBeTruthy();
   });
 
-  it('prefers descriptionNode over description when both provided', () => {
+  it('prefers descriptionNode over description when both provided', async () => {
     const item = {
       ...baseItem,
       description: 'Text description',
       descriptionNode: <Text testID="node-desc">Node Description</Text>,
     };
-    const { getByTestId, queryByText } = render(
+    const { getByTestId, queryByText } = await render(
       <SettingSubmenu
         item={item}
         icon={undefined}
@@ -124,8 +124,8 @@ describe('SettingSubmenu', () => {
     expect(queryByText('Text description')).toBeNull();
   });
 
-  it('renders with icon', () => {
-    const { root } = render(
+  it('renders with icon', async () => {
+    const { root } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={{ name: 'cog', solid: true }}
@@ -137,8 +137,8 @@ describe('SettingSubmenu', () => {
     expect(root).toBeTruthy();
   });
 
-  it('renders without icon when icon is undefined', () => {
-    const { getByText } = render(
+  it('renders without icon when icon is undefined', async () => {
+    const { getByText } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={undefined}
@@ -150,9 +150,9 @@ describe('SettingSubmenu', () => {
     expect(getByText('Test Submenu')).toBeTruthy();
   });
 
-  it('renders disabled state', () => {
+  it('renders disabled state', async () => {
     const item = { ...baseItem, disabled: true };
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSubmenu
         item={item}
         icon={undefined}
@@ -164,9 +164,9 @@ describe('SettingSubmenu', () => {
     expect(getByText('Test Submenu')).toBeTruthy();
   });
 
-  it('renders numeric description', () => {
+  it('renders numeric description', async () => {
     const item = { ...baseItem, description: 42 };
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingSubmenu
         item={item}
         icon={undefined}
@@ -178,8 +178,8 @@ describe('SettingSubmenu', () => {
     expect(getByText('42')).toBeTruthy();
   });
 
-  it('renders without description when neither provided', () => {
-    const { queryByText } = render(
+  it('renders without description when neither provided', async () => {
+    const { queryByText } = await render(
       <SettingSubmenu
         item={baseItem}
         icon={undefined}

@@ -50,7 +50,7 @@ const mockLayoutService = jest.requireMock<any>(
 ).layoutService;
 
 describe('useLayoutConfig', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
     configChangeCallback = null;
@@ -64,26 +64,26 @@ describe('useLayoutConfig', () => {
     });
   });
 
-  it('should return initial config', () => {
-    const { result } = renderHook(() => useLayoutConfig());
+  it('should return initial config', async () => {
+    const { result } = await renderHook(() => useLayoutConfig());
     expect(result.current).toEqual(defaultConfig);
   });
 
   it('should initialize layout service on mount', async () => {
-    renderHook(() => useLayoutConfig());
+    await renderHook(() => useLayoutConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockLayoutService.initialize).toHaveBeenCalled();
     });
   });
 
-  it('should subscribe to config changes', () => {
-    renderHook(() => useLayoutConfig());
+  it('should subscribe to config changes', async () => {
+    await renderHook(() => useLayoutConfig());
     expect(mockLayoutService.onConfigChange).toHaveBeenCalled();
   });
 
   it('should update config when onConfigChange fires', async () => {
-    const { result } = renderHook(() => useLayoutConfig());
+    const { result } = await renderHook(() => useLayoutConfig());
 
     const newConfig = {
       tabPosition: 'bottom',
@@ -98,11 +98,11 @@ describe('useLayoutConfig', () => {
     expect(result.current).toEqual(newConfig);
   });
 
-  it('should unsubscribe on unmount', () => {
-    const { unmount } = renderHook(() => useLayoutConfig());
+  it('should unsubscribe on unmount', async () => {
+    const { unmount } = await renderHook(() => useLayoutConfig());
 
     expect(configChangeCallback).toBeTruthy();
-    unmount();
+    await unmount();
     // The unsubscribe function should have been called, clearing the callback
   });
 
@@ -112,9 +112,9 @@ describe('useLayoutConfig', () => {
       .mockReturnValueOnce(defaultConfig) // initial
       .mockReturnValueOnce(updatedConfig); // after init
 
-    const { result } = renderHook(() => useLayoutConfig());
+    const { result } = await renderHook(() => useLayoutConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(result.current).toEqual(updatedConfig);
     });
   });
@@ -134,7 +134,7 @@ describe('useLayoutConfig', () => {
       showUserList: false,
     };
 
-    const { result } = renderHook(() => useLayoutConfig());
+    const { result } = await renderHook(() => useLayoutConfig());
 
     await act(async () => {
       configChangeCallback?.(afterChangeConfig);
@@ -160,9 +160,9 @@ describe('useLayoutConfig', () => {
       .mockReturnValueOnce(defaultConfig)
       .mockReturnValue(afterInitConfig);
 
-    const { result, unmount } = renderHook(() => useLayoutConfig());
+    const { result, unmount } = await renderHook(() => useLayoutConfig());
 
-    unmount();
+    await unmount();
 
     await act(async () => {
       resolveInit();
@@ -172,10 +172,10 @@ describe('useLayoutConfig', () => {
   });
 
   it('should ignore config change callbacks after unmount', async () => {
-    const { result, unmount } = renderHook(() => useLayoutConfig());
+    const { result, unmount } = await renderHook(() => useLayoutConfig());
     const initialConfig = result.current;
 
-    unmount();
+    await unmount();
 
     await act(async () => {
       configChangeCallback?.({

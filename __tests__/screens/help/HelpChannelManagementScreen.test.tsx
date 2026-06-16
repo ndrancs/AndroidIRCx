@@ -25,16 +25,16 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('HelpChannelManagementScreen', () => {
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <HelpChannelManagementScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('Channel Management Guide')).toBeNull();
   });
 
-  it('renders channel management content when visible', () => {
-    const { getByText } = render(
+  it('renders channel management content when visible', async () => {
+    const { getByText } = await render(
       <HelpChannelManagementScreen visible onClose={jest.fn()} />,
     );
 
@@ -50,13 +50,13 @@ describe('HelpChannelManagementScreen', () => {
     expect(getByText('Lost operator status')).toBeTruthy();
   });
 
-  it('calls onClose when close button is pressed', () => {
+  it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = await render(
       <HelpChannelManagementScreen visible onClose={onClose} />,
     );
 
-    fireEvent.press(getByLabelText('Close help screen'));
+    await fireEvent.press(getByLabelText('Close help screen'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

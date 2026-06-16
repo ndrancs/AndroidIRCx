@@ -26,7 +26,7 @@ describe('useAutoJoinChannels', () => {
   const mockGetActiveIRCService = jest.fn();
   const mockMotdCompleteRef = { current: new Set<string>() };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockMotdCompleteRef.current = new Set();
 
@@ -42,7 +42,7 @@ describe('useAutoJoinChannels', () => {
     );
   });
 
-  it('should render without crashing', () => {
+  it('should render without crashing', async () => {
     const params = {
       isConnected: false,
       activeConnectionId: null,
@@ -52,9 +52,7 @@ describe('useAutoJoinChannels', () => {
       motdSignal: 0,
     };
 
-    expect(() => {
-      renderHook(() => useAutoJoinChannels(params));
-    }).not.toThrow();
+    await renderHook(() => useAutoJoinChannels(params));
   });
 
   it('should load autoJoinFavorites setting on mount', async () => {
@@ -67,7 +65,7 @@ describe('useAutoJoinChannels', () => {
       motdSignal: 0,
     };
 
-    renderHook(() => useAutoJoinChannels(params));
+    await renderHook(() => useAutoJoinChannels(params));
 
     expect(
       require('../../src/services/SettingsService').settingsService.getSetting,
@@ -97,7 +95,7 @@ describe('useAutoJoinChannels', () => {
       [{ id: 'test-net', name: 'Test Network', autoJoinChannels: ['#test'] }],
     );
 
-    renderHook(() => useAutoJoinChannels(params));
+    await renderHook(() => useAutoJoinChannels(params));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -105,7 +103,7 @@ describe('useAutoJoinChannels', () => {
     expect(mockIRCService.joinChannel).toHaveBeenCalledWith('#test', undefined);
   });
 
-  it('should not attempt auto-join when not connected', () => {
+  it('should not attempt auto-join when not connected', async () => {
     const params = {
       isConnected: false,
       activeConnectionId: 'test-net',
@@ -115,12 +113,12 @@ describe('useAutoJoinChannels', () => {
       motdSignal: 0,
     };
 
-    renderHook(() => useAutoJoinChannels(params));
+    await renderHook(() => useAutoJoinChannels(params));
 
     expect(mockGetActiveIRCService).toHaveBeenCalled();
   });
 
-  it('should not attempt auto-join when not registered', () => {
+  it('should not attempt auto-join when not registered', async () => {
     const mockIRCService = {
       isRegistered: jest.fn().mockReturnValue(false),
       joinChannel: jest.fn(),
@@ -137,7 +135,7 @@ describe('useAutoJoinChannels', () => {
       motdSignal: 0,
     };
 
-    renderHook(() => useAutoJoinChannels(params));
+    await renderHook(() => useAutoJoinChannels(params));
 
     expect(mockIRCService.joinChannel).not.toHaveBeenCalled();
   });
@@ -169,7 +167,7 @@ describe('useAutoJoinChannels', () => {
       [{ name: '#favorite', key: 'secret' }],
     );
 
-    renderHook(() => useAutoJoinChannels(params));
+    await renderHook(() => useAutoJoinChannels(params));
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -213,13 +211,13 @@ describe('useAutoJoinChannels', () => {
       [{ name: '#favorite', key: 'secret' }],
     );
 
-    const { rerender } = renderHook(p => useAutoJoinChannels(p), {
+    const { rerender } = await renderHook(p => useAutoJoinChannels(p), {
       initialProps: params,
     });
 
     // Wait for async operations
     await new Promise(resolve => setTimeout(resolve, 0));
-    rerender({ ...params, isConnected: true });
+    await rerender({ ...params, isConnected: true });
     await new Promise(resolve => setTimeout(resolve, 0));
 
     // Should only join auto-join channels, not favorites
@@ -230,7 +228,7 @@ describe('useAutoJoinChannels', () => {
     );
   });
 
-  it('should reset when connection ID changes', () => {
+  it('should reset when connection ID changes', async () => {
     const params = {
       isConnected: false,
       activeConnectionId: 'test-net',
@@ -240,12 +238,12 @@ describe('useAutoJoinChannels', () => {
       motdSignal: 0,
     };
 
-    const { rerender } = renderHook(props => useAutoJoinChannels(props), {
+    const { rerender } = await renderHook(props => useAutoJoinChannels(props), {
       initialProps: params,
     });
 
     // Rerender with different connection ID to trigger reset
-    rerender({
+    await rerender({
       ...params,
       activeConnectionId: 'different-net',
     });

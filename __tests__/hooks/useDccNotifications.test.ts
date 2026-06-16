@@ -46,7 +46,7 @@ describe('useDccNotifications', () => {
     isMountedRef: mockIsMountedRef,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -59,14 +59,12 @@ describe('useDccNotifications', () => {
     });
   });
 
-  it('should render without crashing', () => {
-    expect(() => {
-      renderHook(() => useDccNotifications(defaultProps));
-    }).not.toThrow();
+  it('should render without crashing', async () => {
+    await renderHook(() => useDccNotifications(defaultProps));
   });
 
-  it('should set up transfer update listener on mount', () => {
-    renderHook(() => useDccNotifications(defaultProps));
+  it('should set up transfer update listener on mount', async () => {
+    await renderHook(() => useDccNotifications(defaultProps));
 
     expect(
       require('../../src/services/DCCFileService').dccFileService
@@ -74,20 +72,22 @@ describe('useDccNotifications', () => {
     ).toHaveBeenCalled();
   });
 
-  it('should clean up transfer update listener on unmount', () => {
+  it('should clean up transfer update listener on unmount', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockReturnValue(
       mockUnsubscribe,
     );
 
-    const { unmount } = renderHook(() => useDccNotifications(defaultProps));
+    const { unmount } = await renderHook(() =>
+      useDccNotifications(defaultProps),
+    );
 
-    unmount();
+    await unmount();
 
     expect(mockUnsubscribe).toHaveBeenCalled();
   });
 
-  it('should show alert when transfer completes', () => {
+  it('should show alert when transfer completes', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -97,7 +97,7 @@ describe('useDccNotifications', () => {
       },
     );
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with completed status
     const completedTransfer = {
@@ -114,7 +114,7 @@ describe('useDccNotifications', () => {
     );
   });
 
-  it('should show alert when transfer fails', () => {
+  it('should show alert when transfer fails', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -124,7 +124,7 @@ describe('useDccNotifications', () => {
       },
     );
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with failed status
     const failedTransfer = {
@@ -140,7 +140,7 @@ describe('useDccNotifications', () => {
     );
   });
 
-  it('should update transfers list when transfer status changes', () => {
+  it('should update transfers list when transfer status changes', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -150,7 +150,7 @@ describe('useDccNotifications', () => {
       },
     );
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback
     const transfer = {
@@ -183,7 +183,7 @@ describe('useDccNotifications', () => {
       setDccTransfersMinimized: jest.fn(),
     });
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with completed status
     const completedTransfer = {
@@ -222,7 +222,7 @@ describe('useDccNotifications', () => {
       setDccTransfersMinimized: jest.fn(),
     });
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with failed status
     const failedTransfer = {
@@ -244,7 +244,7 @@ describe('useDccNotifications', () => {
     );
   });
 
-  it('should not send system notification when UI is not minimized', () => {
+  it('should not send system notification when UI is not minimized', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -260,7 +260,7 @@ describe('useDccNotifications', () => {
       setDccTransfersMinimized: jest.fn(),
     });
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with completed status
     const completedTransfer = {
@@ -277,7 +277,7 @@ describe('useDccNotifications', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('should restore UI when all transfers complete and UI was minimized', () => {
+  it('should restore UI when all transfers complete and UI was minimized', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -299,7 +299,7 @@ describe('useDccNotifications', () => {
       [],
     );
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback
     const completedTransfer = {
@@ -314,7 +314,7 @@ describe('useDccNotifications', () => {
     expect(mockSetDccTransfersMinimized).toHaveBeenCalledWith(false);
   });
 
-  it('should not restore UI when there are still active transfers', () => {
+  it('should not restore UI when there are still active transfers', async () => {
     const mockUnsubscribe = jest.fn();
     const mockTransferCallback = jest.fn();
     require('../../src/services/DCCFileService').dccFileService.onTransferUpdate.mockImplementation(
@@ -336,7 +336,7 @@ describe('useDccNotifications', () => {
       [{ status: 'downloading', id: 'active-transfer' }],
     );
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback
     const completedTransfer = {
@@ -374,7 +374,7 @@ describe('useDccNotifications', () => {
       setDccTransfersMinimized: jest.fn(),
     });
 
-    renderHook(() => useDccNotifications(defaultProps));
+    await renderHook(() => useDccNotifications(defaultProps));
 
     // Trigger the transfer update callback with completed status
     const completedTransfer = {

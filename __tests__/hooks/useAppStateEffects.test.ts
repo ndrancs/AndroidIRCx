@@ -83,17 +83,17 @@ describe('useAppStateEffects', () => {
     setTabs: mockSetTabs,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockTabs.length = 0;
     mockAppStateRef.current = 'active';
     mockPendingAlertRef.current = null;
   });
 
-  it('should subscribe to AppState changes on mount', () => {
+  it('should subscribe to AppState changes on mount', async () => {
     const addEventListenerSpy = jest.spyOn(AppState, 'addEventListener');
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'change',
@@ -101,20 +101,22 @@ describe('useAppStateEffects', () => {
     );
   });
 
-  it('should unsubscribe on unmount', () => {
+  it('should unsubscribe on unmount', async () => {
     const mockRemove = jest.fn();
     jest
       .spyOn(AppState, 'addEventListener')
       .mockReturnValue({ remove: mockRemove });
 
-    const { unmount } = renderHook(() => useAppStateEffects(defaultProps));
+    const { unmount } = await renderHook(() =>
+      useAppStateEffects(defaultProps),
+    );
 
-    unmount();
+    await unmount();
 
     expect(mockRemove).toHaveBeenCalled();
   });
 
-  it('should flush message history when going to background', () => {
+  it('should flush message history when going to background', async () => {
     let stateChangeHandler: ((state: string) => void) | undefined;
     jest
       .spyOn(AppState, 'addEventListener')
@@ -123,7 +125,7 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     // Simulate background state change
     stateChangeHandler!('background');
@@ -131,7 +133,7 @@ describe('useAppStateEffects', () => {
     expect(messageHistoryBatching.flushSync).toHaveBeenCalled();
   });
 
-  it('should flush message history when going to inactive', () => {
+  it('should flush message history when going to inactive', async () => {
     let stateChangeHandler: ((state: string) => void) | undefined;
     jest
       .spyOn(AppState, 'addEventListener')
@@ -140,14 +142,14 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     stateChangeHandler!('inactive');
 
     expect(messageHistoryBatching.flushSync).toHaveBeenCalled();
   });
 
-  it('should refresh notification permissions when becoming active', () => {
+  it('should refresh notification permissions when becoming active', async () => {
     let stateChangeHandler: ((state: string) => void) | undefined;
     jest
       .spyOn(AppState, 'addEventListener')
@@ -156,14 +158,14 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     stateChangeHandler!('active');
 
     expect(notificationService.refreshPermissionStatus).toHaveBeenCalled();
   });
 
-  it('should update appStateRef on state change', () => {
+  it('should update appStateRef on state change', async () => {
     let stateChangeHandler: ((state: string) => void) | undefined;
     jest
       .spyOn(AppState, 'addEventListener')
@@ -172,14 +174,14 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     stateChangeHandler!('background');
 
     expect(mockAppStateRef.current).toBe('background');
   });
 
-  it('should show pending alert when becoming active', () => {
+  it('should show pending alert when becoming active', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
     let stateChangeHandler: ((state: string) => void) | undefined;
@@ -196,7 +198,7 @@ describe('useAppStateEffects', () => {
       buttons: [{ text: 'OK' }],
     };
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
 
     stateChangeHandler!('active');
 
@@ -232,7 +234,7 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
     await stateChangeHandler!('active');
 
     expect(tabService.getTabs).toHaveBeenCalledWith('freenode');
@@ -255,7 +257,7 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
     await stateChangeHandler!('active');
 
     expect(tabService.getTabs).not.toHaveBeenCalled();
@@ -278,7 +280,7 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
     stateChangeHandler!('background');
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -305,7 +307,7 @@ describe('useAppStateEffects', () => {
         return { remove: jest.fn() };
       });
 
-    renderHook(() => useAppStateEffects(defaultProps));
+    await renderHook(() => useAppStateEffects(defaultProps));
     await stateChangeHandler!('active');
     await new Promise(resolve => setTimeout(resolve, 0));
 

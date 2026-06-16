@@ -209,7 +209,7 @@ describe('useConnectionLifecycle', () => {
     isMountedRef: { current: true },
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -230,14 +230,12 @@ describe('useConnectionLifecycle', () => {
     );
   });
 
-  it('should render without crashing', () => {
-    expect(() => {
-      renderHook(() => useConnectionLifecycle(mockParams));
-    }).not.toThrow();
+  it('should render without crashing', async () => {
+    await renderHook(() => useConnectionLifecycle(mockParams));
   });
 
-  it('should set up connection listeners when mounted', () => {
-    renderHook(() => useConnectionLifecycle(mockParams));
+  it('should set up connection listeners when mounted', async () => {
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     // Check that connection manager listeners are set up
     expect(
@@ -252,46 +250,46 @@ describe('useConnectionLifecycle', () => {
       mockUnsubscribe,
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.onMessage,
     ).toHaveBeenCalled();
   });
 
-  it('should handle connection change events', () => {
+  it('should handle connection change events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.onConnectionChange.mockReturnValue(
       mockUnsubscribe,
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.onConnectionChange,
     ).toHaveBeenCalled();
   });
 
-  it('should handle user list change events', () => {
+  it('should handle user list change events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.onUserListChange.mockReturnValue(
       mockUnsubscribe,
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.onUserListChange,
     ).toHaveBeenCalled();
   });
 
-  it('should handle encryption events', () => {
+  it('should handle encryption events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/EncryptedDMService').encryptedDMService.onBundleStored.mockReturnValue(
       mockUnsubscribe,
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/EncryptedDMService').encryptedDMService
@@ -299,13 +297,13 @@ describe('useConnectionLifecycle', () => {
     ).toHaveBeenCalled();
   });
 
-  it('should handle channel encryption events', () => {
+  it('should handle channel encryption events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/ChannelEncryptionService').channelEncryptionService.onChannelKeyChange.mockReturnValue(
       mockUnsubscribe,
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/ChannelEncryptionService')
@@ -313,7 +311,7 @@ describe('useConnectionLifecycle', () => {
     ).toHaveBeenCalled();
   });
 
-  it('should handle typing indicator events', () => {
+  it('should handle typing indicator events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -324,14 +322,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('typing-indicator', expect.any(Function));
   });
 
-  it('should handle clear-tab events', () => {
+  it('should handle clear-tab events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -342,14 +340,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('clear-tab', expect.any(Function));
   });
 
-  it('should handle close-tab events', () => {
+  it('should handle close-tab events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -360,14 +358,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('close-tab', expect.any(Function));
   });
 
-  it('should handle server-command events', () => {
+  it('should handle server-command events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -378,14 +376,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('server-command', expect.any(Function));
   });
 
-  it('should handle dns-lookup events', () => {
+  it('should handle dns-lookup events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -396,14 +394,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('dns-lookup', expect.any(Function));
   });
 
-  it('should handle amsg events', () => {
+  it('should handle amsg events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -414,14 +412,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('amsg', expect.any(Function));
   });
 
-  it('should handle ame events', () => {
+  it('should handle ame events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -432,14 +430,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('ame', expect.any(Function));
   });
 
-  it('should handle anotice events', () => {
+  it('should handle anotice events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -450,14 +448,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('anotice', expect.any(Function));
   });
 
-  it('should handle reconnect events', () => {
+  it('should handle reconnect events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -468,14 +466,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('reconnect', expect.any(Function));
   });
 
-  it('should handle STS policy events', () => {
+  it('should handle STS policy events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -486,14 +484,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('sts-policy', expect.any(Function));
   });
 
-  it('should handle beep events', () => {
+  it('should handle beep events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -504,14 +502,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('beep', expect.any(Function));
   });
 
-  it('should handle registered events', () => {
+  it('should handle registered events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -522,14 +520,14 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('registered', expect.any(Function));
   });
 
-  it('should handle motdEnd events', () => {
+  it('should handle motdEnd events', async () => {
     const mockUnsubscribe = jest.fn();
     require('../../src/services/IRCService').ircService.on.mockImplementation(
       (event, _handler) => {
@@ -540,20 +538,22 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     expect(
       require('../../src/services/IRCService').ircService.on,
     ).toHaveBeenCalledWith('motdEnd', expect.any(Function));
   });
 
-  it('should clean up listeners on unmount', () => {
-    const { unmount } = renderHook(() => useConnectionLifecycle(mockParams));
+  it('should clean up listeners on unmount', async () => {
+    const { unmount } = await renderHook(() =>
+      useConnectionLifecycle(mockParams),
+    );
 
     // Mock setTimeout to prevent actual timeouts
     jest.useFakeTimers();
 
-    unmount();
+    await unmount();
 
     // Advance timers to trigger cleanup
     jest.runAllTimers();
@@ -563,14 +563,14 @@ describe('useConnectionLifecycle', () => {
     expect(true).toBe(true);
   });
 
-  it('should update connection state when connection changes', () => {
+  it('should update connection state when connection changes', async () => {
     const mockSetIsConnected = jest.fn();
     const paramsWithSetter = {
       ...mockParams,
       setIsConnected: mockSetIsConnected,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate connection change
     const connectionChangeCallback = require('../../src/services/IRCService')
@@ -590,7 +590,7 @@ describe('useConnectionLifecycle', () => {
       processBatchedMessages: mockProcessBatchedMessages,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithProcessor));
+    await renderHook(() => useConnectionLifecycle(paramsWithProcessor));
 
     // Simulate message arrival
     const messageCallback = require('../../src/services/IRCService').ircService
@@ -611,7 +611,7 @@ describe('useConnectionLifecycle', () => {
   });
 
   it('should handle dns-lookup with empty hostname', async () => {
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     const dnsCall =
       require('../../src/services/IRCService').ircService.on.mock.calls.find(
@@ -636,7 +636,7 @@ describe('useConnectionLifecycle', () => {
     (global as any).fetch = jest
       .fn()
       .mockRejectedValue(new Error('network down'));
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     const dnsCall =
       require('../../src/services/IRCService').ircService.on.mock.calls.find(
@@ -667,7 +667,7 @@ describe('useConnectionLifecycle', () => {
       }),
     });
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     const dnsCall =
       require('../../src/services/IRCService').ircService.on.mock.calls.find(
@@ -689,7 +689,7 @@ describe('useConnectionLifecycle', () => {
   });
 
   it('should handle server-command without address/index', async () => {
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     const serverCommandCall =
       require('../../src/services/IRCService').ircService.on.mock.calls.find(
@@ -713,7 +713,7 @@ describe('useConnectionLifecycle', () => {
     );
   });
 
-  it('should handle reconnect event by disconnecting and marking disconnected state', () => {
+  it('should handle reconnect event by disconnecting and marking disconnected state', async () => {
     const disconnectMock = jest.fn();
     require('../../src/services/ConnectionManager').connectionManager.getConnection.mockReturnValue(
       {
@@ -724,7 +724,7 @@ describe('useConnectionLifecycle', () => {
     );
     const setIsConnected = jest.fn();
 
-    renderHook(() =>
+    await renderHook(() =>
       useConnectionLifecycle({
         ...mockParams,
         setIsConnected,
@@ -821,7 +821,7 @@ describe('useConnectionLifecycle', () => {
       },
     };
 
-    renderHook(() => useConnectionLifecycle(params as any));
+    await renderHook(() => useConnectionLifecycle(params as any));
 
     const onCalls = require('../../src/services/IRCService').ircService.on.mock
       .calls;
@@ -943,7 +943,7 @@ describe('useConnectionLifecycle', () => {
       [{ id: 'm1', type: 'notice', text: 'hello', timestamp: Date.now() }],
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useConnectionLifecycle({
         ...mockParams,
         tabsRef: { current: [] },
@@ -982,7 +982,7 @@ describe('useConnectionLifecycle', () => {
       },
     );
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
     const onCalls = require('../../src/services/IRCService').ircService.on.mock
       .calls;
     const registeredCall = onCalls.find(
@@ -1024,7 +1024,7 @@ describe('useConnectionLifecycle', () => {
     mockParams.pendingMessagesRef.current = [];
     mockParams.processBatchedMessages.mockClear();
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     mockParams.pendingMessagesRef.current = [];
     await act(async () => {
@@ -1054,7 +1054,7 @@ describe('useConnectionLifecycle', () => {
       return jest.fn();
     });
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     await act(async () => {
       await messageHandler({
@@ -1105,7 +1105,7 @@ describe('useConnectionLifecycle', () => {
       return jest.fn();
     });
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     await act(async () => {
       await messageHandler({
@@ -1151,7 +1151,7 @@ describe('useConnectionLifecycle', () => {
       return jest.fn();
     });
 
-    renderHook(() => useConnectionLifecycle(mockParams));
+    await renderHook(() => useConnectionLifecycle(mockParams));
 
     await act(async () => {
       await messageHandler({

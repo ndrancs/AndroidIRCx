@@ -132,7 +132,7 @@ const styles = {
 };
 
 describe('Security/Users sections', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     mockSettingsGet.mockImplementation(async (_k: string, d: any) => d);
@@ -144,7 +144,7 @@ describe('Security/Users sections', () => {
   });
 
   it('SecurityQuickConnectSection wires switch/input actions', async () => {
-    render(
+    await render(
       <SecurityQuickConnectSection
         colors={colors}
         styles={styles as any}
@@ -170,7 +170,7 @@ describe('Security/Users sections', () => {
 
   it('SecurityQuickConnectSection opens color picker and applies valid hex color', async () => {
     const { getByTestId, getByPlaceholderText, getByText, queryByText } =
-      render(
+      await render(
         <SecurityQuickConnectSection
           colors={colors}
           styles={styles as any}
@@ -196,26 +196,26 @@ describe('Security/Users sections', () => {
       'bolt',
     );
 
-    fireEvent.press(getByTestId('setting-kill-switch-custom-color'));
+    await fireEvent.press(getByTestId('setting-kill-switch-custom-color'));
     await waitFor(() => expect(getByText('Choose Color')).toBeTruthy());
 
-    fireEvent.changeText(getByPlaceholderText('#ff0000'), '#123');
+    await fireEvent.changeText(getByPlaceholderText('#ff0000'), '#123');
     expect(
       mockSecurityHookState.setKillSwitchCustomColor,
     ).not.toHaveBeenCalledWith('#123');
 
-    fireEvent.changeText(getByPlaceholderText('#ff0000'), '#00ff00');
+    await fireEvent.changeText(getByPlaceholderText('#ff0000'), '#00ff00');
     expect(mockSecurityHookState.setKillSwitchCustomColor).toHaveBeenCalledWith(
       '#00ff00',
     );
 
-    fireEvent.press(getByText('Done'));
+    await fireEvent.press(getByText('Done'));
     await waitFor(() => expect(queryByText('Choose Color')).toBeNull());
   });
 
   it('SecuritySection invokes key management and setting updates', async () => {
     const onShowKeyManagement = jest.fn();
-    render(
+    await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -227,7 +227,7 @@ describe('Security/Users sections', () => {
       expect(mockCapturedItems.has('security-manage-keys')).toBe(true),
     );
 
-    act(() => {
+    await act(() => {
       mockCapturedItems.get('security-manage-keys').onPress();
     });
     await act(async () => {
@@ -243,7 +243,7 @@ describe('Security/Users sections', () => {
   it('SecuritySection shows alert when enabling biometric lock without enrollment', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert');
     mockHasEnrolledBiometrics.mockResolvedValue(false);
-    render(
+    await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -265,7 +265,7 @@ describe('Security/Users sections', () => {
 
   it('SecuritySection blocks app lock enable when no biometric or pin method exists', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert');
-    render(
+    await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -284,7 +284,7 @@ describe('Security/Users sections', () => {
   });
 
   it('SecuritySection enables/disables biometric lock and updates app lock state', async () => {
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -295,7 +295,7 @@ describe('Security/Users sections', () => {
       expect(mockCapturedItems.has('security-app-lock-biometric')).toBe(true),
     );
 
-    fireEvent.press(getByTestId('setting-security-app-lock-biometric'));
+    await fireEvent.press(getByTestId('setting-security-app-lock-biometric'));
     await waitFor(() => expect(mockEnableLock).toHaveBeenCalledWith('app'));
     expect(mockEnableLock).toHaveBeenCalledWith('app');
     expect(mockSettingsSet).toHaveBeenCalledWith('appLockUseBiometric', true);
@@ -311,7 +311,7 @@ describe('Security/Users sections', () => {
   });
 
   it('SecuritySection handles app-lock PIN setup and stores pin after confirm', async () => {
-    const { getByPlaceholderText, getByText, getByTestId } = render(
+    const { getByPlaceholderText, getByText, getByTestId } = await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -322,13 +322,13 @@ describe('Security/Users sections', () => {
       expect(mockCapturedItems.has('security-app-lock-pin')).toBe(true),
     );
 
-    fireEvent.press(getByTestId('setting-security-app-lock-pin'));
+    await fireEvent.press(getByTestId('setting-security-app-lock-pin'));
     await waitFor(() => expect(getByPlaceholderText('Enter PIN')).toBeTruthy());
 
-    fireEvent.changeText(getByPlaceholderText('Enter PIN'), '1234');
-    fireEvent.press(getByText('Submit'));
-    fireEvent.changeText(getByPlaceholderText('Re-enter PIN'), '1234');
-    fireEvent.press(getByText('Confirm'));
+    await fireEvent.changeText(getByPlaceholderText('Enter PIN'), '1234');
+    await fireEvent.press(getByText('Submit'));
+    await fireEvent.changeText(getByPlaceholderText('Re-enter PIN'), '1234');
+    await fireEvent.press(getByText('Confirm'));
 
     await waitFor(() =>
       expect(mockSetSecret).toHaveBeenCalledWith(
@@ -346,7 +346,7 @@ describe('Security/Users sections', () => {
 
   it('SecuritySection handles lock-now disabled and enabled flows', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert');
-    render(
+    await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -368,7 +368,7 @@ describe('Security/Users sections', () => {
       return d;
     });
     mockCapturedItems.clear();
-    render(
+    await render(
       <SecuritySection
         colors={colors}
         styles={styles as any}
@@ -390,7 +390,7 @@ describe('Security/Users sections', () => {
 
   it('UsersServicesSection supports blacklist and add-service flow', async () => {
     const onShowBlacklist = jest.fn();
-    render(
+    await render(
       <UsersServicesSection
         colors={colors}
         styles={styles as any}
@@ -412,7 +412,7 @@ describe('Security/Users sections', () => {
     await act(async () => {
       await mockCapturedItems.get('irc-services-add').onPress();
     });
-    act(() => {
+    await act(() => {
       mockCapturedItems.get('user-blacklist').onPress();
     });
 
@@ -426,7 +426,7 @@ describe('Security/Users sections', () => {
   it('UsersServicesSection shows blacklist fallback alert and user-list callback', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert');
     const onShowUserLists = jest.fn();
-    render(
+    await render(
       <UsersServicesSection
         colors={colors}
         styles={styles as any}
@@ -439,7 +439,7 @@ describe('Security/Users sections', () => {
       expect(mockCapturedItems.has('user-blacklist')).toBe(true),
     );
 
-    act(() => {
+    await act(() => {
       mockCapturedItems.get('user-blacklist').onPress();
       mockCapturedItems.get('user-lists').onPress();
     });
@@ -456,7 +456,7 @@ describe('Security/Users sections', () => {
     mockGetUserAliases.mockReturnValue([
       { nick: 'alice', alias: 'ali', network: 'net' },
     ]);
-    const { getByTestId, getByText } = render(
+    const { getByTestId, getByText } = await render(
       <UsersServicesSection
         colors={colors}
         styles={styles as any}
@@ -466,18 +466,18 @@ describe('Security/Users sections', () => {
     );
     await waitFor(() => expect(mockCapturedItems.has('user-notes')).toBe(true));
 
-    fireEvent.press(getByTestId('setting-user-notes'));
+    await fireEvent.press(getByTestId('setting-user-notes'));
     await waitFor(() => expect(getByText('alice (net)')).toBeTruthy());
-    fireEvent.press(getByText('alice (net)'));
+    await fireEvent.press(getByText('alice (net)'));
     const noteAlertButtons = alertSpy.mock.calls[
       alertSpy.mock.calls.length - 1
     ][2] as any[];
     await noteAlertButtons[1].onPress();
     expect(mockRemoveUserNote).toHaveBeenCalledWith('alice', 'net');
 
-    fireEvent.press(getByTestId('setting-user-aliases'));
+    await fireEvent.press(getByTestId('setting-user-aliases'));
     await waitFor(() => expect(getByText('ali → alice')).toBeTruthy());
-    fireEvent.press(getByText('ali → alice'));
+    await fireEvent.press(getByText('ali → alice'));
     const aliasAlertButtons = alertSpy.mock.calls[
       alertSpy.mock.calls.length - 1
     ][2] as any[];

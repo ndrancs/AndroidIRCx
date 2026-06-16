@@ -29,8 +29,8 @@ describe('SettingsSectionHeader', () => {
     sectionToggle: { fontSize: 18 },
   };
 
-  it('should render with title', () => {
-    const { getByText } = render(
+  it('should render with title', async () => {
+    const { getByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={false}
@@ -43,8 +43,8 @@ describe('SettingsSectionHeader', () => {
     expect(getByText('Test Section')).toBeTruthy();
   });
 
-  it('should render expanded toggle', () => {
-    const { getByText } = render(
+  it('should render expanded toggle', async () => {
+    const { getByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={true}
@@ -57,8 +57,8 @@ describe('SettingsSectionHeader', () => {
     expect(getByText('-')).toBeTruthy();
   });
 
-  it('should render collapsed toggle', () => {
-    const { getByText } = render(
+  it('should render collapsed toggle', async () => {
+    const { getByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={false}
@@ -71,10 +71,10 @@ describe('SettingsSectionHeader', () => {
     expect(getByText('+')).toBeTruthy();
   });
 
-  it('should call onToggle when pressed', () => {
+  it('should call onToggle when pressed', async () => {
     const mockOnToggle = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={false}
@@ -84,15 +84,15 @@ describe('SettingsSectionHeader', () => {
       />,
     );
 
-    fireEvent.press(
+    await fireEvent.press(
       getByText('Test Section').parent?.parent || getByText('Test Section'),
     );
 
     expect(mockOnToggle).toHaveBeenCalled();
   });
 
-  it('should render with icon', () => {
-    const { getByText, root } = render(
+  it('should render with icon', async () => {
+    const { getByText, root } = await render(
       <SettingsSectionHeader
         title="Test Section"
         icon={{ name: 'cog', solid: true }}
@@ -107,8 +107,8 @@ describe('SettingsSectionHeader', () => {
     expect(root).toBeTruthy();
   });
 
-  it('should not render toggle when disabled', () => {
-    const { getByText, queryByText } = render(
+  it('should not render toggle when disabled', async () => {
+    const { getByText, queryByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={false}
@@ -124,10 +124,10 @@ describe('SettingsSectionHeader', () => {
     expect(queryByText('-')).toBeNull();
   });
 
-  it('should not call onToggle when disabled', () => {
+  it('should not call onToggle when disabled', async () => {
     const mockOnToggle = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingsSectionHeader
         title="Test Section"
         isExpanded={false}
@@ -138,7 +138,7 @@ describe('SettingsSectionHeader', () => {
       />,
     );
 
-    fireEvent.press(
+    await fireEvent.press(
       getByText('Test Section').parent?.parent || getByText('Test Section'),
     );
 

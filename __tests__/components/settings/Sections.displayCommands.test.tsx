@@ -166,14 +166,14 @@ const styles = {
 };
 
 describe('DisplayUI + Commands sections', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
   });
 
   it('DisplayUISection renders and updates settings', async () => {
-    render(
+    await render(
       <DisplayUISection
         colors={colors}
         styles={styles as any}
@@ -201,7 +201,7 @@ describe('DisplayUI + Commands sections', () => {
     const onShowEncryptionIndicatorsChange = jest.fn();
     const onShowTypingIndicatorsChange = jest.fn();
 
-    render(
+    await render(
       <DisplayUISection
         colors={colors}
         styles={styles as any}
@@ -293,7 +293,7 @@ describe('DisplayUI + Commands sections', () => {
   });
 
   it('DisplayUISection handles alignment, direction, timestamp, keyboard and banner options', async () => {
-    render(
+    await render(
       <DisplayUISection
         colors={colors}
         styles={styles as any}
@@ -430,7 +430,7 @@ describe('DisplayUI + Commands sections', () => {
   });
 
   it('CommandsSection renders and handles alias add validation path', async () => {
-    render(
+    await render(
       <CommandsSection
         colors={colors}
         styles={styles as any}
@@ -446,7 +446,7 @@ describe('DisplayUI + Commands sections', () => {
     getAliasSubmenu()
       .submenuItems.find((x: any) => x.id === 'alias-name-input')
       .onValueChange('j');
-    await waitFor(() => {
+    await waitFor(async () => {
       const nameValue = getAliasSubmenu().submenuItems.find(
         (x: any) => x.id === 'alias-name-input',
       )?.value;
@@ -456,7 +456,7 @@ describe('DisplayUI + Commands sections', () => {
     getAliasSubmenu()
       .submenuItems.find((x: any) => x.id === 'alias-command-input')
       .onValueChange('/join #test');
-    await waitFor(() => {
+    await waitFor(async () => {
       const commandValue = getAliasSubmenu().submenuItems.find(
         (x: any) => x.id === 'alias-command-input',
       )?.value;
@@ -472,7 +472,7 @@ describe('DisplayUI + Commands sections', () => {
   });
 
   it('CommandsSection validates alias input and custom command parameter extraction', async () => {
-    render(
+    await render(
       <CommandsSection
         colors={colors}
         styles={styles as any}
@@ -500,7 +500,7 @@ describe('DisplayUI + Commands sections', () => {
       .find((x: any) => x.id === 'custom-command-input')
       .onValueChange('/msg {channel} hello {param1} {param1}');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockCapturedItems
           .get('commands-custom')
@@ -538,7 +538,7 @@ describe('DisplayUI + Commands sections', () => {
       },
     ]);
 
-    render(
+    await render(
       <CommandsSection
         colors={colors}
         styles={styles as any}

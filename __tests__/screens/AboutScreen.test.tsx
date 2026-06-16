@@ -40,20 +40,22 @@ jest.mock('react-native-vector-icons/FontAwesome5', () => {
 });
 
 describe('AboutScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <AboutScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('About')).toBeNull();
   });
 
-  it('renders app details and social links when visible', () => {
-    const { getByText } = render(<AboutScreen visible onClose={jest.fn()} />);
+  it('renders app details and social links when visible', async () => {
+    const { getByText } = await render(
+      <AboutScreen visible onClose={jest.fn()} />,
+    );
 
     expect(getByText('About')).toBeTruthy();
     expect(getByText('Version 1.2.3')).toBeTruthy();
@@ -74,36 +76,42 @@ describe('AboutScreen', () => {
     expect(getByText('CoderLegion')).toBeTruthy();
   });
 
-  it('calls onClose when close button is pressed', () => {
+  it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByText } = render(<AboutScreen visible onClose={onClose} />);
+    const { getByText } = await render(
+      <AboutScreen visible onClose={onClose} />,
+    );
 
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('opens external links when pressed', () => {
+  it('opens external links when pressed', async () => {
     const openURLSpy = jest
       .spyOn(Linking, 'openURL')
       .mockResolvedValue(true as never);
-    const { getByText } = render(<AboutScreen visible onClose={jest.fn()} />);
+    const { getByText } = await render(
+      <AboutScreen visible onClose={jest.fn()} />,
+    );
 
-    fireEvent.press(getByText('Velimir Majstorov'));
-    fireEvent.press(getByText('contact@androidircx.com'));
-    fireEvent.press(getByText('https://irc.dbase.in.rs'));
-    fireEvent.press(getByText('https://androidircx.com'));
-    fireEvent.press(getByText('https://github.com/AndroidIRCx/AndroidIRCx'));
-    fireEvent.press(getByText('Instagram'));
-    fireEvent.press(getByText('Facebook'));
-    fireEvent.press(getByText('TikTok'));
-    fireEvent.press(getByText('X'));
-    fireEvent.press(getByText('Reddit'));
-    fireEvent.press(getByText('Telegram'));
-    fireEvent.press(getByText('LinkedIn'));
-    fireEvent.press(getByText('Mastodon'));
-    fireEvent.press(getByText('Dev.to'));
-    fireEvent.press(getByText('CoderLegion'));
+    await fireEvent.press(getByText('Velimir Majstorov'));
+    await fireEvent.press(getByText('contact@androidircx.com'));
+    await fireEvent.press(getByText('https://irc.dbase.in.rs'));
+    await fireEvent.press(getByText('https://androidircx.com'));
+    await fireEvent.press(
+      getByText('https://github.com/AndroidIRCx/AndroidIRCx'),
+    );
+    await fireEvent.press(getByText('Instagram'));
+    await fireEvent.press(getByText('Facebook'));
+    await fireEvent.press(getByText('TikTok'));
+    await fireEvent.press(getByText('X'));
+    await fireEvent.press(getByText('Reddit'));
+    await fireEvent.press(getByText('Telegram'));
+    await fireEvent.press(getByText('LinkedIn'));
+    await fireEvent.press(getByText('Mastodon'));
+    await fireEvent.press(getByText('Dev.to'));
+    await fireEvent.press(getByText('CoderLegion'));
 
     expect(openURLSpy).toHaveBeenNthCalledWith(
       1,
@@ -160,11 +168,13 @@ describe('AboutScreen', () => {
     jest
       .spyOn(Linking, 'openURL')
       .mockRejectedValueOnce(new Error('open failed'));
-    const { getByText } = render(<AboutScreen visible onClose={jest.fn()} />);
+    const { getByText } = await render(
+      <AboutScreen visible onClose={jest.fn()} />,
+    );
 
-    fireEvent.press(getByText('contact@androidircx.com'));
+    await fireEvent.press(getByText('contact@androidircx.com'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(errorSpy).toHaveBeenCalledWith(
         'Failed to open URL:',
         expect.any(Error),
