@@ -54,7 +54,7 @@ const baseProps = {
 };
 
 describe('HeaderBar', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockIsSupporter.mockReturnValue(false);
     mockAddListener.mockImplementation(() => () => {});
@@ -64,33 +64,33 @@ describe('HeaderBar', () => {
     });
   });
 
-  it('renders network name and ping text', () => {
-    const { getByText } = render(<HeaderBar {...baseProps} />);
+  it('renders network name and ping text', async () => {
+    const { getByText } = await render(<HeaderBar {...baseProps} />);
 
     expect(getByText('Libera')).toBeTruthy();
     expect(getByText('Ping: 25.4 ms')).toBeTruthy();
   });
 
-  it('shows connect hint and calls connect when disconnected', () => {
-    const { getByText } = render(
+  it('shows connect hint and calls connect when disconnected', async () => {
+    const { getByText } = await render(
       <HeaderBar {...baseProps} isConnected={false} />,
     );
 
-    fireEvent.press(getByText('Libera'));
+    await fireEvent.press(getByText('Libera'));
 
     expect(getByText('Tap to connect')).toBeTruthy();
     expect(baseProps.onConnectPress).toHaveBeenCalled();
   });
 
-  it('fires right-side actions', () => {
-    const { getByText } = render(<HeaderBar {...baseProps} />);
+  it('fires right-side actions', async () => {
+    const { getByText } = await render(<HeaderBar {...baseProps} />);
 
-    fireEvent.press(getByText('👥'));
-    fireEvent.press(getByText('🔍'));
-    fireEvent.press(getByText('🔐'));
-    fireEvent.press(getByText('🔓'));
-    fireEvent.press(getByText('▼'));
-    fireEvent.press(getByText('☰'));
+    await fireEvent.press(getByText('👥'));
+    await fireEvent.press(getByText('🔍'));
+    await fireEvent.press(getByText('🔐'));
+    await fireEvent.press(getByText('🔓'));
+    await fireEvent.press(getByText('▼'));
+    await fireEvent.press(getByText('☰'));
 
     expect(baseProps.onToggleNicklist).toHaveBeenCalled();
     expect(baseProps.onSearchPress).toHaveBeenCalled();
@@ -100,7 +100,7 @@ describe('HeaderBar', () => {
     expect(baseProps.onMenuPress).toHaveBeenCalled();
   });
 
-  it('updates supporter badge from in-app purchase listener', () => {
+  it('updates supporter badge from in-app purchase listener', async () => {
     let listener: (() => void) | undefined;
     mockAddListener.mockImplementation((cb: any) => {
       listener = cb;
@@ -108,24 +108,24 @@ describe('HeaderBar', () => {
     });
 
     mockIsSupporter.mockReturnValue(false);
-    const { queryByText } = render(<HeaderBar {...baseProps} />);
+    const { queryByText } = await render(<HeaderBar {...baseProps} />);
     expect(queryByText('❤️')).toBeNull();
 
     mockIsSupporter.mockReturnValue(true);
-    act(() => {
+    await act(() => {
       listener?.();
     });
 
     expect(queryByText('❤️')).toBeTruthy();
   });
 
-  it('supports hidden side tabs icon state and locked icon variant', () => {
-    const { getByText } = render(
+  it('supports hidden side tabs icon state and locked icon variant', async () => {
+    const { getByText } = await render(
       <HeaderBar {...baseProps} sideTabsVisible={false} lockState="locked" />,
     );
 
-    fireEvent.press(getByText('='));
-    fireEvent.press(getByText('🔒'));
+    await fireEvent.press(getByText('='));
+    await fireEvent.press(getByText('🔒'));
 
     expect(baseProps.onToggleSideTabs).toHaveBeenCalled();
     expect(baseProps.onLockPress).toHaveBeenCalled();

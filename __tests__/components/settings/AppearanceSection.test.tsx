@@ -179,7 +179,7 @@ const styles = {
 };
 
 describe('AppearanceSection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
@@ -192,13 +192,13 @@ describe('AppearanceSection', () => {
     ];
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.restoreAllMocks();
   });
 
   describe('Basic Rendering', () => {
     it('renders all main setting items', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -213,7 +213,7 @@ describe('AppearanceSection', () => {
         />,
       );
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockCapturedItems.has('display-theme')).toBe(true);
         expect(mockCapturedItems.has('app-language')).toBe(true);
         expect(mockCapturedItems.has('layout-tab-position')).toBe(true);
@@ -244,7 +244,7 @@ describe('AppearanceSection', () => {
 
   describe('Theme Selection', () => {
     it('handles theme selection without recommended settings', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -281,7 +281,7 @@ describe('AppearanceSection', () => {
       };
       mockAvailableThemes = [...mockAvailableThemes, themeWithSettings];
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -345,7 +345,7 @@ describe('AppearanceSection', () => {
       };
       mockAvailableThemes = [...mockAvailableThemes, themeWithSettings];
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -385,7 +385,7 @@ describe('AppearanceSection', () => {
 
     it('handles create new theme button', async () => {
       const onShowThemeEditor = jest.fn();
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -409,7 +409,7 @@ describe('AppearanceSection', () => {
 
     it('handles edit custom theme button', async () => {
       const onShowThemeEditor = jest.fn();
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -434,7 +434,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles delete custom theme with cancel', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -476,7 +476,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles delete custom theme with confirm', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -512,7 +512,7 @@ describe('AppearanceSection', () => {
 
   describe('Theme Export/Import', () => {
     it('handles theme export successfully', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -531,7 +531,7 @@ describe('AppearanceSection', () => {
         .submenuItems.find((x: any) => x.id === 'theme-export')
         .onPress();
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(mockThemeExportCurrentTheme).toHaveBeenCalled();
         expect(mockRNFSWriteFile).toHaveBeenCalled();
         expect(Alert.alert).toHaveBeenCalledWith(
@@ -545,7 +545,7 @@ describe('AppearanceSection', () => {
     it('handles theme export failure', async () => {
       mockThemeExportCurrentTheme.mockReturnValueOnce(null);
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -573,7 +573,7 @@ describe('AppearanceSection', () => {
     it('handles theme export on Android', async () => {
       Platform.OS = 'android';
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -608,7 +608,7 @@ describe('AppearanceSection', () => {
         theme: importedTheme,
       });
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -627,7 +627,7 @@ describe('AppearanceSection', () => {
         .submenuItems.find((x: any) => x.id === 'theme-import')
         .onPress();
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           expect.stringContaining('Theme Imported'),
           expect.stringContaining('Imported Theme'),
@@ -657,7 +657,7 @@ describe('AppearanceSection', () => {
         theme: importedTheme,
       });
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -676,7 +676,7 @@ describe('AppearanceSection', () => {
         .submenuItems.find((x: any) => x.id === 'theme-import')
         .onPress();
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           expect.stringContaining('Theme Imported'),
           expect.anything(),
@@ -703,7 +703,7 @@ describe('AppearanceSection', () => {
         error: 'Invalid theme format',
       });
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -722,7 +722,7 @@ describe('AppearanceSection', () => {
         .submenuItems.find((x: any) => x.id === 'theme-import')
         .onPress();
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           expect.stringContaining('Import Failed'),
           expect.stringContaining('Invalid theme format'),
@@ -738,7 +738,7 @@ describe('AppearanceSection', () => {
       isErrorWithCode.mockReturnValueOnce(true);
       mockPick.mockRejectedValueOnce({ code: errorCodes.OPERATION_CANCELED });
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -767,7 +767,7 @@ describe('AppearanceSection', () => {
 
   describe('Language Selection', () => {
     it('handles system language selection', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -795,7 +795,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles specific language selection', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -832,7 +832,7 @@ describe('AppearanceSection', () => {
 
   describe('Tab Position', () => {
     it('handles all tab position options', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -862,7 +862,7 @@ describe('AppearanceSection', () => {
 
   describe('User List Position', () => {
     it('handles all user list position options', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -897,7 +897,7 @@ describe('AppearanceSection', () => {
 
   describe('User List Size Input', () => {
     it('handles valid user list size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -919,7 +919,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid user list size input - not a number', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -943,7 +943,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid user list size input - zero or negative', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -969,7 +969,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles empty user list size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -993,7 +993,7 @@ describe('AppearanceSection', () => {
 
   describe('User List Nick Font Size Input', () => {
     it('handles valid nick font size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1016,7 +1016,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid nick font size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1045,7 +1045,7 @@ describe('AppearanceSection', () => {
 
   describe('Reset User List Defaults', () => {
     it('resets user list settings to defaults', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1071,7 +1071,7 @@ describe('AppearanceSection', () => {
 
   describe('Nicklist Tongue Settings', () => {
     it('handles tongue enabled toggle', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1099,7 +1099,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles tongue size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1121,7 +1121,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid tongue size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1157,7 +1157,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles empty tongue size input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1180,7 +1180,7 @@ describe('AppearanceSection', () => {
 
   describe('View Mode', () => {
     it('handles all view mode options', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1213,7 +1213,7 @@ describe('AppearanceSection', () => {
 
   describe('Font Size Settings', () => {
     it('handles all font size preset options', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1245,7 +1245,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles font size value inputs', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1280,7 +1280,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid font size value inputs', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1309,7 +1309,7 @@ describe('AppearanceSection', () => {
 
   describe('Search Button Settings', () => {
     it('handles header search button toggle', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1333,7 +1333,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles message area search button toggle', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1359,7 +1359,7 @@ describe('AppearanceSection', () => {
 
   describe('Message Spacing and Padding', () => {
     it('handles message spacing input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1381,7 +1381,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles message spacing out of range', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1406,7 +1406,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles message padding input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1428,7 +1428,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles invalid message padding input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1455,7 +1455,7 @@ describe('AppearanceSection', () => {
 
   describe('Navigation Bar Offset', () => {
     it('handles navigation bar offset input', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1479,7 +1479,7 @@ describe('AppearanceSection', () => {
     });
 
     it('handles navigation bar offset out of range', async () => {
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1535,7 +1535,7 @@ describe('AppearanceSection', () => {
       };
       mockAvailableThemes = [comprehensiveTheme];
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1634,7 +1634,7 @@ describe('AppearanceSection', () => {
         };
         mockAvailableThemes = [themeWithBanner];
 
-        render(
+        await render(
           <AppearanceSection
             colors={colors}
             styles={styles as any}
@@ -1684,7 +1684,7 @@ describe('AppearanceSection', () => {
       };
       mockAvailableThemes = [themeWithUnknownBanner];
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}
@@ -1734,7 +1734,7 @@ describe('AppearanceSection', () => {
       };
       mockAvailableThemes = [themeWithHoverTimestamp];
 
-      render(
+      await render(
         <AppearanceSection
           colors={colors}
           styles={styles as any}

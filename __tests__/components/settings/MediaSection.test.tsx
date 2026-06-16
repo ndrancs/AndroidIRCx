@@ -138,7 +138,7 @@ describe('MediaSection', () => {
     chevron: {},
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockSettings.isMediaEnabled.mockResolvedValue(true);
@@ -177,68 +177,68 @@ describe('MediaSection', () => {
   });
 
   it('renders media setting entries', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Enable Encrypted Media Sharing')).toBeTruthy();
       expect(getByText('Clear Media Cache')).toBeTruthy();
     });
   });
 
   it('toggles media enabled switch and persists', async () => {
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const switches = UNSAFE_getAllByType(Switch);
-      fireEvent(switches[0], 'valueChange', false);
+      await fireEvent(switches[0], 'valueChange', false);
       expect(mockSettings.setMediaEnabled).toHaveBeenCalledWith(false);
     });
   });
 
   it('opens cache submenu and closes it', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Maximum Cache Size'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Maximum Cache Size'));
+    await waitFor(async () => {
       expect(getByText('Close')).toBeTruthy();
     });
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
   });
 
   it('updates cache max size by submenu action', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Maximum Cache Size'));
-    await waitFor(() => {
-      fireEvent.press(getByText('500 MB'));
+    await fireEvent.press(getByText('Maximum Cache Size'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('500 MB'));
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setMaxCacheSize).toHaveBeenCalled();
     });
   });
 
   it('selects additional cache size presets', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Maximum Cache Size'));
-    await waitFor(() => {
-      fireEvent.press(getByText('250 MB'));
+    await fireEvent.press(getByText('Maximum Cache Size'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('250 MB'));
     });
-    fireEvent.press(getByText('Maximum Cache Size'));
-    await waitFor(() => {
-      fireEvent.press(getByText('1 GB'));
+    await fireEvent.press(getByText('Maximum Cache Size'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('1 GB'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setMaxCacheSize).toHaveBeenCalledWith(
         250 * 1024 * 1024,
       );
@@ -249,49 +249,49 @@ describe('MediaSection', () => {
   });
 
   it('updates media quality from submenu', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setMediaQuality).toHaveBeenCalledWith('original');
     });
     mockSettings.setMediaQuality.mockClear();
 
-    fireEvent.press(getByText('Media Quality'));
-    await waitFor(() => {
-      fireEvent.press(getByText('Low'));
+    await fireEvent.press(getByText('Media Quality'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('Low'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setMediaQuality).toHaveBeenCalledWith('low');
     });
   });
 
   it('updates video quality from submenu', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVideoQuality).toHaveBeenCalledWith('1080p');
     });
     mockSettings.setVideoQuality.mockClear();
 
-    fireEvent.press(getByText('Video Recording Quality'));
-    await waitFor(() => {
-      fireEvent.press(getByText('720p'));
+    await fireEvent.press(getByText('Video Recording Quality'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('720p'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVideoQuality).toHaveBeenCalledWith('720p');
     });
   });
 
   it('limits live call quality options for free users', async () => {
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Live Call Video Quality'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Live Call Video Quality'));
+    await waitFor(async () => {
       expect(getByText('720p')).toBeTruthy();
       expect(queryByText('1440p')).toBeNull();
     });
@@ -305,59 +305,59 @@ describe('MediaSection', () => {
     });
     mockSettings.getCallVideoQuality.mockResolvedValue('1080p');
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallVideoQuality).toHaveBeenCalledWith('1080p');
     });
     mockSettings.setCallVideoQuality.mockClear();
 
-    fireEvent.press(getByText('Live Call Video Quality'));
-    await waitFor(() => {
-      fireEvent.press(getByText('1440p'));
+    await fireEvent.press(getByText('Live Call Video Quality'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('1440p'));
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallVideoQuality).toHaveBeenCalledWith('1440p');
     });
   });
 
   it('updates additional video quality presets', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Video Recording Quality'));
-    await waitFor(() => {
-      fireEvent.press(getByText('4K'));
+    await fireEvent.press(getByText('Video Recording Quality'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('4K'));
     });
-    fireEvent.press(getByText('Video Recording Quality'));
-    await waitFor(() => {
-      fireEvent.press(getByText('480p'));
+    await fireEvent.press(getByText('Video Recording Quality'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('480p'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVideoQuality).toHaveBeenCalledWith('480p');
     });
   });
 
   it('updates free-call STUN servers from list editor', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Free Call STUN Servers'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Free Call STUN Servers'));
+    await waitFor(async () => {
       expect(getByText('stun:turn.dbase.in.rs:3478')).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('stun:stun.l.google.com:19302'),
       'stun:new.example.org:3478',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallStunServers).toHaveBeenLastCalledWith([
         'stun:turn.dbase.in.rs:3478',
         'stun:stun.l.google.com:19302',
@@ -367,44 +367,44 @@ describe('MediaSection', () => {
   });
 
   it('shows validation for invalid STUN entries and does not add them', async () => {
-    const { getByText, getByPlaceholderText, queryByText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Free Call STUN Servers'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Free Call STUN Servers'));
+    await waitFor(async () => {
       expect(getByText('STUN Servers')).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('stun:stun.l.google.com:19302'),
       'http://bad.example.org',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('STUN must start with stun:')).toBeTruthy();
       expect(queryByText('http://bad.example.org')).toBeNull();
     });
   });
 
   it('does not add duplicate STUN server entries', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Free Call STUN Servers'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Free Call STUN Servers'));
+    await waitFor(async () => {
       expect(getByText('STUN Servers')).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('stun:stun.l.google.com:19302'),
       'stun:turn.dbase.in.rs:3478',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallStunServers).toHaveBeenLastCalledWith([
         'stun:turn.dbase.in.rs:3478',
         'stun:stun.l.google.com:19302',
@@ -420,26 +420,29 @@ describe('MediaSection', () => {
       credential: 'relay-pass',
     });
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('External TURN Server'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('External TURN Server'));
+    await waitFor(async () => {
       expect(
         getByText('turn:relay.example.net:3478?transport=udp'),
       ).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('turn:turn.example.com:3478?transport=udp'),
       'turns:relay.example.net:5349?transport=tcp',
     );
-    fireEvent.press(getByText('Add'));
-    fireEvent.changeText(getByPlaceholderText('username'), 'relay-user');
-    fireEvent.changeText(getByPlaceholderText('credential'), 'relay-pass');
+    await fireEvent.press(getByText('Add'));
+    await fireEvent.changeText(getByPlaceholderText('username'), 'relay-user');
+    await fireEvent.changeText(
+      getByPlaceholderText('credential'),
+      'relay-pass',
+    );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallTurnServerConfig).toHaveBeenLastCalledWith({
         enabled: true,
         urls: [
@@ -456,11 +459,11 @@ describe('MediaSection', () => {
     mockSettings.getCallForceRelayOnly.mockResolvedValueOnce(true);
     mockSettings.getCallNicklistCallActionsEnabled.mockResolvedValueOnce(true);
 
-    render(
+    await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallForceRelayOnly).toHaveBeenCalledWith(true);
       expect(
         mockSettings.setCallNicklistCallActionsEnabled,
@@ -473,16 +476,16 @@ describe('MediaSection', () => {
       .mockResolvedValueOnce(true) // showCallNotification
       .mockResolvedValueOnce(false); // callMinimizedOnlyOnActiveQuery
 
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const switches = UNSAFE_getAllByType(Switch);
-      fireEvent(switches[6], 'valueChange', false);
+      await fireEvent(switches[6], 'valueChange', false);
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockAppSettings.setSetting).toHaveBeenCalledWith(
         'showCallNotification',
         false,
@@ -495,16 +498,16 @@ describe('MediaSection', () => {
       .mockResolvedValueOnce(true) // showCallNotification
       .mockResolvedValueOnce(false); // callMinimizedOnlyOnActiveQuery
 
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const switches = UNSAFE_getAllByType(Switch);
-      fireEvent(switches[7], 'valueChange', true);
+      await fireEvent(switches[7], 'valueChange', true);
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockAppSettings.setSetting).toHaveBeenCalledWith(
         'callMinimizedOnlyOnActiveQuery',
         true,
@@ -513,29 +516,29 @@ describe('MediaSection', () => {
   });
 
   it('reorders and removes STUN servers from list editor', async () => {
-    const { getByText, getByLabelText } = render(
+    const { getByText, getByLabelText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Free Call STUN Servers'));
+    await fireEvent.press(getByText('Free Call STUN Servers'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('stun:turn.dbase.in.rs:3478')).toBeTruthy();
       expect(getByText('stun:stun.l.google.com:19302')).toBeTruthy();
     });
 
-    fireEvent.press(getByLabelText('stun-server-down-0'));
+    await fireEvent.press(getByLabelText('stun-server-down-0'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallStunServers).toHaveBeenLastCalledWith([
         'stun:stun.l.google.com:19302',
         'stun:turn.dbase.in.rs:3478',
       ]);
     });
 
-    fireEvent.press(getByLabelText('stun-server-remove-1'));
+    await fireEvent.press(getByLabelText('stun-server-remove-1'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallStunServers).toHaveBeenLastCalledWith([
         'stun:stun.l.google.com:19302',
       ]);
@@ -543,22 +546,22 @@ describe('MediaSection', () => {
   });
 
   it('shows validation for invalid TURN entry and does not add it', async () => {
-    const { getByText, getByPlaceholderText, queryByText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('External TURN Server'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('External TURN Server'));
+    await waitFor(async () => {
       expect(getByText('TURN Servers')).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('turn:turn.example.com:3478?transport=udp'),
       'http://bad-turn.example.org',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('TURN must start with turn: or turns:')).toBeTruthy();
       expect(queryByText('http://bad-turn.example.org')).toBeNull();
     });
@@ -572,22 +575,22 @@ describe('MediaSection', () => {
       credential: 'relay-pass',
     });
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('External TURN Server'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('External TURN Server'));
+    await waitFor(async () => {
       expect(getByText('TURN Servers')).toBeTruthy();
     });
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('turn:turn.example.com:3478?transport=udp'),
       'turn:relay.example.net:3478?transport=udp',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setCallTurnServerConfig).toHaveBeenLastCalledWith({
         enabled: true,
         urls: ['turn:relay.example.net:3478?transport=udp'],
@@ -598,58 +601,58 @@ describe('MediaSection', () => {
   });
 
   it('updates max voice duration from submenu', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVoiceMaxDuration).toHaveBeenCalledWith(180);
     });
     mockSettings.setVoiceMaxDuration.mockClear();
 
-    fireEvent.press(getByText('Max Voice Message Duration'));
-    await waitFor(() => {
-      fireEvent.press(getByText('1 minute'));
+    await fireEvent.press(getByText('Max Voice Message Duration'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('1 minute'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVoiceMaxDuration).toHaveBeenCalledWith(60);
     });
   });
 
   it('updates additional voice duration presets', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Max Voice Message Duration'));
-    await waitFor(() => {
-      fireEvent.press(getByText('3 minutes'));
+    await fireEvent.press(getByText('Max Voice Message Duration'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('3 minutes'));
     });
-    fireEvent.press(getByText('Max Voice Message Duration'));
-    await waitFor(() => {
-      fireEvent.press(getByText('5 minutes'));
+    await fireEvent.press(getByText('Max Voice Message Duration'));
+    await waitFor(async () => {
+      await fireEvent.press(getByText('5 minutes'));
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettings.setVoiceMaxDuration).toHaveBeenCalledWith(300);
     });
   });
 
   it('triggers clear cache confirmation flow', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Clear Media Cache'));
+    await fireEvent.press(getByText('Clear Media Cache'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalled();
     });
   });
 
   it('executes clear-cache confirm action successfully', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Clear Media Cache'));
+    await fireEvent.press(getByText('Clear Media Cache'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
       const buttons = alertCall[2];
       const confirm = buttons.find((b: any) => b.style === 'destructive');
@@ -657,20 +660,20 @@ describe('MediaSection', () => {
       confirm.onPress();
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCache.clearCache).toHaveBeenCalled();
     });
   });
 
   it('toggles auto-download and wifi-only settings', async () => {
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const switches = UNSAFE_getAllByType(Switch);
-      fireEvent(switches[2], 'valueChange', false); // auto-download
-      fireEvent(switches[3], 'valueChange', true); // wifi-only
+      await fireEvent(switches[2], 'valueChange', false); // auto-download
+      await fireEvent(switches[3], 'valueChange', true); // wifi-only
       expect(mockSettings.setAutoDownload).toHaveBeenCalledWith(false);
       expect(mockSettings.setWiFiOnly).toHaveBeenCalledWith(true);
     });
@@ -678,19 +681,19 @@ describe('MediaSection', () => {
 
   it('handles clear-cache confirm error path', async () => {
     mockCache.clearCache.mockRejectedValueOnce(new Error('boom'));
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
-    fireEvent.press(getByText('Clear Media Cache'));
+    await fireEvent.press(getByText('Clear Media Cache'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
       const buttons = alertCall[2];
       const confirm = buttons.find((b: any) => b.style === 'destructive');
       confirm.onPress();
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Failed to clear cache: {error}',
@@ -702,11 +705,11 @@ describe('MediaSection', () => {
     mockCache.getCacheSize.mockResolvedValueOnce(512);
     mockSettings.getMaxCacheSize.mockResolvedValueOnce(512 * 1024);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Current cache: 512 B / Max: 512 KB')).toBeTruthy();
     });
   });
@@ -715,11 +718,11 @@ describe('MediaSection', () => {
     mockSettings.isMediaEnabled.mockResolvedValueOnce(false);
     mockCache.getCacheSize.mockResolvedValueOnce(2 * 1024 * 1024 * 1024);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         getByText(
           'Media sharing is disabled. Attachment button will not appear.',
@@ -730,16 +733,16 @@ describe('MediaSection', () => {
   });
 
   it('closes submenu through modal requestClose callback', async () => {
-    const { getByText, UNSAFE_getByType } = render(
+    const { getByText, UNSAFE_getByType } = await render(
       <MediaSection colors={colors} styles={styles as any} settingIcons={{}} />,
     );
 
-    fireEvent.press(getByText('Maximum Cache Size'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Maximum Cache Size'));
+    await waitFor(async () => {
       expect(getByText('Close')).toBeTruthy();
     });
-    fireEvent(UNSAFE_getByType(Modal), 'requestClose');
-    await waitFor(() => {
+    await fireEvent(UNSAFE_getByType(Modal), 'requestClose');
+    await waitFor(async () => {
       expect(getByText('Maximum Cache Size')).toBeTruthy();
     });
   });

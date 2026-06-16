@@ -26,23 +26,23 @@ describe('useAppLockActions', () => {
     setAppUnlockModalVisible: mockSetAppUnlockModalVisible,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should return handleLockButtonPress function', () => {
-    const { result } = renderHook(() => useAppLockActions(defaultProps));
+  it('should return handleLockButtonPress function', async () => {
+    const { result } = await renderHook(() => useAppLockActions(defaultProps));
 
     expect(result.current.handleLockButtonPress).toBeDefined();
     expect(typeof result.current.handleLockButtonPress).toBe('function');
   });
 
-  it('should show alert when app lock is disabled', () => {
-    const { result } = renderHook(() =>
+  it('should show alert when app lock is disabled', async () => {
+    const { result } = await renderHook(() =>
       useAppLockActions({ ...defaultProps, appLockEnabled: false }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleLockButtonPress();
     });
 
@@ -53,12 +53,12 @@ describe('useAppLockActions', () => {
     expect(mockSetAppLocked).not.toHaveBeenCalled();
   });
 
-  it('should lock app when unlocked', () => {
-    const { result } = renderHook(() =>
+  it('should lock app when unlocked', async () => {
+    const { result } = await renderHook(() =>
       useAppLockActions({ ...defaultProps, appLocked: false }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleLockButtonPress();
     });
 
@@ -66,8 +66,8 @@ describe('useAppLockActions', () => {
     expect(mockSetAppUnlockModalVisible).toHaveBeenCalledWith(true);
   });
 
-  it('should trigger biometric unlock when locked and biometric is enabled', () => {
-    const { result } = renderHook(() =>
+  it('should trigger biometric unlock when locked and biometric is enabled', async () => {
+    const { result } = await renderHook(() =>
       useAppLockActions({
         ...defaultProps,
         appLocked: true,
@@ -75,7 +75,7 @@ describe('useAppLockActions', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleLockButtonPress();
     });
 
@@ -83,8 +83,8 @@ describe('useAppLockActions', () => {
     expect(mockSetAppUnlockModalVisible).not.toHaveBeenCalled();
   });
 
-  it('should show unlock modal when locked and biometric is disabled', () => {
-    const { result } = renderHook(() =>
+  it('should show unlock modal when locked and biometric is disabled', async () => {
+    const { result } = await renderHook(() =>
       useAppLockActions({
         ...defaultProps,
         appLocked: true,
@@ -92,7 +92,7 @@ describe('useAppLockActions', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleLockButtonPress();
     });
 
@@ -100,12 +100,12 @@ describe('useAppLockActions', () => {
     expect(mockAttemptBiometricUnlock).not.toHaveBeenCalled();
   });
 
-  it('should use t function for translations', () => {
-    const { result } = renderHook(() =>
+  it('should use t function for translations', async () => {
+    const { result } = await renderHook(() =>
       useAppLockActions({ ...defaultProps, appLockEnabled: false }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.handleLockButtonPress();
     });
 

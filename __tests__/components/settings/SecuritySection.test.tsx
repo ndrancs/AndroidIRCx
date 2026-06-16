@@ -6,40 +6,74 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { SecuritySection } from '../../../src/components/settings/sections/SecuritySection';
-import { settingsService } from '../../../src/services/SettingsService';
-import { biometricAuthService } from '../../../src/services/BiometricAuthService';
 
-// Mock dependencies
-jest.mock('../../../src/services/SettingsService');
-jest.mock('../../../src/services/BiometricAuthService');
-jest.mock('../../../src/services/SecureStorageService');
-jest.mock('react-native', () => {
+const mockCapturedItems = new Map<string, any>();
+const mockSettingsGet = jest.fn(async (_k: string, d: any) => d);
+const mockSettingsSet = jest.fn(async () => undefined);
+const mockHasEnrolledBiometrics = jest.fn(async () => true);
+const mockIsAvailable = jest.fn(async () => true);
+const mockEnableLock = jest.fn(async () => true);
+const mockDisableLock = jest.fn(async () => undefined);
+const mockSetSecret = jest.fn(async () => undefined);
+const mockRemoveSecret = jest.fn(async () => undefined);
+const mockSetAllowScreenshots = jest.fn(async () => undefined);
+
+jest.mock('../../../src/i18n/transifex', () => ({
+  useT: () => (key: string) => key,
+}));
+
+jest.mock('../../../src/components/settings/SettingItem', () => {
   const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
   return {
-    Alert: {
-      alert: jest.fn(),
-    },
-    Platform: {
-      OS: 'android',
-    },
-    View: ({ children, ...props }: any) =>
-      React.createElement('View', props, children),
-    Text: ({ children, ...props }: any) =>
-      React.createElement('Text', props, children),
-    TextInput: (props: any) => React.createElement('TextInput', props),
-    TouchableOpacity: ({ children, ...props }: any) =>
-      React.createElement('TouchableOpacity', props, children),
-    ScrollView: ({ children, ...props }: any) =>
-      React.createElement('ScrollView', props, children),
-    FlatList: (props: any) => React.createElement('FlatList', props),
-    StyleSheet: {
-      create: (styles: any) => styles,
-      flatten: (style: any) => style,
+    SettingItem: ({ item }: any) => {
+      mockCapturedItems.set(item.id, item);
+      return React.createElement(
+        TouchableOpacity,
+        {
+          testID: `setting-${item.id}`,
+          onPress: () => {
+            item.onPress?.();
+            if (item.type === 'switch') item.onValueChange?.(!item.value);
+          },
+        },
+        React.createElement(Text, null, item.title || item.id),
+      );
     },
   };
 });
+
+jest.mock('../../../src/services/SettingsService', () => ({
+  settingsService: {
+    getSetting: (...args: any[]) => mockSettingsGet(...args),
+    setSetting: (...args: any[]) => mockSettingsSet(...args),
+  },
+}));
+
+jest.mock('../../../src/services/BiometricAuthService', () => ({
+  biometricAuthService: {
+    hasEnrolledBiometrics: (...args: any[]) =>
+      mockHasEnrolledBiometrics(...args),
+    isAvailable: (...args: any[]) => mockIsAvailable(...args),
+    enableLock: (...args: any[]) => mockEnableLock(...args),
+    disableLock: (...args: any[]) => mockDisableLock(...args),
+  },
+}));
+
+jest.mock('../../../src/services/SecureStorageService', () => ({
+  secureStorageService: {
+    setSecret: (...args: any[]) => mockSetSecret(...args),
+    removeSecret: (...args: any[]) => mockRemoveSecret(...args),
+  },
+}));
+
+jest.mock('../../../src/services/ScreenshotProtectionService', () => ({
+  screenshotProtectionService: {
+    setAllowScreenshots: (...args: any[]) => mockSetAllowScreenshots(...args),
+  },
+}));
 
 const mockColors = {
   text: '#000000',
@@ -70,104 +104,111 @@ const mockStyles = {
 
 const mockSettingIcons = {};
 
-describe.skip('SecuritySection', () => {
+describe('SecuritySection', () => {
   beforeEach(() => {
+    mockCapturedItems.clear();
     jest.clearAllMocks();
-    (settingsService.getSetting as jest.Mock).mockImplementation(
-      async (key, defaultValue) => {
-        const defaults: Record<string, any> = {
-          securityAllowQrVerification: true,
-          securityAllowFileExchange: true,
-          securityAllowNfcExchange: true,
-          appLockEnabled: false,
-          appLockUseBiometric: false,
-          appLockUsePin: false,
-          appLockOnLaunch: true,
-          appLockOnBackground: true,
-        };
-        return defaults[key] ?? defaultValue;
-      },
-    );
-    (biometricAuthService.isAvailable as jest.Mock).mockResolvedValue(true);
-    (settingsService.setSetting as jest.Mock).mockResolvedValue(undefined);
+    mockSettingsGet.mockImplementation(async (_k: string, d: any) => d);
+    mockHasEnrolledBiometrics.mockResolvedValue(true);
+    mockIsAvailable.mockResolvedValue(true);
+    mockEnableLock.mockResolvedValue(true);
+    mockDisableLock.mockResolvedValue(undefined);
   });
 
-  it('should render security settings', () => {
-    const { getByText } = render(
+  it('should render security settings', async () => {
+    await render(
       <SecuritySection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    expect(getByText(/Manage Encryption Keys/i)).toBeTruthy();
-    expect(getByText(/Allow QR Verification/i)).toBeTruthy();
+    await waitFor(() =>
+      expect(mockCapturedItems.has('security-manage-keys')).toBe(true),
+    );
+    expect(mockCapturedItems.has('security-qr')).toBe(true);
   });
 
   it('should toggle QR verification setting', async () => {
-    const { getByText } = render(
+    await render(
       <SecuritySection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    // Find and toggle the QR verification switch
-    // This depends on how SettingSwitch is implemented
-    await waitFor(() => {
-      expect(getByText(/Allow QR Verification/i)).toBeTruthy();
+    await waitFor(() =>
+      expect(mockCapturedItems.has('security-qr')).toBe(true),
+    );
+
+    await act(async () => {
+      await mockCapturedItems.get('security-qr').onValueChange(false);
     });
+
+    expect(mockSettingsSet).toHaveBeenCalledWith(
+      'securityAllowQrVerification',
+      false,
+    );
   });
 
-  it('should call onShowKeyManagement when key management is pressed', () => {
+  it('should call onShowKeyManagement when key management is pressed', async () => {
     const mockOnShowKeyManagement = jest.fn();
-    const { getByText } = render(
+    const { getByTestId } = await render(
       <SecuritySection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
         onShowKeyManagement={mockOnShowKeyManagement}
       />,
     );
 
-    const keyManagementButton = getByText(/Manage Encryption Keys/i);
-    fireEvent.press(keyManagementButton);
+    await waitFor(() =>
+      expect(mockCapturedItems.has('security-manage-keys')).toBe(true),
+    );
+
+    await fireEvent.press(getByTestId('setting-security-manage-keys'));
 
     expect(mockOnShowKeyManagement).toHaveBeenCalled();
   });
 
-  it('should call onShowMigrationDialog when migration is pressed', () => {
+  it('should call onShowMigrationDialog when migration is pressed', async () => {
     const mockOnShowMigrationDialog = jest.fn();
-    const { getByText } = render(
+    const { getByTestId } = await render(
       <SecuritySection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
         onShowMigrationDialog={mockOnShowMigrationDialog}
       />,
     );
 
-    const migrationButton = getByText(/Migrate Old Keys/i);
-    fireEvent.press(migrationButton);
+    await waitFor(() =>
+      expect(mockCapturedItems.has('security-migrate-keys')).toBe(true),
+    );
+
+    await fireEvent.press(getByTestId('setting-security-migrate-keys'));
 
     expect(mockOnShowMigrationDialog).toHaveBeenCalled();
   });
 
   it('should disable biometric option when biometrics unavailable', async () => {
-    (biometricAuthService.isAvailable as jest.Mock).mockResolvedValue(false);
+    mockHasEnrolledBiometrics.mockResolvedValue(false);
 
-    const { getByText } = render(
+    await render(
       <SecuritySection
         colors={mockColors}
-        styles={mockStyles}
+        styles={mockStyles as any}
         settingIcons={mockSettingIcons}
       />,
     );
 
-    await waitFor(() => {
-      expect(getByText(/App Lock with Biometrics/i)).toBeTruthy();
-    });
+    await waitFor(() =>
+      expect(mockCapturedItems.has('security-app-lock-biometric')).toBe(true),
+    );
+
+    const biometricItem = mockCapturedItems.get('security-app-lock-biometric');
+    expect(biometricItem.disabled).toBe(true);
   });
 });

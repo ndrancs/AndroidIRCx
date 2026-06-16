@@ -246,7 +246,7 @@ afterAll(() => {
 
 // ── test suite ─────────────────────────────────────────────────────────────
 describe('MessageInput', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockServiceCommandsState.isDetected = false;
     mockServiceCommandsState.getSuggestions.mockReturnValue([]);
@@ -269,13 +269,15 @@ describe('MessageInput', () => {
 
   // ── basic rendering ──────────────────────────────────────────────────────
   it('renders without crashing', async () => {
-    const { toJSON } = render(<MessageInput {...defaultProps} />);
+    const { toJSON } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
 
   it('renders a TextInput for message entry', async () => {
-    const { UNSAFE_getAllByType } = render(<MessageInput {...defaultProps} />);
+    const { UNSAFE_getAllByType } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const { TextInput } = require('react-native');
     const inputs = UNSAFE_getAllByType(TextInput);
@@ -283,7 +285,7 @@ describe('MessageInput', () => {
   });
 
   it('renders with a custom placeholder', async () => {
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} placeholder="Type here..." />,
     );
     await flushAsync();
@@ -291,14 +293,16 @@ describe('MessageInput', () => {
   });
 
   it('renders with the default placeholder key when none is provided', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     // useT returns the key string directly in tests
     expect(getByPlaceholderText('Enter a message')).toBeTruthy();
   });
 
   it('renders when disabled=true', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput {...defaultProps} disabled={true} />,
     );
     await flushAsync();
@@ -306,7 +310,7 @@ describe('MessageInput', () => {
   });
 
   it('renders when disabled=false', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput {...defaultProps} disabled={false} />,
     );
     await flushAsync();
@@ -315,7 +319,7 @@ describe('MessageInput', () => {
 
   // ── tab types ────────────────────────────────────────────────────────────
   it('renders for tabType=channel', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -328,7 +332,7 @@ describe('MessageInput', () => {
   });
 
   it('renders for tabType=query', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="query"
@@ -341,7 +345,7 @@ describe('MessageInput', () => {
   });
 
   it('renders for tabType=server', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput {...defaultProps} tabType="server" network="TestNet" />,
     );
     await flushAsync();
@@ -349,7 +353,7 @@ describe('MessageInput', () => {
   });
 
   it('renders for tabType=notice', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput {...defaultProps} tabType="notice" network="TestNet" />,
     );
     await flushAsync();
@@ -357,7 +361,7 @@ describe('MessageInput', () => {
   });
 
   it('renders for tabType=dcc', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="dcc"
@@ -371,30 +375,32 @@ describe('MessageInput', () => {
 
   // ── text input interaction ───────────────────────────────────────────────
   it('updates message state when text is typed', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
     await act(async () => {
-      fireEvent.changeText(input, 'Hello IRC!');
+      await fireEvent.changeText(input, 'Hello IRC!');
     });
     expect(input.props.value).toBe('Hello IRC!');
   });
 
   it('clears message input after submission', async () => {
     const onSubmit = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} onSubmit={onSubmit} />,
     );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, 'Hello IRC!');
+      await fireEvent.changeText(input, 'Hello IRC!');
     });
     expect(input.props.value).toBe('Hello IRC!');
 
     await act(async () => {
-      fireEvent(input, 'submitEditing');
+      await fireEvent(input, 'submitEditing');
     });
     expect(input.props.value).toBe('');
     expect(onSubmit).toHaveBeenCalledWith('Hello IRC!');
@@ -402,30 +408,30 @@ describe('MessageInput', () => {
 
   it('does not submit when message is empty', async () => {
     const onSubmit = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} onSubmit={onSubmit} />,
     );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '   ');
-      fireEvent(input, 'submitEditing');
+      await fireEvent.changeText(input, '   ');
+      await fireEvent(input, 'submitEditing');
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('does not submit when disabled', async () => {
     const onSubmit = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} disabled={true} onSubmit={onSubmit} />,
     );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, 'Hello!');
-      fireEvent(input, 'submitEditing');
+      await fireEvent.changeText(input, 'Hello!');
+      await fireEvent(input, 'submitEditing');
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -436,7 +442,7 @@ describe('MessageInput', () => {
       if (key === 'showSendButton') return Promise.resolve(true);
       return Promise.resolve(fallback);
     });
-    const { toJSON } = render(<MessageInput {...defaultProps} />);
+    const { toJSON } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
@@ -446,7 +452,7 @@ describe('MessageInput', () => {
       if (key === 'showSendButton') return Promise.resolve(false);
       return Promise.resolve(fallback);
     });
-    const { toJSON } = render(<MessageInput {...defaultProps} />);
+    const { toJSON } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
@@ -458,24 +464,26 @@ describe('MessageInput', () => {
       return Promise.resolve(fallback);
     });
 
-    const comp = render(<MessageInput {...defaultProps} onSubmit={onSubmit} />);
+    const comp = await render(
+      <MessageInput {...defaultProps} onSubmit={onSubmit} />,
+    );
     await flushAsync();
     const input = comp.getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, 'Hello IRC');
+      await fireEvent.changeText(input, 'Hello IRC');
     });
 
     try {
       const sendBtn = comp.getByLabelText('Send message');
       await act(async () => {
-        fireEvent.press(sendBtn);
+        await fireEvent.press(sendBtn);
       });
       expect(onSubmit).toHaveBeenCalledWith('Hello IRC');
     } catch {
       // Fallback: submit via enter
       await act(async () => {
-        fireEvent(input, 'submitEditing');
+        await fireEvent(input, 'submitEditing');
       });
       expect(onSubmit).toHaveBeenCalledWith('Hello IRC');
     }
@@ -484,7 +492,7 @@ describe('MessageInput', () => {
   // ── prefilled message ─────────────────────────────────────────────────────
   it('accepts prefilledMessage prop and populates input', async () => {
     const onPrefillUsed = jest.fn();
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         prefilledMessage="prefilled text"
@@ -499,7 +507,7 @@ describe('MessageInput', () => {
 
   it('calls onPrefillUsed when prefilledMessage is provided', async () => {
     const onPrefillUsed = jest.fn();
-    render(
+    await render(
       <MessageInput
         {...defaultProps}
         prefilledMessage="some message"
@@ -512,7 +520,7 @@ describe('MessageInput', () => {
 
   // ── bottomInset ───────────────────────────────────────────────────────────
   it('accepts bottomInset prop', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput {...defaultProps} bottomInset={20} />,
     );
     await flushAsync();
@@ -521,13 +529,13 @@ describe('MessageInput', () => {
 
   // ── settings loading ──────────────────────────────────────────────────────
   it('loads settings on mount', async () => {
-    render(<MessageInput {...defaultProps} />);
+    await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(mockGetSetting).toHaveBeenCalled();
   });
 
   it('subscribes to setting changes on mount', async () => {
-    render(<MessageInput {...defaultProps} />);
+    await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(mockOnSettingChange).toHaveBeenCalled();
   });
@@ -542,7 +550,7 @@ describe('MessageInput', () => {
       },
     );
 
-    render(<MessageInput {...defaultProps} />);
+    await render(<MessageInput {...defaultProps} />);
     await flushAsync();
 
     await act(async () => {
@@ -558,7 +566,7 @@ describe('MessageInput', () => {
 
   // ── command suggestions ───────────────────────────────────────────────────
   it('shows command suggestions when typing a slash command', async () => {
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -570,21 +578,23 @@ describe('MessageInput', () => {
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/jo');
+      await fireEvent.changeText(input, '/jo');
     });
     expect(input.props.value).toBe('/jo');
   });
 
   it('clears suggestions when input is cleared', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/join');
+      await fireEvent.changeText(input, '/join');
     });
     await act(async () => {
-      fireEvent.changeText(input, '');
+      await fireEvent.changeText(input, '');
     });
     expect(input.props.value).toBe('');
   });
@@ -593,14 +603,14 @@ describe('MessageInput', () => {
   it('hides attachment button when no network is provided', async () => {
     mockIsMediaEnabled.mockResolvedValue(true);
     mockHasEncryptionKey.mockResolvedValue(true);
-    const { toJSON } = render(<MessageInput onSubmit={jest.fn()} />);
+    const { toJSON } = await render(<MessageInput onSubmit={jest.fn()} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
 
   it('hides attachment button when media is disabled', async () => {
     mockIsMediaEnabled.mockResolvedValue(false);
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -616,7 +626,7 @@ describe('MessageInput', () => {
   it('can show attachment button when media enabled and encryption key exists', async () => {
     mockIsMediaEnabled.mockResolvedValue(true);
     mockHasEncryptionKey.mockResolvedValue(true);
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -635,7 +645,7 @@ describe('MessageInput', () => {
       if (key === 'showColorPickerButton') return Promise.resolve(true);
       return Promise.resolve(fallback);
     });
-    const { toJSON } = render(<MessageInput {...defaultProps} />);
+    const { toJSON } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
@@ -646,12 +656,12 @@ describe('MessageInput', () => {
       if (key === 'showSendButton') return Promise.resolve(true);
       return Promise.resolve(fallback);
     });
-    const comp = render(<MessageInput {...defaultProps} />);
+    const comp = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     try {
       const colorBtn = comp.getByLabelText('Open color picker');
       await act(async () => {
-        fireEvent.press(colorBtn);
+        await fireEvent.press(colorBtn);
       });
     } catch {
       // Button may not be accessible until settings resolve in this test env
@@ -660,13 +670,15 @@ describe('MessageInput', () => {
 
   // ── keyboard key press ────────────────────────────────────────────────────
   it('handles Enter key press event without crash', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
     await act(async () => {
-      fireEvent.changeText(input, 'some text');
+      await fireEvent.changeText(input, 'some text');
       // The event handler calls e.preventDefault() and accesses e.nativeEvent.key
-      fireEvent(input, 'keyPress', {
+      await fireEvent(input, 'keyPress', {
         nativeEvent: { key: 'Enter' },
         preventDefault: jest.fn(),
       });
@@ -675,11 +687,13 @@ describe('MessageInput', () => {
 
   // ── selection change ──────────────────────────────────────────────────────
   it('handles selection change event without crash', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
     await act(async () => {
-      fireEvent(input, 'selectionChange', {
+      await fireEvent(input, 'selectionChange', {
         nativeEvent: { selection: { start: 3, end: 3 } },
       });
     });
@@ -687,15 +701,15 @@ describe('MessageInput', () => {
 
   // ── unmount / cleanup ─────────────────────────────────────────────────────
   it('unmounts without error', async () => {
-    const { unmount } = render(<MessageInput {...defaultProps} />);
+    const { unmount } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     await act(async () => {
-      unmount();
+      await unmount();
     });
   });
 
   it('unmounts cleanly when typing indicator is active', async () => {
-    const { getByPlaceholderText, unmount } = render(
+    const { getByPlaceholderText, unmount } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -706,16 +720,16 @@ describe('MessageInput', () => {
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
     await act(async () => {
-      fireEvent.changeText(input, 'typing...');
+      await fireEvent.changeText(input, 'typing...');
     });
     await act(async () => {
-      unmount();
+      await unmount();
     });
   });
 
   // ── tab/network combinations ──────────────────────────────────────────────
   it('renders with tabId provided', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -729,7 +743,7 @@ describe('MessageInput', () => {
   });
 
   it('renders with query tabId', async () => {
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="query"
@@ -745,19 +759,19 @@ describe('MessageInput', () => {
   // ── message submission with IRC commands ──────────────────────────────────
   it('submits IRC slash commands', async () => {
     const onSubmit = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} onSubmit={onSubmit} />,
     );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/join #test');
+      await fireEvent.changeText(input, '/join #test');
     });
     // Wait for state update before submitting
     await flushAsync();
     await act(async () => {
-      fireEvent(input, 'submitEditing', {
+      await fireEvent(input, 'submitEditing', {
         nativeEvent: { text: '/join #test' },
       });
     });
@@ -766,19 +780,19 @@ describe('MessageInput', () => {
 
   it('submits /me action command', async () => {
     const onSubmit = jest.fn();
-    const { getByPlaceholderText } = render(
+    const { getByPlaceholderText } = await render(
       <MessageInput {...defaultProps} onSubmit={onSubmit} />,
     );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/me waves hello');
+      await fireEvent.changeText(input, '/me waves hello');
     });
     // Wait for state update before submitting
     await flushAsync();
     await act(async () => {
-      fireEvent(input, 'submitEditing', {
+      await fireEvent(input, 'submitEditing', {
         nativeEvent: { text: '/me waves hello' },
       });
     });
@@ -787,12 +801,14 @@ describe('MessageInput', () => {
 
   // ── typing with non-slash text ────────────────────────────────────────────
   it('does not show command suggestions for regular text', async () => {
-    const { getByPlaceholderText } = render(<MessageInput {...defaultProps} />);
+    const { getByPlaceholderText } = await render(
+      <MessageInput {...defaultProps} />,
+    );
     await flushAsync();
     const input = getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, 'hello everyone');
+      await fireEvent.changeText(input, 'hello everyone');
     });
     expect(input.props.value).toBe('hello everyone');
   });
@@ -803,7 +819,7 @@ describe('MessageInput', () => {
       if (key === 'enterKeyBehavior') return Promise.resolve('newline');
       return Promise.resolve(fallback);
     });
-    const { toJSON } = render(<MessageInput {...defaultProps} />);
+    const { toJSON } = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     expect(toJSON()).toBeTruthy();
   });
@@ -816,7 +832,7 @@ describe('MessageInput', () => {
       if (key === 'nickCompleteSeparator2') return Promise.resolve('');
       return Promise.resolve(fallback);
     });
-    const { toJSON } = render(
+    const { toJSON } = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -842,7 +858,7 @@ describe('MessageInput', () => {
       },
     });
 
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         onSubmit={onSubmit}
@@ -855,16 +871,16 @@ describe('MessageInput', () => {
     const input = comp.getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, 'hello @Al');
+      await fireEvent.changeText(input, 'hello @Al');
     });
 
     await act(async () => {
-      fireEvent.press(comp.getByText('Alice'));
+      await fireEvent.press(comp.getByText('Alice'));
     });
     expect(input.props.value).toBe('hello @Alice ');
 
     await act(async () => {
-      fireEvent(input, 'submitEditing');
+      await fireEvent(input, 'submitEditing');
     });
     expect(onSubmit).toHaveBeenCalledWith('hello @Alice__');
   });
@@ -875,7 +891,7 @@ describe('MessageInput', () => {
       { type: 'query', name: 'Bob' },
     ]);
 
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -887,11 +903,11 @@ describe('MessageInput', () => {
     const input = comp.getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/csop #And');
+      await fireEvent.changeText(input, '/csop #And');
     });
 
     await act(async () => {
-      fireEvent.press(comp.getByText('#AndroidIRCx'));
+      await fireEvent.press(comp.getByText('#AndroidIRCx'));
     });
     expect(input.props.value).toBe('/csop #AndroidIRCx ');
   });
@@ -907,7 +923,7 @@ describe('MessageInput', () => {
       },
     ]);
 
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -919,11 +935,11 @@ describe('MessageInput', () => {
     const input = comp.getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/ns');
+      await fireEvent.changeText(input, '/ns');
     });
 
     await act(async () => {
-      fireEvent.press(
+      await fireEvent.press(
         comp.getByText('/msg NickServ identify hunter2 — NickServ identify'),
       );
     });
@@ -938,7 +954,7 @@ describe('MessageInput', () => {
       { command: '/ahistory' },
     ]);
 
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         tabType="channel"
@@ -950,42 +966,38 @@ describe('MessageInput', () => {
     const input = comp.getByPlaceholderText('Enter a message');
 
     await act(async () => {
-      fireEvent.changeText(input, '/a');
+      await fireEvent.changeText(input, '/a');
     });
     expect(comp.getByText('/ahelp — alias')).toBeTruthy();
     expect(comp.getByText('/ahistory — recent')).toBeTruthy();
   });
 
   it('applies formatting controls for selection and color insert', async () => {
-    const comp = render(<MessageInput {...defaultProps} />);
+    const comp = await render(<MessageInput {...defaultProps} />);
     await flushAsync();
     const input = comp.getByPlaceholderText('Enter a message');
-    const { TouchableOpacity } = require('react-native');
-    const findActionButton = (label: string) =>
-      comp.UNSAFE_getAllByType(TouchableOpacity).find((node: any) => {
-        const children = node.props.children;
-        const textNode = Array.isArray(children) ? children[0] : children;
-        return textNode?.props?.children === label;
-      });
+    // RNTL 14 only exposes host elements, so query by visible text of the
+    // formatting button instead of walking composite TouchableOpacity nodes.
+    const findActionButton = (label: string) => comp.getByText(label);
 
     await act(async () => {
-      fireEvent.changeText(input, 'abc');
-      fireEvent(input, 'selectionChange', {
+      await fireEvent.changeText(input, 'abc');
+      await fireEvent(input, 'selectionChange', {
         nativeEvent: { selection: { start: 0, end: 3 } },
       });
     });
 
     await act(async () => {
-      fireEvent.press(comp.getByLabelText('Open color picker'));
+      await fireEvent.press(comp.getByLabelText('Open color picker'));
     });
 
     await act(async () => {
-      fireEvent.press(findActionButton('B'));
+      await fireEvent.press(findActionButton('B'));
     });
     expect(input.props.value).toBe('\u0002abc\u0002');
 
     await act(async () => {
-      fireEvent(input, 'selectionChange', {
+      await fireEvent(input, 'selectionChange', {
         nativeEvent: {
           selection: {
             start: input.props.value.length,
@@ -993,12 +1005,12 @@ describe('MessageInput', () => {
           },
         },
       });
-      fireEvent.press(comp.getByLabelText('Mock insert color'));
+      await fireEvent.press(comp.getByLabelText('Mock insert color'));
     });
     expect(input.props.value).toContain('\u000304');
 
     await act(async () => {
-      fireEvent.press(comp.getByText('Close'));
+      await fireEvent.press(comp.getByText('Close'));
     });
   });
 
@@ -1007,7 +1019,7 @@ describe('MessageInput', () => {
     mockIsMediaEnabled.mockResolvedValue(true);
     mockHasEncryptionKey.mockResolvedValue(true);
 
-    const comp = render(
+    const comp = await render(
       <MessageInput
         {...defaultProps}
         onSubmit={onSubmit}
@@ -1020,13 +1032,13 @@ describe('MessageInput', () => {
     await flushAsync();
 
     await act(async () => {
-      fireEvent.press(comp.getByLabelText('Attach media'));
+      await fireEvent.press(comp.getByLabelText('Attach media'));
     });
     await act(async () => {
-      fireEvent.press(comp.getByLabelText('Mock pick media'));
+      await fireEvent.press(comp.getByLabelText('Mock pick media'));
     });
     await act(async () => {
-      fireEvent.press(comp.getByLabelText('Mock send media'));
+      await fireEvent.press(comp.getByLabelText('Mock send media'));
     });
 
     expect(onSubmit).toHaveBeenCalledWith('@media=abc caption');

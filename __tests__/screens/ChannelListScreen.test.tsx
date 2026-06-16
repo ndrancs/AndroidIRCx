@@ -77,7 +77,7 @@ describe('ChannelListScreen', () => {
   let updateListener: ((channels: any[]) => void) | undefined;
   let endListener: (() => void) | undefined;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
     updateListener = undefined;
@@ -124,15 +124,15 @@ describe('ChannelListScreen', () => {
     connectionManager.getActiveConnection.mockReturnValue(null);
   });
 
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    await act(() => {
       jest.runOnlyPendingTimers();
     });
     jest.useRealTimers();
   });
 
-  it('renders nothing when hidden', () => {
-    const { queryByText } = render(
+  it('renders nothing when hidden', async () => {
+    const { queryByText } = await render(
       <ChannelListScreen
         visible={false}
         onClose={jest.fn()}
@@ -144,7 +144,7 @@ describe('ChannelListScreen', () => {
   });
 
   it('loads channel list from server when connected', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ChannelListScreen
         visible
         onClose={jest.fn()}
@@ -160,7 +160,7 @@ describe('ChannelListScreen', () => {
   it('loads cached channels when disconnected', async () => {
     ircService.getConnectionStatus.mockReturnValue(false);
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <ChannelListScreen
         visible
         onClose={jest.fn()}
@@ -175,7 +175,7 @@ describe('ChannelListScreen', () => {
   it('joins a channel and closes the modal', async () => {
     const onJoinChannel = jest.fn();
     const onClose = jest.fn();
-    const { findByText } = render(
+    const { findByText } = await render(
       <ChannelListScreen
         visible
         onClose={onClose}
@@ -184,14 +184,14 @@ describe('ChannelListScreen', () => {
       />,
     );
 
-    fireEvent.press(await findByText('#alpha'));
+    await fireEvent.press(await findByText('#alpha'));
 
     expect(onJoinChannel).toHaveBeenCalledWith('#alpha', undefined);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('toggles favorites on long press using normalized network id', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ChannelListScreen
         visible
         onClose={jest.fn()}
@@ -200,9 +200,9 @@ describe('ChannelListScreen', () => {
       />,
     );
 
-    fireEvent(await findByText('#alpha'), 'longPress');
+    await fireEvent(await findByText('#alpha'), 'longPress');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(channelFavoritesService.addFavorite).toHaveBeenCalledWith(
         'DBase',
         '#alpha',
@@ -211,7 +211,7 @@ describe('ChannelListScreen', () => {
   });
 
   it('searches after debounce delay', async () => {
-    const { findByPlaceholderText, findByText } = render(
+    const { findByPlaceholderText, findByText } = await render(
       <ChannelListScreen
         visible
         onClose={jest.fn()}
@@ -219,12 +219,12 @@ describe('ChannelListScreen', () => {
       />,
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Search channels...'),
       'term',
     );
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(300);
     });
 
@@ -233,7 +233,7 @@ describe('ChannelListScreen', () => {
   });
 
   it('applies filters and sorting controls', async () => {
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <ChannelListScreen
         visible
         onClose={jest.fn()}
@@ -241,10 +241,13 @@ describe('ChannelListScreen', () => {
       />,
     );
 
-    fireEvent.press(await findByText('Filters'));
-    fireEvent.changeText(await findByPlaceholderText('Min users'), '5');
-    fireEvent.changeText(await findByPlaceholderText('Name pattern'), 'irc');
-    fireEvent.press(await findByText('Name'));
+    await fireEvent.press(await findByText('Filters'));
+    await fireEvent.changeText(await findByPlaceholderText('Min users'), '5');
+    await fireEvent.changeText(
+      await findByPlaceholderText('Name pattern'),
+      'irc',
+    );
+    await fireEvent.press(await findByText('Name'));
 
     expect(await findByText('#filtered')).toBeTruthy();
     expect(channelListService.filterChannelList).toHaveBeenCalledWith({
@@ -256,14 +259,14 @@ describe('ChannelListScreen', () => {
 
   it('refreshes and closes from header actions', async () => {
     const onClose = jest.fn();
-    const { findByText } = render(
+    const { findByText } = await render(
       <ChannelListScreen visible onClose={onClose} onJoinChannel={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Refresh'));
+    await fireEvent.press(await findByText('Refresh'));
     expect(channelListService.requestChannelList).toHaveBeenCalledTimes(2);
 
-    fireEvent.press(await findByText('Close'));
+    await fireEvent.press(await findByText('Close'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

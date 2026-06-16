@@ -69,7 +69,7 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('VoiceRecorder', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockGetVoiceMaxDuration.mockResolvedValue(120);
     mockExists.mockResolvedValue(true);
@@ -89,7 +89,7 @@ describe('VoiceRecorder', () => {
   it('records, stops and sends recording', async () => {
     const onRecordingComplete = jest.fn();
 
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <VoiceRecorder
         onRecordingComplete={onRecordingComplete}
         onCancel={jest.fn()}
@@ -99,29 +99,29 @@ describe('VoiceRecorder', () => {
     const touchables = UNSAFE_getAllByType(
       require('react-native').TouchableOpacity,
     );
-    fireEvent(touchables[0], 'pressIn');
+    await fireEvent(touchables[0], 'pressIn');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockStartRecorder).toHaveBeenCalled();
     });
 
-    act(() => {
+    await act(() => {
       recorderCallbacks.record?.({ currentPosition: 2500 });
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText(/Stop Recording/)).toBeTruthy();
     });
     await act(async () => {
-      fireEvent.press(getByText(/Stop Recording/));
+      await fireEvent.press(getByText(/Stop Recording/));
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Recording complete')).toBeTruthy();
     });
 
     await act(async () => {
-      fireEvent.press(getByText(/Send/));
+      await fireEvent.press(getByText(/Send/));
     });
 
     expect(onRecordingComplete).toHaveBeenCalledWith(
@@ -133,11 +133,11 @@ describe('VoiceRecorder', () => {
   it('supports delete and cancel flows', async () => {
     const onCancel = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <VoiceRecorder onRecordingComplete={jest.fn()} onCancel={onCancel} />,
     );
 
-    fireEvent.press(getByText('Cancel'));
+    await fireEvent.press(getByText('Cancel'));
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -146,17 +146,17 @@ describe('VoiceRecorder', () => {
       .spyOn(PermissionsAndroid, 'request')
       .mockResolvedValueOnce(PermissionsAndroid.RESULTS.DENIED);
 
-    const { UNSAFE_getAllByType, getByText } = render(
+    const { UNSAFE_getAllByType, getByText } = await render(
       <VoiceRecorder onRecordingComplete={jest.fn()} onCancel={jest.fn()} />,
     );
 
     const touchables = UNSAFE_getAllByType(
       require('react-native').TouchableOpacity,
     );
-    fireEvent(touchables[0], 'pressIn');
+    await fireEvent(touchables[0], 'pressIn');
 
     if (Platform.OS === 'android') {
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(getByText('Microphone permission denied')).toBeTruthy();
       });
       expect(mockStartRecorder).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe('VoiceRecorder', () => {
       return;
     }
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockStartRecorder).toHaveBeenCalled();
     });
   });
@@ -173,7 +173,7 @@ describe('VoiceRecorder', () => {
     mockExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     const onRecordingComplete = jest.fn();
 
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <VoiceRecorder
         onRecordingComplete={onRecordingComplete}
         onCancel={jest.fn()}
@@ -183,22 +183,22 @@ describe('VoiceRecorder', () => {
     const touchables = UNSAFE_getAllByType(
       require('react-native').TouchableOpacity,
     );
-    fireEvent(touchables[0], 'pressIn');
+    await fireEvent(touchables[0], 'pressIn');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockStartRecorder).toHaveBeenCalled();
     });
 
-    act(() => {
+    await act(() => {
       recorderCallbacks.record?.({ currentPosition: 2500 });
     });
 
     await act(async () => {
-      fireEvent.press(getByText(/Stop Recording/));
+      await fireEvent.press(getByText(/Stop Recording/));
     });
 
     await act(async () => {
-      fireEvent.press(getByText(/Send/));
+      await fireEvent.press(getByText(/Send/));
     });
 
     expect(onRecordingComplete).not.toHaveBeenCalled();
@@ -208,33 +208,33 @@ describe('VoiceRecorder', () => {
   });
 
   it('deletes recorded file and returns to idle state', async () => {
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <VoiceRecorder onRecordingComplete={jest.fn()} onCancel={jest.fn()} />,
     );
 
     const touchables = UNSAFE_getAllByType(
       require('react-native').TouchableOpacity,
     );
-    fireEvent(touchables[0], 'pressIn');
+    await fireEvent(touchables[0], 'pressIn');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockStartRecorder).toHaveBeenCalled();
     });
 
-    act(() => {
+    await act(() => {
       recorderCallbacks.record?.({ currentPosition: 2500 });
     });
 
     await act(async () => {
-      fireEvent.press(getByText(/Stop Recording/));
+      await fireEvent.press(getByText(/Stop Recording/));
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Recording complete')).toBeTruthy();
     });
 
     await act(async () => {
-      fireEvent.press(getByText('Delete'));
+      await fireEvent.press(getByText('Delete'));
     });
 
     expect(mockUnlink).toHaveBeenCalledWith('/cache/voice_1.m4a');

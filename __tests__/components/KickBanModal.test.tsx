@@ -35,7 +35,7 @@ const colors = {
 };
 
 describe('KickBanModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockGenerateBanMask.mockReturnValue('*!*@example.com');
@@ -47,7 +47,7 @@ describe('KickBanModal', () => {
   });
 
   it('shows validation error when reason is empty', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <KickBanModal
         visible
         onClose={jest.fn()}
@@ -60,7 +60,7 @@ describe('KickBanModal', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Confirm'));
+      await fireEvent.press(getByText('Confirm'));
     });
 
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -73,7 +73,7 @@ describe('KickBanModal', () => {
     const onConfirm = jest.fn();
     const onClose = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <KickBanModal
         visible
         onClose={onClose}
@@ -85,10 +85,10 @@ describe('KickBanModal', () => {
       />,
     );
 
-    fireEvent.press(getByText('Spamming'));
+    await fireEvent.press(getByText('Spamming'));
 
     await act(async () => {
-      fireEvent.press(getByText('Confirm'));
+      await fireEvent.press(getByText('Confirm'));
     });
 
     expect(onConfirm).toHaveBeenCalledWith({
@@ -103,7 +103,7 @@ describe('KickBanModal', () => {
   });
 
   it('validates timed unban value', async () => {
-    const { getByText, getByPlaceholderText, getByRole } = render(
+    const { getByText, getByPlaceholderText, getByRole } = await render(
       <KickBanModal
         visible
         onClose={jest.fn()}
@@ -115,12 +115,15 @@ describe('KickBanModal', () => {
       />,
     );
 
-    fireEvent.changeText(getByPlaceholderText('Enter reason...'), 'reason');
-    fireEvent(getByRole('switch'), 'valueChange', true);
+    await fireEvent.changeText(
+      getByPlaceholderText('Enter reason...'),
+      'reason',
+    );
+    await fireEvent(getByRole('switch'), 'valueChange', true);
 
-    fireEvent.changeText(getByPlaceholderText('Time'), '0');
+    await fireEvent.changeText(getByPlaceholderText('Time'), '0');
     await act(async () => {
-      fireEvent.press(getByText('Confirm'));
+      await fireEvent.press(getByText('Confirm'));
     });
 
     expect(Alert.alert).toHaveBeenCalledWith(

@@ -177,7 +177,7 @@ describe('useTabContextMenu', () => {
     ircService: mockGetActiveIRCService(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     // Reset UI store mocks
     Object.values(mockUIStore).forEach((fn: any) => fn.mockClear?.());
@@ -196,18 +196,18 @@ describe('useTabContextMenu', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     cleanup();
   });
 
-  it('should return handleTabLongPress function', () => {
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+  it('should return handleTabLongPress function', async () => {
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     expect(result.current.handleTabLongPress).toBeDefined();
     expect(typeof result.current.handleTabLongPress).toBe('function');
   });
 
   it('should handle server tab long press for connected server', async () => {
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const serverTab = {
       id: 'server-freenode',
@@ -228,7 +228,7 @@ describe('useTabContextMenu', () => {
   it('should handle server tab long press for disconnected server', async () => {
     (connectionManager.getConnection as jest.Mock).mockReturnValue(null);
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const serverTab = {
       id: 'server-freenode',
@@ -249,7 +249,7 @@ describe('useTabContextMenu', () => {
   });
 
   it('should handle channel tab long press', async () => {
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const channelTab = {
       id: 'channel-1',
@@ -276,7 +276,7 @@ describe('useTabContextMenu', () => {
   });
 
   it('should handle query tab long press', async () => {
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const queryTab = {
       id: 'query-1',
@@ -303,7 +303,7 @@ describe('useTabContextMenu', () => {
       true,
     );
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const channelTab = {
       id: 'channel-1',
@@ -333,7 +333,7 @@ describe('useTabContextMenu', () => {
       },
     });
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
 
     const serverTab = {
       id: 'server-freenode',
@@ -353,7 +353,7 @@ describe('useTabContextMenu', () => {
 
   it('executes server disconnected connect action and shows missing network alert', async () => {
     (connectionManager.getConnection as jest.Mock).mockReturnValue(null);
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -383,7 +383,7 @@ describe('useTabContextMenu', () => {
   it('executes server connected actions: disconnect, browse channels, close all', async () => {
     const disconnectMock = jest.fn();
     (connectionManager.disconnect as jest.Mock) = disconnectMock as any;
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -422,7 +422,7 @@ describe('useTabContextMenu', () => {
       sendCommand: jest.fn(),
       sendRaw: jest.fn(),
     };
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTabContextMenu({
         ...defaultParams,
         getActiveIRCService: jest.fn().mockReturnValue(activeIRC),
@@ -467,7 +467,7 @@ describe('useTabContextMenu', () => {
   it('executes query options: whois, dcc, ignore and blacklist', async () => {
     const ignoreUser = jest.fn().mockResolvedValue(undefined);
     const { dccChatService } = require('../../src/services/DCCChatService');
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTabContextMenu({
         ...defaultParams,
         getActiveUserManagementService: jest
@@ -523,7 +523,7 @@ describe('useTabContextMenu', () => {
     });
     mockGetNetworkConfigForId.mockResolvedValueOnce({ clientCert: 'PEM_CERT' });
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -572,7 +572,7 @@ describe('useTabContextMenu', () => {
       id: 'freenode',
       name: 'freenode',
     });
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -602,7 +602,7 @@ describe('useTabContextMenu', () => {
       { id: 'freenode', name: 'freenode', servers: [] },
     ]);
     const { tabService } = require('../../src/services/TabService');
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -644,7 +644,7 @@ describe('useTabContextMenu', () => {
         buttons[1]?.onPress?.('u'),
     );
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const serverTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -717,7 +717,7 @@ describe('useTabContextMenu', () => {
       .mockResolvedValueOnce(true);
     channelEncryptionSettingsService.getAlwaysEncrypt.mockResolvedValue(false);
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTabContextMenu({
         ...defaultParams,
         getActiveIRCService: jest.fn().mockReturnValue(activeIRC),
@@ -806,7 +806,7 @@ describe('useTabContextMenu', () => {
       { service: 'ChanServ' },
     ]);
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTabContextMenu({
         ...defaultParams,
         getActiveIRCService: jest.fn().mockReturnValue(activeIRC),
@@ -901,7 +901,7 @@ describe('useTabContextMenu', () => {
       )
       .mockResolvedValueOnce(null);
 
-    const { result } = renderHook(() => useTabContextMenu(defaultParams));
+    const { result } = await renderHook(() => useTabContextMenu(defaultParams));
     const firstTab = {
       id: 'server-freenode',
       name: 'Freenode',
@@ -919,7 +919,7 @@ describe('useTabContextMenu', () => {
       unreadCount: 0,
     };
 
-    act(() => {
+    await act(() => {
       result.current.handleTabLongPress(firstTab);
     });
     await act(async () => {

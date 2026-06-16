@@ -35,18 +35,18 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('ApplyThemeSettingsButton', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockUseTheme.mockReturnValue({ theme: { name: 'Oceanic' } });
     mockSetSetting.mockResolvedValue(undefined);
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
   });
 
-  it('returns null when recommended settings are unavailable', () => {
+  it('returns null when recommended settings are unavailable', async () => {
     mockHasRecommendedSettings.mockReturnValue(false);
     mockGetRecommendedSettings.mockReturnValue(null);
 
-    const { toJSON } = render(<ApplyThemeSettingsButton />);
+    const { toJSON } = await render(<ApplyThemeSettingsButton />);
     expect(toJSON()).toBeNull();
   });
 
@@ -61,11 +61,11 @@ describe('ApplyThemeSettingsButton', () => {
     });
 
     const onApplied = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ApplyThemeSettingsButton onApplied={onApplied} />,
     );
 
-    fireEvent.press(getByText('Apply Theme Settings'));
+    await fireEvent.press(getByText('Apply Theme Settings'));
     const firstAlertArgs = (Alert.alert as jest.Mock).mock.calls[0];
     const applyAction = firstAlertArgs[2][1];
 
@@ -96,9 +96,9 @@ describe('ApplyThemeSettingsButton', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const { getByText } = render(<ApplyThemeSettingsButton />);
+    const { getByText } = await render(<ApplyThemeSettingsButton />);
 
-    fireEvent.press(getByText('Apply Theme Settings'));
+    await fireEvent.press(getByText('Apply Theme Settings'));
     const firstAlertArgs = (Alert.alert as jest.Mock).mock.calls[0];
     const applyAction = firstAlertArgs[2][1];
 

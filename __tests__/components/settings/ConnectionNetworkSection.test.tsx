@@ -21,6 +21,8 @@ const mockSetQuickConnect = jest.fn(async () => undefined);
 const mockUpdateRateLimitConfig = jest.fn(async () => undefined);
 const mockUpdateFloodProtectionConfig = jest.fn(async () => undefined);
 const mockUpdateLagMonitoringConfig = jest.fn(async () => undefined);
+const mockRefreshNetworks = jest.fn();
+const mockHookUpdateAutoReconnectConfig = jest.fn(async () => undefined);
 const mockAutoRejoinSetEnabled = jest.fn();
 const mockAutoVoiceSetConfig = jest.fn();
 const mockAutoReconnectSetConfig = jest.fn(async () => undefined);
@@ -60,6 +62,10 @@ const mockChannelFavoritesRemove = jest.fn(async () => undefined);
 const mockChannelFavoritesMove = jest.fn(async () => undefined);
 const mockIdentityProfilesList = jest.fn(async () => []);
 const mockSetShowIRCv3Info = jest.fn();
+const mockHookNetworks = [
+  { id: 'net1', name: 'Libera.Chat' },
+  { id: 'net2', name: 'OFTC' },
+];
 
 jest.mock('../../../src/i18n/transifex', () => ({
   useT: () => (key: string, params?: Record<string, any>) => {
@@ -98,10 +104,7 @@ jest.mock('../../../src/components/settings/SettingItem', () => {
 
 jest.mock('../../../src/hooks/useSettingsConnection', () => ({
   useSettingsConnection: () => ({
-    networks: [
-      { id: 'net1', name: 'Libera.Chat' },
-      { id: 'net2', name: 'OFTC' },
-    ],
+    networks: mockHookNetworks,
     autoReconnectConfig: { enabled: false },
     rateLimitConfig: { enabled: false, messagesPerSecond: 2, burstLimit: 5 },
     floodProtectionConfig: { enabled: false, maxMessages: 5, timeWindow: 5 },
@@ -111,8 +114,8 @@ jest.mock('../../../src/hooks/useSettingsConnection', () => ({
       warningThreshold: 3000,
     },
     connectionStats: null,
-    refreshNetworks: jest.fn(),
-    updateAutoReconnectConfig: jest.fn(async () => undefined),
+    refreshNetworks: mockRefreshNetworks,
+    updateAutoReconnectConfig: mockHookUpdateAutoReconnectConfig,
     updateRateLimitConfig: (...args: any[]) =>
       mockUpdateRateLimitConfig(...args),
     updateFloodProtectionConfig: (...args: any[]) =>
@@ -270,7 +273,7 @@ const styles = {
 };
 
 describe('ConnectionNetworkSection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
@@ -286,12 +289,12 @@ describe('ConnectionNetworkSection', () => {
     mockSetShowIRCv3Info.mockClear();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.restoreAllMocks();
   });
 
   it('renders all main settings items', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -300,7 +303,7 @@ describe('ConnectionNetworkSection', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedItems.has('setup-wizard')).toBe(true);
       expect(mockCapturedItems.has('choose-network')).toBe(true);
       expect(mockCapturedItems.has('quick-connect-network')).toBe(true);
@@ -340,7 +343,7 @@ describe('ConnectionNetworkSection', () => {
       },
     });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -365,7 +368,7 @@ describe('ConnectionNetworkSection', () => {
     const onShowNetworksList = jest.fn();
     const onShowConnectionProfiles = jest.fn();
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -392,7 +395,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles auto-connect favorite server toggle', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -416,7 +419,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles auto-reconnect configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -469,7 +472,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles rate limiting configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -508,7 +511,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles flood protection configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -551,7 +554,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles lag monitoring configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -606,7 +609,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('displays connection statistics', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -631,7 +634,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles global proxy configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -695,7 +698,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles auto-rejoin on kick toggle', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -713,7 +716,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles auto-voice configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -754,7 +757,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles DCC configuration', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -849,7 +852,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles DCC block private IP security warning', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -882,7 +885,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles DCC file filter buttons', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -916,7 +919,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles DCC auto accept from level selection', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -956,7 +959,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles auto-join favorites toggle', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -987,7 +990,7 @@ describe('ConnectionNetworkSection', () => {
     ]);
     mockChannelFavoritesGetAll.mockReturnValue(favoritesMap);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1015,7 +1018,7 @@ describe('ConnectionNetworkSection', () => {
     ]);
     mockChannelFavoritesGetAll.mockReturnValue(favoritesMap);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1048,7 +1051,7 @@ describe('ConnectionNetworkSection', () => {
     ]);
     mockChannelFavoritesGetAll.mockReturnValue(favoritesMap);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1085,7 +1088,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles WHOIS auto-detect toggle', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1110,7 +1113,7 @@ describe('ConnectionNetworkSection', () => {
       ircService: { setWhoisUseDoubleNick },
     });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1137,7 +1140,7 @@ describe('ConnectionNetworkSection', () => {
     });
     mockServiceDetectionGet.mockReturnValue({ serviceType: 'undernet' });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1160,7 +1163,7 @@ describe('ConnectionNetworkSection', () => {
   it('handles biometric lock toggle when available', async () => {
     mockBiometricIsAvailable.mockResolvedValue(true);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1168,7 +1171,7 @@ describe('ConnectionNetworkSection', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedItems.has('connection-biometric-lock')).toBe(true);
       expect(mockCapturedItems.get('connection-biometric-lock').disabled).toBe(
         false,
@@ -1185,7 +1188,7 @@ describe('ConnectionNetworkSection', () => {
   it('shows alert when biometric not available', async () => {
     mockBiometricIsAvailable.mockResolvedValue(false);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1212,7 +1215,7 @@ describe('ConnectionNetworkSection', () => {
       return def;
     });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1220,7 +1223,7 @@ describe('ConnectionNetworkSection', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockCapturedItems.has('connection-biometric-lock')).toBe(true);
       expect(mockCapturedItems.get('connection-biometric-lock').disabled).toBe(
         false,
@@ -1241,7 +1244,7 @@ describe('ConnectionNetworkSection', () => {
     (pick as jest.Mock).mockRejectedValue(new Error('Picker failed'));
     (isErrorWithCode as jest.Mock).mockReturnValue(false);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1269,7 +1272,7 @@ describe('ConnectionNetworkSection', () => {
     );
     (pick as jest.Mock).mockRejectedValue(cancelError);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1296,7 +1299,7 @@ describe('ConnectionNetworkSection', () => {
       uri: 'file:///storage/emulated/0/Download%20Files',
     });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1327,7 +1330,7 @@ describe('ConnectionNetworkSection', () => {
       fileCopyUri: 'file:///storage/emulated/0/Downloads/example.txt',
     });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1355,7 +1358,7 @@ describe('ConnectionNetworkSection', () => {
     pickerModule.pickDirectory.mockResolvedValue(null);
     (pick as jest.Mock).mockResolvedValue({ uri: 'single-file' });
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1383,7 +1386,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles invalid numeric inputs gracefully', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1416,7 +1419,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles quick connect network selection', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1435,7 +1438,7 @@ describe('ConnectionNetworkSection', () => {
   it('handles empty channel favorites state', async () => {
     mockChannelFavoritesGetAll.mockReturnValue(new Map());
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1461,7 +1464,7 @@ describe('ConnectionNetworkSection', () => {
       { id: '2', name: 'Profile 2' },
     ]);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1478,7 +1481,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles rate limiting input validation', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1521,7 +1524,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles flood protection input validation', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1558,7 +1561,7 @@ describe('ConnectionNetworkSection', () => {
   });
 
   it('handles lag monitoring input validation', async () => {
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}
@@ -1600,7 +1603,7 @@ describe('ConnectionNetworkSection', () => {
   it('shows an IRCv3 diagnostics safety alert when no connection is active', async () => {
     mockConnectionGet.mockReturnValue(null);
 
-    render(
+    await render(
       <ConnectionNetworkSection
         colors={colors}
         styles={styles as any}

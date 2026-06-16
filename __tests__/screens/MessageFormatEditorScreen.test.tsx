@@ -82,8 +82,8 @@ jest.mock('../../src/components/ColorPalettePicker', () => ({
 }));
 
 describe('MessageFormatEditorScreen', () => {
-  it('renders nothing useful when hidden', () => {
-    const { queryByText } = render(
+  it('renders nothing useful when hidden', async () => {
+    const { queryByText } = await render(
       <MessageFormatEditorScreen
         visible={false}
         colors={mockColors as any}
@@ -98,7 +98,7 @@ describe('MessageFormatEditorScreen', () => {
 
   it('adds a text part and saves formats', async () => {
     const onSave = jest.fn();
-    const { findAllByText, findByPlaceholderText, findByText } = render(
+    const { findAllByText, findByPlaceholderText, findByText } = await render(
       <MessageFormatEditorScreen
         visible
         colors={mockColors as any}
@@ -108,11 +108,11 @@ describe('MessageFormatEditorScreen', () => {
       />,
     );
 
-    fireEvent.press((await findAllByText('+'))[0]);
-    fireEvent.press(await findByText('Text'));
-    fireEvent.changeText(await findByPlaceholderText('Text'), 'custom');
-    fireEvent.press(await findByText('Apply'));
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press((await findAllByText('+'))[0]);
+    await fireEvent.press(await findByText('Text'));
+    await fireEvent.changeText(await findByPlaceholderText('Text'), 'custom');
+    await fireEvent.press(await findByText('Apply'));
+    await fireEvent.press(await findByText('Save'));
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -125,7 +125,7 @@ describe('MessageFormatEditorScreen', () => {
 
   it('edits a part, applies color and reorders parts', async () => {
     const onSave = jest.fn();
-    const { findByText, getAllByText } = render(
+    const { findByText, getAllByText } = await render(
       <MessageFormatEditorScreen
         visible
         colors={mockColors as any}
@@ -135,13 +135,13 @@ describe('MessageFormatEditorScreen', () => {
       />,
     );
 
-    fireEvent.press(getAllByText('{time}')[0]);
-    fireEvent.press(await findByText('B'));
-    fireEvent.press(await findByText('Text color'));
-    fireEvent.press(await findByText('Apply Palette Color'));
-    fireEvent.press(await findByText('Move Right'));
-    fireEvent.press(await findByText('Apply'));
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press(getAllByText('{time}')[0]);
+    await fireEvent.press(await findByText('B'));
+    await fireEvent.press(await findByText('Text color'));
+    await fireEvent.press(await findByText('Apply Palette Color'));
+    await fireEvent.press(await findByText('Move Right'));
+    await fireEvent.press(await findByText('Apply'));
+    await fireEvent.press(await findByText('Save'));
 
     const saved = onSave.mock.calls[0][0];
     expect(saved.message[1]).toEqual(
@@ -158,7 +158,7 @@ describe('MessageFormatEditorScreen', () => {
 
   it('deletes an existing part and supports custom color clearing', async () => {
     const onSave = jest.fn();
-    const { findByDisplayValue, findByText, getAllByText } = render(
+    const { findByDisplayValue, findByText, getAllByText } = await render(
       <MessageFormatEditorScreen
         visible
         colors={mockColors as any}
@@ -168,13 +168,13 @@ describe('MessageFormatEditorScreen', () => {
       />,
     );
 
-    fireEvent.press(getAllByText(' hello ')[1]);
-    fireEvent.press(await findByText('Background'));
-    fireEvent.press(await findByText('Custom'));
-    fireEvent.changeText(await findByDisplayValue('#FFFFFF'), '#abcdef');
-    fireEvent.press(await findByText('Clear'));
-    fireEvent.press(await findByText('Delete'));
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press(getAllByText(' hello ')[1]);
+    await fireEvent.press(await findByText('Background'));
+    await fireEvent.press(await findByText('Custom'));
+    await fireEvent.changeText(await findByDisplayValue('#FFFFFF'), '#abcdef');
+    await fireEvent.press(await findByText('Clear'));
+    await fireEvent.press(await findByText('Delete'));
+    await fireEvent.press(await findByText('Save'));
 
     const saved = onSave.mock.calls[0][0];
     expect(saved.message).toHaveLength(1);

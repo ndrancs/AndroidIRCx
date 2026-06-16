@@ -21,8 +21,8 @@ const colors = {
 };
 
 describe('ServiceSelector', () => {
-  it('renders detected service for auto mode', () => {
-    const { getByText } = render(
+  it('renders detected service for auto mode', async () => {
+    const { getByText } = await render(
       <ServiceSelector
         value="auto"
         onChange={jest.fn()}
@@ -34,9 +34,9 @@ describe('ServiceSelector', () => {
     expect(getByText('Auto (anope)')).toBeTruthy();
   });
 
-  it('opens modal and selects a concrete service', () => {
+  it('opens modal and selects a concrete service', async () => {
     const onChange = jest.fn();
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = await render(
       <ServiceSelector
         value="auto"
         onChange={onChange}
@@ -45,17 +45,17 @@ describe('ServiceSelector', () => {
       />,
     );
 
-    fireEvent.press(getByText('IRC Service Type'));
+    await fireEvent.press(getByText('IRC Service Type'));
     expect(getByText('Select IRC Service')).toBeTruthy();
 
-    fireEvent.press(getByText('Anope'));
+    await fireEvent.press(getByText('Anope'));
 
     expect(onChange).toHaveBeenCalledWith('anope');
     expect(queryByText('Select IRC Service')).toBeNull();
   });
 
-  it('does not open modal when disabled', () => {
-    const { getByText, queryByText } = render(
+  it('does not open modal when disabled', async () => {
+    const { getByText, queryByText } = await render(
       <ServiceSelector
         value="generic"
         onChange={jest.fn()}
@@ -65,12 +65,12 @@ describe('ServiceSelector', () => {
       />,
     );
 
-    fireEvent.press(getByText('IRC Service Type'));
+    await fireEvent.press(getByText('IRC Service Type'));
     expect(queryByText('Select IRC Service')).toBeNull();
   });
 
-  it('renders current non-auto selection label', () => {
-    const { getByText } = render(
+  it('renders current non-auto selection label', async () => {
+    const { getByText } = await render(
       <ServiceSelector
         value="quakenet"
         onChange={jest.fn()}

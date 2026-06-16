@@ -236,7 +236,7 @@ describe('backupRestoreFlow Integration Test', () => {
     isMountedRef: { current: true },
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -276,7 +276,7 @@ describe('backupRestoreFlow Integration Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate creating a backup
     const backup =
@@ -302,7 +302,7 @@ describe('backupRestoreFlow Integration Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Mock a valid backup object
     const mockBackup = {
@@ -333,7 +333,7 @@ describe('backupRestoreFlow Integration Test', () => {
     expect(mockRestoreBackup).toHaveBeenCalledWith(mockBackup);
   });
 
-  it('should validate backup before restoration', () => {
+  it('should validate backup before restoration', async () => {
     const mockValidateBackup = jest.fn().mockReturnValue(true);
     require('../../src/services/DataBackupService').dataBackupService.validateBackup.mockImplementation(
       mockValidateBackup,
@@ -357,7 +357,7 @@ describe('backupRestoreFlow Integration Test', () => {
     expect(isValid).toBe(true);
   });
 
-  it('should handle invalid backup gracefully', () => {
+  it('should handle invalid backup gracefully', async () => {
     const mockValidateBackup = jest.fn().mockReturnValue(false);
     require('../../src/services/DataBackupService').dataBackupService.validateBackup.mockImplementation(
       mockValidateBackup,
@@ -381,7 +381,7 @@ describe('backupRestoreFlow Integration Test', () => {
     expect(isValid).toBe(false);
   });
 
-  it('should handle backup metadata retrieval', () => {
+  it('should handle backup metadata retrieval', async () => {
     const mockGetBackupMetadata = jest.fn().mockReturnValue({
       version: '1.0',
       timestamp: Date.now(),

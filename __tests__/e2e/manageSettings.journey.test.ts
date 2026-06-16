@@ -250,7 +250,7 @@ describe('manageSettings Journey Test', () => {
     isMountedRef: { current: true },
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -296,7 +296,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing notification settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -320,7 +320,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing theme settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -344,7 +344,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing nickname settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -368,7 +368,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing auto-join channel settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -395,7 +395,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing message history settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -419,7 +419,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing DCC settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -443,7 +443,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing encryption settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -467,7 +467,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing privacy settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -491,7 +491,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate changing appearance settings
     await require('../../src/services/SettingsService').settingsService.saveSetting(
@@ -515,7 +515,7 @@ describe('manageSettings Journey Test', () => {
       setTabs: mockSetTabs,
     };
 
-    renderHook(() => useConnectionLifecycle(paramsWithSetter));
+    await renderHook(() => useConnectionLifecycle(paramsWithSetter));
 
     // Simulate saving all settings
     const settings = {

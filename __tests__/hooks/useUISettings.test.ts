@@ -75,8 +75,8 @@ jest.mock('../../src/services/ScriptingService', () => ({
 import { settingsService } from '../../src/services/SettingsService';
 import { scriptingService } from '../../src/services/ScriptingService';
 
-const flushPromises = () =>
-  act(async () => {
+const flushPromises = async () =>
+  await act(async () => {
     await new Promise(r => setTimeout(r, 0));
   });
 
@@ -93,7 +93,7 @@ describe('useUISettings', () => {
     setAutoConnectFavoriteServer: mockSetAutoConnectFavoriteServer,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     Object.keys(settingChangeCallbacks).forEach(
       k => delete settingChangeCallbacks[k],
@@ -101,7 +101,7 @@ describe('useUISettings', () => {
   });
 
   it('should load raw command settings on mount', async () => {
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 
@@ -113,7 +113,7 @@ describe('useUISettings', () => {
   });
 
   it('should normalize and set raw category visibility', async () => {
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 
@@ -127,7 +127,7 @@ describe('useUISettings', () => {
   });
 
   it('should initialize scripting service', async () => {
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 
@@ -135,7 +135,7 @@ describe('useUISettings', () => {
   });
 
   it('should load message visibility settings', async () => {
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 
@@ -149,7 +149,7 @@ describe('useUISettings', () => {
   });
 
   it('should load UI settings into callback props', async () => {
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 
@@ -159,8 +159,8 @@ describe('useUISettings', () => {
     expect(mockSetAutoConnectFavoriteServer).toHaveBeenCalledWith(true);
   });
 
-  it('should subscribe to setting changes', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should subscribe to setting changes', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     expect(settingsService.onSettingChange).toHaveBeenCalledWith(
       'hideJoinMessages',
@@ -188,8 +188,8 @@ describe('useUISettings', () => {
     );
   });
 
-  it('should update hideJoinMessages via setting change listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update hideJoinMessages via setting change listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.hideJoinMessages) {
       settingChangeCallbacks.hideJoinMessages(true);
@@ -198,8 +198,8 @@ describe('useUISettings', () => {
     expect(mockStore.setHideJoinMessages).toHaveBeenCalledWith(true);
   });
 
-  it('should update hidePartMessages via setting change listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update hidePartMessages via setting change listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.hidePartMessages) {
       settingChangeCallbacks.hidePartMessages(true);
@@ -208,8 +208,8 @@ describe('useUISettings', () => {
     expect(mockStore.setHidePartMessages).toHaveBeenCalledWith(true);
   });
 
-  it('should update hideQuitMessages via setting change listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update hideQuitMessages via setting change listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.hideQuitMessages) {
       settingChangeCallbacks.hideQuitMessages(false);
@@ -218,8 +218,8 @@ describe('useUISettings', () => {
     expect(mockStore.setHideQuitMessages).toHaveBeenCalledWith(false);
   });
 
-  it('should update hideIrcServiceListenerMessages via listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update hideIrcServiceListenerMessages via listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.hideIrcServiceListenerMessages) {
       settingChangeCallbacks.hideIrcServiceListenerMessages(true);
@@ -230,8 +230,8 @@ describe('useUISettings', () => {
     );
   });
 
-  it('should update showTypingIndicators via listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update showTypingIndicators via listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.showTypingIndicators) {
       settingChangeCallbacks.showTypingIndicators(false);
@@ -240,8 +240,8 @@ describe('useUISettings', () => {
     expect(mockStore.setShowTypingIndicators).toHaveBeenCalledWith(false);
   });
 
-  it('should update autoConnectFavoriteServer via listener', () => {
-    renderHook(() => useUISettings(defaultProps));
+  it('should update autoConnectFavoriteServer via listener', async () => {
+    await renderHook(() => useUISettings(defaultProps));
 
     if (settingChangeCallbacks.autoConnectFavoriteServer) {
       settingChangeCallbacks.autoConnectFavoriteServer(true);
@@ -250,10 +250,10 @@ describe('useUISettings', () => {
     expect(mockSetAutoConnectFavoriteServer).toHaveBeenCalledWith(true);
   });
 
-  it('should clean up subscriptions on unmount', () => {
-    const { unmount } = renderHook(() => useUISettings(defaultProps));
+  it('should clean up subscriptions on unmount', async () => {
+    const { unmount } = await renderHook(() => useUISettings(defaultProps));
 
-    unmount();
+    await unmount();
 
     const calls = (settingsService.onSettingChange as jest.Mock).mock.results;
     calls.forEach((result: any) => {
@@ -271,7 +271,7 @@ describe('useUISettings', () => {
       },
     );
 
-    renderHook(() => useUISettings(defaultProps));
+    await renderHook(() => useUISettings(defaultProps));
 
     await flushPromises();
 

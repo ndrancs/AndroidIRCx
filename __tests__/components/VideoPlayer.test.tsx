@@ -40,11 +40,7 @@ jest.mock('react-native-video', () => {
       enterPictureInPicture: mockEnterPictureInPicture,
     }));
 
-    return (
-      <video-test data-props={JSON.stringify(props)}>
-        Video Component
-      </video-test>
-    );
+    return <video-test data-props={JSON.stringify(props)} />;
   });
 });
 
@@ -53,54 +49,62 @@ describe('VideoPlayer', () => {
     url: 'https://example.com/video.mp4',
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should render video container', () => {
-    const { UNSAFE_root } = render(<VideoPlayer {...defaultProps} />);
+  it('should render video container', async () => {
+    const { UNSAFE_root } = await render(<VideoPlayer {...defaultProps} />);
     expect(UNSAFE_root).toBeTruthy();
   });
 
-  it('should render Video component with correct source', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should render Video component with correct source', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.source.uri).toBe('https://example.com/video.mp4');
   });
 
-  it('should render loading indicator initially', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should render loading indicator initially', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const activityIndicator = UNSAFE_getByType('ActivityIndicator');
     expect(activityIndicator).toBeTruthy();
   });
 
-  it('should pass controls prop to Video', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should pass controls prop to Video', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.controls).toBe(true);
   });
 
-  it('should initialize with paused state', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should initialize with paused state', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.paused).toBe(true);
   });
 
-  it('should render play button', () => {
-    const { getByText } = render(<VideoPlayer {...defaultProps} />);
+  it('should render play button', async () => {
+    const { getByText } = await render(<VideoPlayer {...defaultProps} />);
     expect(getByText('Play')).toBeTruthy();
   });
 
-  it('should toggle play/pause when button pressed', () => {
-    const { getByText, UNSAFE_getByType } = render(
+  it('should toggle play/pause when button pressed', async () => {
+    const { getByText, UNSAFE_getByType } = await render(
       <VideoPlayer {...defaultProps} />,
     );
     const playButton = getByText('Play');
 
-    fireEvent.press(playButton);
+    await fireEvent.press(playButton);
 
     // After press, should show Pause
     expect(getByText('Pause')).toBeTruthy();
@@ -111,47 +115,55 @@ describe('VideoPlayer', () => {
     expect(props.paused).toBe(false);
   });
 
-  it('should toggle back to play when pressed again', () => {
-    const { getByText } = render(<VideoPlayer {...defaultProps} />);
+  it('should toggle back to play when pressed again', async () => {
+    const { getByText } = await render(<VideoPlayer {...defaultProps} />);
     const playButton = getByText('Play');
 
-    fireEvent.press(playButton);
+    await fireEvent.press(playButton);
     const pauseButton = getByText('Pause');
-    fireEvent.press(pauseButton);
+    await fireEvent.press(pauseButton);
 
     expect(getByText('Play')).toBeTruthy();
   });
 
-  it('should pass resizeMode prop', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should pass resizeMode prop', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.resizeMode).toBe('contain');
   });
 
-  it('should have playInBackground prop', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should have playInBackground prop', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.playInBackground).toBeDefined();
   });
 
-  it('should have playWhenInactive prop', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should have playWhenInactive prop', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.playWhenInactive).toBeDefined();
   });
 
-  it('should have enterPictureInPictureOnLeave prop', () => {
-    const { UNSAFE_getByType } = render(<VideoPlayer {...defaultProps} />);
+  it('should have enterPictureInPictureOnLeave prop', async () => {
+    const { UNSAFE_getByType } = await render(
+      <VideoPlayer {...defaultProps} />,
+    );
     const video = UNSAFE_getByType('video-test');
     const props = JSON.parse(video.props['data-props']);
     expect(props.enterPictureInPictureOnLeave).toBeDefined();
   });
 
-  it('should render with different URL', () => {
-    const { UNSAFE_getByType } = render(
+  it('should render with different URL', async () => {
+    const { UNSAFE_getByType } = await render(
       <VideoPlayer url="https://example.com/another-video.mp4" />,
     );
     const video = UNSAFE_getByType('video-test');
@@ -159,48 +171,50 @@ describe('VideoPlayer', () => {
     expect(props.source.uri).toBe('https://example.com/another-video.mp4');
   });
 
-  it('should clear loading after video loads', () => {
-    const { UNSAFE_getByType, UNSAFE_root } = render(
+  it('should clear loading after video loads', async () => {
+    const { UNSAFE_getByType, UNSAFE_root } = await render(
       <VideoPlayer {...defaultProps} />,
     );
     const video = UNSAFE_getByType('video-test');
 
-    act(() => {
-      fireEvent(video, 'load');
+    await act(async () => {
+      await fireEvent(video, 'load');
     });
 
     expect(UNSAFE_root.findAllByType('ActivityIndicator')).toHaveLength(0);
   });
 
-  it('should show translated error when video load fails', () => {
-    const { UNSAFE_getByType, getByText } = render(
+  it('should show translated error when video load fails', async () => {
+    const { UNSAFE_getByType, getByText } = await render(
       <VideoPlayer {...defaultProps} />,
     );
     const video = UNSAFE_getByType('video-test');
 
-    act(() => {
-      fireEvent(video, 'error', { error: { errorString: 'codec failed' } });
+    await act(async () => {
+      await fireEvent(video, 'error', {
+        error: { errorString: 'codec failed' },
+      });
     });
 
     expect(getByText('Video error: codec failed')).toBeTruthy();
   });
 
-  it('should fall back to default translated error and trigger PiP', () => {
-    const { UNSAFE_getByType, getByText } = render(
+  it('should fall back to default translated error and trigger PiP', async () => {
+    const { UNSAFE_getByType, getByText } = await render(
       <VideoPlayer {...defaultProps} />,
     );
     const video = UNSAFE_getByType('video-test');
 
-    act(() => {
-      fireEvent(video, 'error', {});
+    await act(async () => {
+      await fireEvent(video, 'error', {});
     });
 
     expect(getByText('Video error: Failed to load video')).toBeTruthy();
 
-    const { getByText: getFreshByText } = render(
+    const { getByText: getFreshByText } = await render(
       <VideoPlayer {...defaultProps} />,
     );
-    fireEvent.press(getFreshByText('PiP'));
+    await fireEvent.press(getFreshByText('PiP'));
     expect(mockEnterPictureInPicture).toHaveBeenCalled();
   });
 });

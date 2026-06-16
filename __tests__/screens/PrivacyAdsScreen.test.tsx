@@ -103,7 +103,7 @@ const {
 const { settingsService } = require('../../src/services/SettingsService');
 
 describe('PrivacyAdsScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
@@ -149,15 +149,15 @@ describe('PrivacyAdsScreen', () => {
     settingsService.onSettingChange.mockReturnValue(jest.fn());
   });
 
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    await act(() => {
       jest.runOnlyPendingTimers();
     });
     jest.useRealTimers();
   });
 
-  it('renders nothing when hidden', () => {
-    const { queryByText } = render(
+  it('renders nothing when hidden', async () => {
+    const { queryByText } = await render(
       <PrivacyAdsScreen visible={false} onClose={jest.fn()} />,
     );
 
@@ -165,7 +165,7 @@ describe('PrivacyAdsScreen', () => {
   });
 
   it('renders current status and watch ad action', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyAdsScreen visible onClose={jest.fn()} />,
     );
 
@@ -177,13 +177,15 @@ describe('PrivacyAdsScreen', () => {
   });
 
   it('shows rewarded ad success flow', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyAdsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Watch Ad (+60 min Scripting & No-Ads)'));
+    await fireEvent.press(
+      await findByText('Watch Ad (+60 min Scripting & No-Ads)'),
+    );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(adRewardService.showRewardedAd).toHaveBeenCalledTimes(1);
     });
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -201,12 +203,12 @@ describe('PrivacyAdsScreen', () => {
       adUnitType: 'Fallback',
     });
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyAdsScreen visible onClose={jest.fn()} />,
     );
-    fireEvent.press(await findByText('Request Ad'));
+    await fireEvent.press(await findByText('Request Ad'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(adRewardService.manualLoadAd).toHaveBeenCalledTimes(1);
     });
     expect(Alert.alert).toHaveBeenCalledWith('Loading Ad', 'Loading Ad...');
@@ -214,13 +216,13 @@ describe('PrivacyAdsScreen', () => {
   });
 
   it('reviews consent successfully', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyAdsScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Change Privacy Settings'));
+    await fireEvent.press(await findByText('Change Privacy Settings'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(consentService.showConsentForm).toHaveBeenCalledTimes(1);
     });
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -235,12 +237,12 @@ describe('PrivacyAdsScreen', () => {
     );
     consentService.isManuallyAccepted.mockReturnValue(true);
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyAdsScreen visible onClose={jest.fn()} />,
     );
-    fireEvent.press(await findByText('Change Privacy Settings'));
+    await fireEvent.press(await findByText('Change Privacy Settings'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalled();
     });
 
@@ -249,7 +251,7 @@ describe('PrivacyAdsScreen', () => {
     );
     expect(changeDialog).toBeTruthy();
 
-    act(() => {
+    await act(() => {
       changeDialog[2][1].onPress();
     });
 
@@ -271,7 +273,7 @@ describe('PrivacyAdsScreen', () => {
       await agreementDialog[2][1].onPress();
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(consentService.resetConsent).toHaveBeenCalledTimes(1);
       expect(consentService.acceptConsentManually).toHaveBeenCalledTimes(1);
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -283,18 +285,18 @@ describe('PrivacyAdsScreen', () => {
 
   it('opens privacy policy and handles close button', async () => {
     const onClose = jest.fn();
-    const { findByText, findAllByText } = render(
+    const { findByText, findAllByText } = await render(
       <PrivacyAdsScreen visible onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Read Privacy Policy'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Read Privacy Policy'));
+    await waitFor(async () => {
       expect(Linking.openURL).toHaveBeenCalledWith(
         'https://androidircx.com/privacy',
       );
     });
 
-    fireEvent.press((await findAllByText('Close'))[0]);
+    await fireEvent.press((await findAllByText('Close'))[0]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

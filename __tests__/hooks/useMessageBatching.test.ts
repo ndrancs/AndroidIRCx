@@ -60,12 +60,12 @@ import { messageHistoryService } from '../../src/services/MessageHistoryService'
 describe('useMessageBatching', () => {
   const mockSetTabs = jest.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should return processBatchedMessages function', () => {
-    const { result } = renderHook(() =>
+  it('should return processBatchedMessages function', async () => {
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef: { current: [] },
         messageBatchTimeoutRef: { current: null },
@@ -79,8 +79,8 @@ describe('useMessageBatching', () => {
     expect(typeof result.current.processBatchedMessages).toBe('function');
   });
 
-  it('should process empty batch without error', () => {
-    const { result } = renderHook(() =>
+  it('should process empty batch without error', async () => {
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef: { current: [] },
         messageBatchTimeoutRef: { current: null },
@@ -90,14 +90,14 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
     expect(mockSetTabs).not.toHaveBeenCalled();
   });
 
-  it('should create new tab for message', () => {
+  it('should create new tab for message', async () => {
     const pendingMessagesRef = {
       current: [
         {
@@ -119,7 +119,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -129,7 +129,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -145,7 +145,7 @@ describe('useMessageBatching', () => {
     expect(channelTab?.messages.length).toBe(1);
   });
 
-  it('should add message to existing tab', () => {
+  it('should add message to existing tab', async () => {
     const existingTab = {
       id: 'channel-freenode-#test',
       name: '#test',
@@ -176,7 +176,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -186,7 +186,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -197,7 +197,7 @@ describe('useMessageBatching', () => {
     expect(newState[0].messages[0].text).toBe('Hello');
   });
 
-  it('should keep legitimate repeated remote messages with same text', () => {
+  it('should keep legitimate repeated remote messages with same text', async () => {
     const existingTab = {
       id: 'channel-freenode-#test',
       name: '#test',
@@ -238,7 +238,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -248,7 +248,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -257,7 +257,7 @@ describe('useMessageBatching', () => {
     expect(newState[0].messages.length).toBe(2);
   });
 
-  it('should dedupe local echo and server echo copies', () => {
+  it('should dedupe local echo and server echo copies', async () => {
     const existingTab = {
       id: 'query-freenode-bob',
       name: 'bob',
@@ -299,7 +299,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -309,7 +309,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -318,7 +318,7 @@ describe('useMessageBatching', () => {
     expect(newState[0].messages.length).toBe(1);
   });
 
-  it('should create notices and notifications tabs when targeted', () => {
+  it('should create notices and notifications tabs when targeted', async () => {
     const pendingMessagesRef = {
       current: [
         {
@@ -356,7 +356,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -366,7 +366,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -378,7 +378,7 @@ describe('useMessageBatching', () => {
     );
   });
 
-  it('should dedupe messages by msgid when both have msgid', () => {
+  it('should dedupe messages by msgid when both have msgid', async () => {
     const existingTab = {
       id: 'channel-freenode-#test',
       name: '#test',
@@ -420,7 +420,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -430,7 +430,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -439,7 +439,7 @@ describe('useMessageBatching', () => {
     expect(newState[0].messages.length).toBe(1);
   });
 
-  it('should persist only eligible messages (not raw/playback/invalid network)', () => {
+  it('should persist only eligible messages (not raw/playback/invalid network)', async () => {
     const existingTab = {
       id: 'channel-freenode-#test',
       name: '#test',
@@ -529,7 +529,7 @@ describe('useMessageBatching', () => {
       }
     });
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -539,7 +539,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -551,7 +551,7 @@ describe('useMessageBatching', () => {
     );
   });
 
-  it('should enforce performance cleanup limit when threshold is exceeded', () => {
+  it('should enforce performance cleanup limit when threshold is exceeded', async () => {
     const perf =
       require('../../src/services/PerformanceService').performanceService;
     perf.getConfig.mockReturnValueOnce({
@@ -593,7 +593,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -603,7 +603,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -613,7 +613,7 @@ describe('useMessageBatching', () => {
     expect(newState[0].messages[1].id).toBe('m3');
   });
 
-  it('should skip messages with missing context and return previous tabs', () => {
+  it('should skip messages with missing context and return previous tabs', async () => {
     const pendingMessagesRef = {
       current: [
         {
@@ -629,7 +629,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: 'timer' as any },
@@ -639,7 +639,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -649,7 +649,7 @@ describe('useMessageBatching', () => {
     expect(setTabsCall(prevTabs)).toBe(prevTabs);
   });
 
-  it('should ignore missing server target tabs instead of creating them', () => {
+  it('should ignore missing server target tabs instead of creating them', async () => {
     const pendingMessagesRef = {
       current: [
         {
@@ -670,7 +670,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -680,7 +680,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
 
@@ -728,7 +728,7 @@ describe('useMessageBatching', () => {
       ],
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageBatching({
         pendingMessagesRef,
         messageBatchTimeoutRef: { current: null },
@@ -738,7 +738,7 @@ describe('useMessageBatching', () => {
       }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.processBatchedMessages();
     });
     expect(state[0].messages).toHaveLength(1);

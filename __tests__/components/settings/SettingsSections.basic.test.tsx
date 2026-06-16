@@ -148,15 +148,15 @@ const styles = {
 };
 
 describe('Settings Sections Basic', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
   });
 
-  it('AboutSection renders items and triggers callbacks', () => {
+  it('AboutSection renders items and triggers callbacks', async () => {
     const onShowAbout = jest.fn();
     const onShowCredits = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <AboutSection
         colors={colors}
         styles={styles as any}
@@ -165,14 +165,14 @@ describe('Settings Sections Basic', () => {
         onShowCredits={onShowCredits}
       />,
     );
-    fireEvent.press(getByTestId('setting-about-app'));
-    fireEvent.press(getByTestId('setting-credits'));
+    await fireEvent.press(getByTestId('setting-about-app'));
+    await fireEvent.press(getByTestId('setting-credits'));
     expect(onShowAbout).toHaveBeenCalled();
     expect(onShowCredits).toHaveBeenCalled();
   });
 
-  it('AdvancedSection returns null while empty', () => {
-    const { toJSON } = render(
+  it('AdvancedSection returns null while empty', async () => {
+    const { toJSON } = await render(
       <AdvancedSection
         colors={colors}
         styles={styles as any}
@@ -182,11 +182,11 @@ describe('Settings Sections Basic', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('Premium and Privacy sections trigger actions', () => {
+  it('Premium and Privacy sections trigger actions', async () => {
     const onShowPurchaseScreen = jest.fn();
     const onShowDataPrivacy = jest.fn();
     const onShowPrivacyAds = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <>
         <PremiumSection
           colors={colors}
@@ -203,16 +203,16 @@ describe('Settings Sections Basic', () => {
         />
       </>,
     );
-    fireEvent.press(getByTestId('setting-premium-upgrade'));
-    fireEvent.press(getByTestId('setting-my-data-privacy'));
-    fireEvent.press(getByTestId('setting-privacy-ads'));
+    await fireEvent.press(getByTestId('setting-premium-upgrade'));
+    await fireEvent.press(getByTestId('setting-my-data-privacy'));
+    await fireEvent.press(getByTestId('setting-privacy-ads'));
     expect(onShowPurchaseScreen).toHaveBeenCalled();
     expect(onShowDataPrivacy).toHaveBeenCalled();
     expect(onShowPrivacyAds).toHaveBeenCalled();
   });
 
   it('MessageHistorySection saves input/switch updates', async () => {
-    render(
+    await render(
       <MessageHistorySection
         colors={colors}
         styles={styles as any}
@@ -232,7 +232,7 @@ describe('Settings Sections Basic', () => {
 
   it('BackgroundBatterySection toggles and refreshes battery status', async () => {
     jest.useFakeTimers();
-    render(
+    await render(
       <BackgroundBatterySection
         colors={colors}
         styles={styles as any}
@@ -256,7 +256,7 @@ describe('Settings Sections Basic', () => {
   it('ScriptingAdsSection exposes watch-ad flow', async () => {
     const onShowScripting = jest.fn();
     const onShowScriptingHelp = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ScriptingAdsSection
         colors={colors}
         styles={styles as any}
@@ -267,18 +267,18 @@ describe('Settings Sections Basic', () => {
     );
 
     await mockCapturedItems.get('watch-ad-button-premium').onValueChange(true);
-    fireEvent.press(getByText('Watch Ad (+60 min Scripting & No-Ads)'));
+    await fireEvent.press(getByText('Watch Ad (+60 min Scripting & No-Ads)'));
 
     expect(mockSetWatchAdButtonEnabledForPremium).toHaveBeenCalledWith(true);
     expect(mockHandleWatchAd).toHaveBeenCalled();
   });
 
-  it('HelpSection opens correct help dialogs', () => {
-    const { getByLabelText } = render(<HelpSection />);
+  it('HelpSection opens correct help dialogs', async () => {
+    const { getByLabelText } = await render(<HelpSection />);
 
-    fireEvent.press(getByLabelText('Troubleshooting Guide'));
-    fireEvent.press(getByLabelText('IRC Connection Guide'));
-    fireEvent.press(getByLabelText('Commands Reference'));
+    await fireEvent.press(getByLabelText('Troubleshooting Guide'));
+    await fireEvent.press(getByLabelText('IRC Connection Guide'));
+    await fireEvent.press(getByLabelText('Commands Reference'));
 
     expect(mockUIStore.setShowHelpTroubleshooting).toHaveBeenCalledWith(true);
     expect(mockUIStore.setShowHelpConnection).toHaveBeenCalledWith(true);

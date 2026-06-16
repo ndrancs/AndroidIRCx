@@ -61,7 +61,7 @@ class TimeoutXHR extends MockXHR {
 }
 
 describe('LinkPreview', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     (global as any).XMLHttpRequest = MockXHR as any;
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
@@ -71,42 +71,44 @@ describe('LinkPreview', () => {
 
   it('renders metadata and handles custom press', async () => {
     const onPress = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <LinkPreview url="https://example.com/path?q=1" onPress={onPress} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('example.com')).toBeTruthy();
       expect(getByText('Example Page')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('Example Page'));
+    await fireEvent.press(getByText('Example Page'));
     expect(onPress).toHaveBeenCalled();
   });
 
   it('opens URL when no custom onPress is provided', async () => {
-    const { getAllByText } = render(<LinkPreview url="https://example.com" />);
+    const { getAllByText } = await render(
+      <LinkPreview url="https://example.com" />,
+    );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getAllByText('example.com').length).toBeGreaterThan(0);
     });
 
-    fireEvent.press(getAllByText('example.com')[0]);
+    await fireEvent.press(getAllByText('example.com')[0]);
     expect(Linking.openURL).toHaveBeenCalledWith('https://example.com');
   });
 
   it('downloads linked file and shows success alert', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <LinkPreview url="https://example.com/files/report.pdf" />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Download')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('Download'));
+    await fireEvent.press(getByText('Download'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockDownloadFile).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Download complete',
@@ -127,11 +129,11 @@ describe('LinkPreview', () => {
     }
     (global as any).XMLHttpRequest = YouTubeXHR as any;
 
-    const { getByText, rerender } = render(
+    const { getByText, rerender } = await render(
       <LinkPreview url="https://www.youtube.com/watch?v=abc123" />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('YouTube')).toBeTruthy();
       expect(getByText('YT title')).toBeTruthy();
     });
@@ -143,27 +145,27 @@ describe('LinkPreview', () => {
       }
     }
     (global as any).XMLHttpRequest = YouTubeStatusFailXHR as any;
-    rerender(<LinkPreview url="https://youtu.be/xyz987" />);
+    await rerender(<LinkPreview url="https://youtu.be/xyz987" />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('YouTube Video xyz987')).toBeTruthy();
     });
   });
 
   it('handles xhr network and timeout metadata failures', async () => {
     (global as any).XMLHttpRequest = ErrorXHR as any;
-    const { getAllByText, rerender } = render(
+    const { getAllByText, rerender } = await render(
       <LinkPreview url="https://example.org/a" />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getAllByText('example.org/a').length).toBeGreaterThan(0);
     });
 
     (global as any).XMLHttpRequest = TimeoutXHR as any;
-    rerender(<LinkPreview url="https://example.org/b?x=1" />);
+    await rerender(<LinkPreview url="https://example.org/b?x=1" />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getAllByText('example.org/b?x=1').length).toBeGreaterThan(0);
     });
   });
@@ -179,29 +181,29 @@ describe('LinkPreview', () => {
       promise: rejected,
     });
 
-    const { getByText, UNSAFE_getByType, UNSAFE_queryAllByType } = render(
+    const { getByText, UNSAFE_getByType, UNSAFE_queryAllByType } = await render(
       <LinkPreview url="https://example.com/file.zip" />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Example Page')).toBeTruthy();
     });
 
     const image = UNSAFE_getByType(Image);
-    fireEvent(image, 'error');
-    await waitFor(() => {
+    await fireEvent(image, 'error');
+    await waitFor(async () => {
       expect(UNSAFE_queryAllByType(Image)).toHaveLength(0);
     });
 
-    fireEvent.press(getByText('example.com'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('example.com'));
+    await waitFor(async () => {
       expect(Linking.openURL).toHaveBeenCalledWith(
         'https://example.com/file.zip',
       );
     });
 
-    fireEvent.press(getByText('Download'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Download'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith('Download failed', 'net-down');
     });
 
@@ -209,12 +211,12 @@ describe('LinkPreview', () => {
   });
 
   it('supports hiding download button and invalid url display fallback', async () => {
-    const { queryByText, getByText } = render(
+    const { queryByText, getAllByText } = await render(
       <LinkPreview url="not-a-valid-url" showDownloadButton={false} />,
     );
 
-    await waitFor(() => {
-      expect(getByText('not-a-valid-url')).toBeTruthy();
+    await waitFor(async () => {
+      expect(getAllByText('not-a-valid-url').length).toBeGreaterThan(0);
     });
     expect(queryByText('Download')).toBeNull();
   });

@@ -39,13 +39,13 @@ jest.mock('../../src/services/SettingsService', () => ({
 
 import { settingsService } from '../../src/services/SettingsService';
 
-const flushPromises = () =>
-  act(async () => {
+const flushPromises = async () =>
+  await act(async () => {
     await new Promise(r => setTimeout(r, 0));
   });
 
 describe('useSettingsSecurity', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     Object.keys(settingChangeCallbacks).forEach(
       k => delete settingChangeCallbacks[k],
@@ -53,7 +53,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should load settings from service', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -67,7 +67,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should subscribe to 6 setting changes', async () => {
-    renderHook(() => useSettingsSecurity());
+    await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -99,11 +99,11 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should update state when setting change listener fires', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
-    act(() => {
+    await act(() => {
       if (settingChangeCallbacks.killSwitchCustomName) {
         settingChangeCallbacks.killSwitchCustomName('NewName');
       }
@@ -113,11 +113,11 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should update icon via setting change listener', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
-    act(() => {
+    await act(() => {
       if (settingChangeCallbacks.killSwitchCustomIcon) {
         settingChangeCallbacks.killSwitchCustomIcon('lock');
       }
@@ -127,11 +127,11 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should update header/lock-screen/warnings via setting change listeners', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
-    act(() => {
+    await act(() => {
       settingChangeCallbacks.killSwitchEnabledOnHeader?.(false);
       settingChangeCallbacks.killSwitchEnabledOnLockScreen?.(true);
       settingChangeCallbacks.killSwitchShowWarnings?.(false);
@@ -143,11 +143,11 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should update custom color via setting change listener', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
-    act(() => {
+    await act(() => {
       settingChangeCallbacks.killSwitchCustomColor?.('#123456');
     });
 
@@ -155,7 +155,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set kill switch on header', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -171,7 +171,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set kill switch on lock screen', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -187,7 +187,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set kill switch show warnings', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -203,7 +203,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set custom name', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -219,7 +219,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set custom icon', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -235,7 +235,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set custom color', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -251,7 +251,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set quick connect network id', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -267,7 +267,7 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should set quick connect network id to null', async () => {
-    const { result } = renderHook(() => useSettingsSecurity());
+    const { result } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
@@ -283,11 +283,11 @@ describe('useSettingsSecurity', () => {
   });
 
   it('should clean up subscriptions on unmount', async () => {
-    const { unmount } = renderHook(() => useSettingsSecurity());
+    const { unmount } = await renderHook(() => useSettingsSecurity());
 
     await flushPromises();
 
-    unmount();
+    await unmount();
 
     const calls = (settingsService.onSettingChange as jest.Mock).mock.results;
     calls.forEach((result: any) => {

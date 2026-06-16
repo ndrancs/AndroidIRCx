@@ -22,7 +22,7 @@ jest.mock('../../src/services/SettingsService', () => ({
 }));
 
 describe('ServerSettingsScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     (settingsService.getNetwork as jest.Mock).mockResolvedValue({
@@ -50,7 +50,7 @@ describe('ServerSettingsScreen', () => {
   });
 
   it('renders defaults for a new server', async () => {
-    const { getByDisplayValue, getByText } = render(
+    const { getByDisplayValue, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         onSave={jest.fn()}
@@ -64,7 +64,7 @@ describe('ServerSettingsScreen', () => {
   });
 
   it('loads an existing server', async () => {
-    const { findByDisplayValue } = render(
+    const { findByDisplayValue } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"
@@ -85,7 +85,7 @@ describe('ServerSettingsScreen', () => {
       servers: [],
     });
 
-    const { findByText, getByText } = render(
+    const { findByText, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"
@@ -95,9 +95,9 @@ describe('ServerSettingsScreen', () => {
     );
 
     expect(await findByText('Server not found')).toBeTruthy();
-    fireEvent.press(getByText('Retry'));
+    await fireEvent.press(getByText('Retry'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.getNetwork).toHaveBeenCalledTimes(2);
     });
   });
@@ -108,7 +108,7 @@ describe('ServerSettingsScreen', () => {
       new Error('load failed'),
     );
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"
@@ -126,7 +126,7 @@ describe('ServerSettingsScreen', () => {
   });
 
   it('shows validation alert when hostname is empty', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         onSave={jest.fn()}
@@ -134,7 +134,7 @@ describe('ServerSettingsScreen', () => {
       />,
     );
 
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
@@ -143,7 +143,7 @@ describe('ServerSettingsScreen', () => {
   });
 
   it('shows validation alert when port is invalid', async () => {
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         onSave={jest.fn()}
@@ -151,12 +151,12 @@ describe('ServerSettingsScreen', () => {
       />,
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('irc.example.com'),
       'irc.example.com',
     );
-    fireEvent.changeText(getByPlaceholderText('6697'), '99999');
-    fireEvent.press(getByText('Save'));
+    await fireEvent.changeText(getByPlaceholderText('6697'), '99999');
+    await fireEvent.press(getByText('Save'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
@@ -166,7 +166,7 @@ describe('ServerSettingsScreen', () => {
 
   it('calls onSave with new server values', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         onSave={onSave}
@@ -174,22 +174,22 @@ describe('ServerSettingsScreen', () => {
       />,
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('Server display name'),
       'EU node',
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('irc.example.com'),
       'irc.eu.example.com',
     );
-    fireEvent.changeText(getByPlaceholderText('6697'), '7000');
-    fireEvent.changeText(
+    await fireEvent.changeText(getByPlaceholderText('6697'), '7000');
+    await fireEvent.changeText(
       getByPlaceholderText('Server connection password'),
       'pass123',
     );
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'EU node',
@@ -203,7 +203,7 @@ describe('ServerSettingsScreen', () => {
 
   it('updates default server assignment when enabled on existing server', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
-    const { getAllByRole, getByText } = render(
+    const { getAllByRole, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"
@@ -215,10 +215,10 @@ describe('ServerSettingsScreen', () => {
     await waitFor(() => expect(getByText('Default Server')).toBeTruthy());
     const switches = getAllByRole('switch');
     const defaultSwitch = switches[switches.length - 1];
-    fireEvent(defaultSwitch, 'valueChange', true);
-    fireEvent.press(getByText('Save'));
+    await fireEvent(defaultSwitch, 'valueChange', true);
+    await fireEvent.press(getByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.setDefaultServerForNetwork).toHaveBeenCalledWith(
         'net1',
         'srv1',
@@ -228,7 +228,7 @@ describe('ServerSettingsScreen', () => {
 
   it('clears default server when existing default is unchecked', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
-    const { getAllByRole, getByText } = render(
+    const { getAllByRole, getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"
@@ -240,10 +240,10 @@ describe('ServerSettingsScreen', () => {
     await waitFor(() => expect(getByText('Default Server')).toBeTruthy());
     const switches = getAllByRole('switch');
     const defaultSwitch = switches[switches.length - 1];
-    fireEvent(defaultSwitch, 'valueChange', false);
-    fireEvent.press(getByText('Save'));
+    await fireEvent(defaultSwitch, 'valueChange', false);
+    await fireEvent.press(getByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(settingsService.clearDefaultServerForNetwork).toHaveBeenCalledWith(
         'net1',
         'srv1',
@@ -251,9 +251,9 @@ describe('ServerSettingsScreen', () => {
     });
   });
 
-  it('calls onCancel from header button', () => {
+  it('calls onCancel from header button', async () => {
     const onCancel = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         onSave={jest.fn()}
@@ -261,7 +261,7 @@ describe('ServerSettingsScreen', () => {
       />,
     );
 
-    fireEvent.press(getByText('Cancel'));
+    await fireEvent.press(getByText('Cancel'));
 
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
@@ -274,7 +274,7 @@ describe('ServerSettingsScreen', () => {
       }),
     );
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <ServerSettingsScreen
         networkId="net1"
         serverId="srv1"

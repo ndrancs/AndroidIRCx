@@ -167,7 +167,7 @@ describe('QueryEncryptionMenu', () => {
   const sendRaw = jest.fn();
   const addMessage = jest.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
 
@@ -226,9 +226,9 @@ describe('QueryEncryptionMenu', () => {
     mockRequestCameraPermission.mockResolvedValue('authorized');
   });
 
-  it('renders menu and closes', () => {
+  it('renders menu and closes', async () => {
     const onClose = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={onClose}
@@ -238,12 +238,12 @@ describe('QueryEncryptionMenu', () => {
     );
 
     expect(getByText('E2E Encryption - alice')).toBeTruthy();
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
     expect(onClose).toHaveBeenCalled();
   });
 
   it('shares dm key and sends request', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -252,10 +252,10 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Share DM Key'));
-    fireEvent.press(getByText('Request DM Key (36s)'));
+    await fireEvent.press(getByText('Share DM Key'));
+    await fireEvent.press(getByText('Request DM Key (36s)'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(sendRaw).toHaveBeenCalledWith(
         expect.stringContaining('PRIVMSG alice :!enc-offer'),
       );
@@ -265,7 +265,7 @@ describe('QueryEncryptionMenu', () => {
   });
 
   it('handles verify action with missing fingerprint', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -274,9 +274,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Verify DM Key'));
+    await fireEvent.press(getByText('Verify DM Key'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('No DM key for alice')).toBeTruthy();
     });
   });
@@ -287,7 +287,7 @@ describe('QueryEncryptionMenu', () => {
       fingerprint: 'ff00',
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -296,9 +296,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Verify DM Key'));
+    await fireEvent.press(getByText('Verify DM Key'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Verify DM Key',
         expect.stringContaining('Compare fingerprints out-of-band'),
@@ -325,7 +325,7 @@ describe('QueryEncryptionMenu', () => {
   });
 
   it('shows share bundle QR and copies payload', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -334,15 +334,15 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Share Key Bundle QR'));
+    await fireEvent.press(getByText('Share Key Bundle QR'));
     await waitFor(() => expect(getByText('Share Key Bundle')).toBeTruthy());
 
-    fireEvent.press(getByText('Copy Payload'));
+    await fireEvent.press(getByText('Copy Payload'));
     expect(mockSetString).toHaveBeenCalledWith('payload-bundle');
   });
 
   it('shares key file and cleans temp file', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -351,9 +351,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Share Key File'));
+    await fireEvent.press(getByText('Share Key File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockWriteFile).toHaveBeenCalledWith(
         '/cache/androidircx-key-me.json',
         'payload-bundle',
@@ -369,7 +369,7 @@ describe('QueryEncryptionMenu', () => {
   });
 
   it('imports key file and feeds payload parser', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -378,9 +378,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Import Key File'));
+    await fireEvent.press(getByText('Import Key File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockPick).toHaveBeenCalled();
       expect(mockReadFile).toHaveBeenCalledWith('/tmp/key.json', 'utf8');
       expect(mockParseExternalPayload).toHaveBeenCalledWith(
@@ -391,7 +391,7 @@ describe('QueryEncryptionMenu', () => {
 
   it('shows nfc unsupported feedback', async () => {
     mockNfcIsSupported.mockResolvedValue(false);
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -400,8 +400,8 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Share via NFC'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Share via NFC'));
+    await waitFor(async () => {
       expect(getByText('NFC not supported')).toBeTruthy();
     });
   });
@@ -414,7 +414,7 @@ describe('QueryEncryptionMenu', () => {
       return Promise.resolve(def);
     });
 
-    render(
+    await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -423,7 +423,7 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockGetSetting).toHaveBeenCalledWith(
         'securityAllowQrVerification',
         true,
@@ -447,7 +447,7 @@ describe('QueryEncryptionMenu', () => {
       nick: 'bob',
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -456,9 +456,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Import Key File'));
+    await fireEvent.press(getByText('Import Key File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Mismatched Nick',
         expect.stringContaining('selected alice'),
@@ -474,7 +474,7 @@ describe('QueryEncryptionMenu', () => {
       (e: any) => e?.code === 'OPERATION_CANCELED',
     );
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -483,9 +483,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Import Key File'));
+    await fireEvent.press(getByText('Import Key File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockPick).toHaveBeenCalled();
     });
     expect(queryByText('Failed to import key file')).toBeNull();
@@ -495,7 +495,7 @@ describe('QueryEncryptionMenu', () => {
     mockPick.mockRejectedValue(new Error('io-fail'));
     mockIsErrorWithCode.mockReturnValue(false);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -504,15 +504,15 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Import Key File'));
+    await fireEvent.press(getByText('Import Key File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Failed to import key file')).toBeTruthy();
     });
   });
 
   it('runs nfc share success path', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -521,9 +521,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Share via NFC'));
+    await fireEvent.press(getByText('Share via NFC'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockNfcIsSupported).toHaveBeenCalled();
       expect(mockNfcStart).toHaveBeenCalled();
       expect(mockNfcRequestTechnology).toHaveBeenCalledWith('ndef');
@@ -537,7 +537,7 @@ describe('QueryEncryptionMenu', () => {
 
   it('handles receive nfc with missing payload', async () => {
     mockNfcGetTag.mockResolvedValue({ ndefMessage: [] });
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -546,9 +546,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Receive via NFC'));
+    await fireEvent.press(getByText('Receive via NFC'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('No NFC payload')).toBeTruthy();
     });
   });
@@ -556,7 +556,7 @@ describe('QueryEncryptionMenu', () => {
   it('handles qr scan permission denial path', async () => {
     mockHasCameraPermission = false;
     mockRequestCameraPermission.mockResolvedValue('denied');
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -565,16 +565,16 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Scan QR Code'));
+    await fireEvent.press(getByText('Scan QR Code'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Camera permission denied')).toBeTruthy();
     });
   });
 
   it('shows verify load error feedback', async () => {
     mockGetVerificationStatus.mockRejectedValue(new Error('verify-fail'));
-    const { getByText } = render(
+    const { getByText } = await render(
       <QueryEncryptionMenu
         visible
         onClose={jest.fn()}
@@ -583,9 +583,9 @@ describe('QueryEncryptionMenu', () => {
       />,
     );
 
-    fireEvent.press(getByText('Verify DM Key'));
+    await fireEvent.press(getByText('Verify DM Key'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Failed to load fingerprints')).toBeTruthy();
     });
   });

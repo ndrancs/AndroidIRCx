@@ -74,7 +74,7 @@ describe('BackupScreen', () => {
   const onClose = jest.fn();
   const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     (dataBackupService.getStorageStats as jest.Mock).mockResolvedValue({
       keyCount: 10,
@@ -110,15 +110,15 @@ describe('BackupScreen', () => {
     alertSpy.mockRestore();
   });
 
-  it('does not render when not visible', () => {
-    const { queryByText } = render(
+  it('does not render when not visible', async () => {
+    const { queryByText } = await render(
       <BackupScreen visible={false} onClose={onClose} />,
     );
     expect(queryByText('Backup & Restore')).toBeNull();
   });
 
   it('renders header and storage section when visible', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
     expect(getByText('Backup & Restore')).toBeTruthy();
@@ -126,10 +126,10 @@ describe('BackupScreen', () => {
   });
 
   it('opens restore modal from Restore from Backup button', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Restore from Backup'));
     expect(
       await findByText('Paste your backup JSON here to restore your data.'),
     ).toBeTruthy();
@@ -137,11 +137,11 @@ describe('BackupScreen', () => {
   });
 
   it('shows validation error when restoring with empty data', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Restore'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Restore'));
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
       'Please paste backup data or load a backup file first',
@@ -152,13 +152,13 @@ describe('BackupScreen', () => {
     const json = '{"version":1,"data":{"foo":"bar"}}';
     (RNFS.readFile as jest.Mock).mockResolvedValue(json);
 
-    const { findByText, queryByDisplayValue } = render(
+    const { findByText, queryByDisplayValue } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(RNFS.readFile).toHaveBeenCalledWith('/tmp/backup.json', 'utf8');
       expect(queryByDisplayValue(json)).toBeNull();
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -178,13 +178,13 @@ describe('BackupScreen', () => {
       },
     ]);
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(RNFS.readFile).toHaveBeenCalledWith(
         '/tmp/copied-backup.json',
         'utf8',
@@ -198,13 +198,13 @@ describe('BackupScreen', () => {
   it('shows error when selected file is invalid JSON', async () => {
     (RNFS.readFile as jest.Mock).mockResolvedValue('not-json');
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Selected file is not a valid JSON backup',
@@ -215,13 +215,13 @@ describe('BackupScreen', () => {
   it('shows error when selected file is empty', async () => {
     (RNFS.readFile as jest.Mock).mockResolvedValue('   ');
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
         'Selected file is empty',
@@ -234,13 +234,13 @@ describe('BackupScreen', () => {
       code: errorCodes.OPERATION_CANCELED,
     });
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).not.toHaveBeenCalledWith(
         'Error',
         'Failed to load backup file',
@@ -253,15 +253,15 @@ describe('BackupScreen', () => {
     const encryptedJson =
       '{"encrypted":true,"salt":"x","iv":"y","ciphertext":"z"}';
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Backup JSON appears here...'),
       encryptedJson,
     );
-    fireEvent.press(await findByText('Restore'));
+    await fireEvent.press(await findByText('Restore'));
 
     expect(await findByText('Encrypted Backup')).toBeTruthy();
   });
@@ -271,15 +271,15 @@ describe('BackupScreen', () => {
     const plainJson =
       '{"version":1,"timestamp":"2026-02-13T00:00:00.000Z","data":{"k":"v"}}';
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Backup JSON appears here...'),
       plainJson,
     );
-    fireEvent.press(await findByText('Restore'));
+    await fireEvent.press(await findByText('Restore'));
 
     const confirmCall = (Alert.alert as jest.Mock).mock.calls.find(
       call => call[0] === 'Confirm Restore',
@@ -301,14 +301,14 @@ describe('BackupScreen', () => {
   });
 
   it('shows alert when trying to generate backup with no options selected', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Clear All'));
-    fireEvent.press(await findByText('Generate Backup'));
+    await fireEvent.press(await findByText('Clear All'));
+    await fireEvent.press(await findByText('Generate Backup'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'No Options Selected',
         'Please select at least one backup option',
@@ -317,14 +317,14 @@ describe('BackupScreen', () => {
   });
 
   it('generates a plain backup, uses exportAll when all data is selected, and exports unencrypted when requested', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('All Data'));
-    fireEvent.press(await findByText('Generate Backup'));
+    await fireEvent.press(await findByText('All Data'));
+    await fireEvent.press(await findByText('Generate Backup'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(dataBackupService.exportAll).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Backup Ready',
@@ -344,18 +344,18 @@ describe('BackupScreen', () => {
       new Error('encrypt failed'),
     );
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Generate Backup'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Generate Backup'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Enter encryption password (optional)'),
       'secret1',
     );
-    fireEvent.press(await findByText('Encrypt & Export'));
+    await fireEvent.press(await findByText('Encrypt & Export'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Encryption Failed',
         'encrypt failed',
@@ -371,20 +371,20 @@ describe('BackupScreen', () => {
       '{"encrypted":true}',
     );
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Generate Backup'));
+    await fireEvent.press(await findByText('Generate Backup'));
     expect(await findByText('Sensitive Data Detected')).toBeTruthy();
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Enter encryption password (optional)'),
       'secret1',
     );
-    fireEvent.press(await findByText('Encrypt & Export'));
+    await fireEvent.press(await findByText('Encrypt & Export'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(dataBackupService.encryptBackup).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Backup Encrypted',
@@ -392,11 +392,11 @@ describe('BackupScreen', () => {
       );
     });
 
-    fireEvent.press(await findByText('Copy to Clipboard'));
+    await fireEvent.press(await findByText('Copy to Clipboard'));
     expect(Clipboard.setString).toHaveBeenCalledWith('{"encrypted":true}');
 
-    fireEvent.press(await findByText('Save to File'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Save to File'));
+    await waitFor(async () => {
       expect((RNFS as any).writeFile).toHaveBeenCalled();
     });
   });
@@ -411,17 +411,17 @@ describe('BackupScreen', () => {
         throw new Error('copy failed');
       });
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
     await act(async () => {
-      fireEvent.press(await findByText('Generate Backup'));
+      await fireEvent.press(await findByText('Generate Backup'));
     });
 
     expect(await findByText('Backup Data')).toBeTruthy();
 
-    fireEvent.press(await findByText('Copy to Clipboard'));
+    await fireEvent.press(await findByText('Copy to Clipboard'));
     expect(Alert.alert).toHaveBeenCalledWith('Error', 'copy failed');
 
     clipboardSpy.mockRestore();
@@ -442,19 +442,19 @@ describe('BackupScreen', () => {
     });
 
     try {
-      const { findByText } = render(
+      const { findByText } = await render(
         <BackupScreen visible={true} onClose={onClose} />,
       );
 
       await act(async () => {
-        fireEvent.press(await findByText('Generate Backup'));
+        await fireEvent.press(await findByText('Generate Backup'));
       });
 
       expect(await findByText('Backup Data')).toBeTruthy();
 
-      fireEvent.press(await findByText('Save to File'));
+      await fireEvent.press(await findByText('Save to File'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect((RNFS as any).writeFile).toHaveBeenCalledWith(
           expect.stringContaining('/external/androidircx_backup_'),
           expect.any(String),
@@ -470,15 +470,15 @@ describe('BackupScreen', () => {
   });
 
   it('switches loaded file restore mode back to manual paste', async () => {
-    const { findByText, queryByText, findByPlaceholderText } = render(
+    const { findByText, queryByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
     expect(await findByText('Loaded Backup File')).toBeTruthy();
-    fireEvent.press(await findByText('Switch to Manual JSON Paste'));
+    await fireEvent.press(await findByText('Switch to Manual JSON Paste'));
 
     expect(queryByText('Loaded Backup File')).toBeNull();
     expect(
@@ -492,23 +492,23 @@ describe('BackupScreen', () => {
       '{"version":1,"data":{"z":"x"}}',
     );
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Backup JSON appears here...'),
       '{"encrypted":true}',
     );
-    fireEvent.press(await findByText('Restore'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Restore'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Enter decryption password'),
       'secret1',
     );
-    fireEvent.press(await findByText('Decrypt & Restore'));
+    await fireEvent.press(await findByText('Decrypt & Restore'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         (Alert.alert as jest.Mock).mock.calls.some(
           call => call[0] === 'Confirm Restore',
@@ -533,7 +533,7 @@ describe('BackupScreen', () => {
       '{"encrypted":true}',
       'secret1',
     );
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(dataBackupService.importAll).toHaveBeenCalledWith(
         '{"version":1,"data":{"z":"x"}}',
       );
@@ -546,25 +546,25 @@ describe('BackupScreen', () => {
       new Error('bad password'),
     );
 
-    const { findByText, findByPlaceholderText } = render(
+    const { findByText, findByPlaceholderText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.changeText(
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.changeText(
       await findByPlaceholderText('Backup JSON appears here...'),
       '{"encrypted":true}',
     );
-    fireEvent.press(await findByText('Restore'));
+    await fireEvent.press(await findByText('Restore'));
     await findByPlaceholderText('Enter decryption password');
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Enter decryption password'),
       'secret1',
     );
-    fireEvent.press(await findByText('Decrypt & Restore'));
+    await fireEvent.press(await findByText('Decrypt & Restore'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Decryption Failed',
         'bad password',
@@ -578,19 +578,19 @@ describe('BackupScreen', () => {
       description: 'picker description',
     });
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <BackupScreen visible={true} onClose={onClose} />,
     );
 
-    fireEvent.press(await findByText('Restore from Backup'));
-    fireEvent.press(await findByText('Load from File'));
+    await fireEvent.press(await findByText('Restore from Backup'));
+    await fireEvent.press(await findByText('Load from File'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith('Error', 'No file selected');
     });
 
-    fireEvent.press(await findByText('Load from File'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Load from File'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith('Error', 'picker description');
     });
   });
@@ -607,18 +607,18 @@ describe('BackupScreen', () => {
     (dataBackupService.isEncryptedBackup as jest.Mock).mockReturnValue(false);
 
     try {
-      const { findByText, findByPlaceholderText } = render(
+      const { findByText, findByPlaceholderText } = await render(
         <BackupScreen visible={true} onClose={onClose} />,
       );
 
-      fireEvent.press(await findByText('Restore from Backup'));
-      fireEvent.changeText(
+      await fireEvent.press(await findByText('Restore from Backup'));
+      await fireEvent.changeText(
         await findByPlaceholderText('Backup JSON appears here...'),
         '{"version":1,"data":{"k":"v"}}',
       );
-      fireEvent.press(await findByText('Restore'));
+      await fireEvent.press(await findByText('Restore'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(
           (Alert.alert as jest.Mock).mock.calls.some(
             call => call[0] === 'Confirm Restore',
@@ -640,9 +640,9 @@ describe('BackupScreen', () => {
       });
 
       expect(await findByText('Exit to Restart App')).toBeTruthy();
-      fireEvent.press(await findByText('Exit to Restart App'));
+      await fireEvent.press(await findByText('Exit to Restart App'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(messageHistoryBatching.flushSync).toHaveBeenCalled();
         expect(connectionManager.disconnectAll).toHaveBeenCalledWith(
           'Restarting after backup restore',
@@ -663,18 +663,18 @@ describe('BackupScreen', () => {
     (dataBackupService.isEncryptedBackup as jest.Mock).mockReturnValue(false);
 
     try {
-      const { findByText, findByPlaceholderText } = render(
+      const { findByText, findByPlaceholderText } = await render(
         <BackupScreen visible={true} onClose={onClose} />,
       );
 
-      fireEvent.press(await findByText('Restore from Backup'));
-      fireEvent.changeText(
+      await fireEvent.press(await findByText('Restore from Backup'));
+      await fireEvent.changeText(
         await findByPlaceholderText('Backup JSON appears here...'),
         '{"version":1,"data":{"k":"v"}}',
       );
-      fireEvent.press(await findByText('Restore'));
+      await fireEvent.press(await findByText('Restore'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(
           (Alert.alert as jest.Mock).mock.calls.some(
             call => call[0] === 'Confirm Restore',
@@ -695,9 +695,9 @@ describe('BackupScreen', () => {
         await restoreButton?.onPress?.();
       });
 
-      fireEvent.press(await findByText('Exit to Restart App'));
+      await fireEvent.press(await findByText('Exit to Restart App'));
 
-      await waitFor(() => {
+      await waitFor(async () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Restart Required',
           'Please close and reopen the app manually to complete restore.',

@@ -39,80 +39,92 @@ describe('ColorPickerModal', () => {
     colors: mockColors,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should render modal when visible', () => {
-    const { getByText } = render(<ColorPickerModal {...defaultProps} />);
+  it('should render modal when visible', async () => {
+    const { getByText } = await render(<ColorPickerModal {...defaultProps} />);
     expect(getByText('Test Color Picker')).toBeTruthy();
   });
 
-  it('should render with default title when title not provided', () => {
-    const { getByText } = render(
+  it('should render with default title when title not provided', async () => {
+    const { getByText } = await render(
       <ColorPickerModal {...defaultProps} title={undefined} />,
     );
     expect(getByText('mIRC Colors')).toBeTruthy();
   });
 
-  it('should render close button', () => {
-    const { getByText } = render(<ColorPickerModal {...defaultProps} />);
+  it('should render close button', async () => {
+    const { getByText } = await render(<ColorPickerModal {...defaultProps} />);
     expect(getByText('Close')).toBeTruthy();
   });
 
-  it('should call onClose when close button pressed', () => {
-    const { getByText } = render(<ColorPickerModal {...defaultProps} />);
-    fireEvent.press(getByText('Close'));
+  it('should call onClose when close button pressed', async () => {
+    const { getByText } = await render(<ColorPickerModal {...defaultProps} />);
+    await fireEvent.press(getByText('Close'));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
-  it('should render ColorPalettePicker component', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should render ColorPalettePicker component', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     expect(UNSAFE_getByType('palette-picker')).toBeTruthy();
   });
 
-  it('should call onInsert when color is selected from palette', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should call onInsert when color is selected from palette', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     const pickerButton = UNSAFE_getByType('picker-button');
-    fireEvent.press(pickerButton);
+    await fireEvent.press(pickerButton);
     expect(defaultProps.onInsert).toHaveBeenCalledWith('\\x0301');
   });
 
-  it('should call onClose when hardware back button pressed', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should call onClose when hardware back button pressed', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     const modal = UNSAFE_getByType('Modal');
     modal.props.onRequestClose();
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
-  it('should have transparent prop set to true', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should have transparent prop set to true', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     const modal = UNSAFE_getByType('Modal');
     expect(modal.props.transparent).toBe(true);
   });
 
-  it('should have animationType set to fade', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should have animationType set to fade', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     const modal = UNSAFE_getByType('Modal');
     expect(modal.props.animationType).toBe('fade');
   });
 
-  it('should have visible prop set to true', () => {
-    const { UNSAFE_getByType } = render(
+  it('should have visible prop set to true', async () => {
+    const { UNSAFE_getByType } = await render(
       <ColorPickerModal {...defaultProps} visible={true} />,
     );
     const modal = UNSAFE_getByType('Modal');
     expect(modal.props.visible).toBe(true);
   });
 
-  it('should apply correct overlay styles', () => {
-    const { UNSAFE_getByType } = render(<ColorPickerModal {...defaultProps} />);
+  it('should apply correct overlay styles', async () => {
+    const { UNSAFE_getByType } = await render(
+      <ColorPickerModal {...defaultProps} />,
+    );
     const view = UNSAFE_getByType('View');
     expect(view.props.style).toBeDefined();
   });
 
-  it('should apply surface background color to card', () => {
-    const { UNSAFE_getAllByType } = render(
+  it('should apply surface background color to card', async () => {
+    const { UNSAFE_getAllByType } = await render(
       <ColorPickerModal {...defaultProps} />,
     );
     const views = UNSAFE_getAllByType('View');

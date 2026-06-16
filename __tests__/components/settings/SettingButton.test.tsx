@@ -35,8 +35,8 @@ describe('SettingButton', () => {
     title: 'Test Button',
   };
 
-  it('should render button with title', () => {
-    const { getByText } = render(
+  it('should render button with title', async () => {
+    const { getByText } = await render(
       <SettingButton
         item={baseItem}
         icon={undefined}
@@ -49,8 +49,8 @@ describe('SettingButton', () => {
     expect(getByText('Test Button')).toBeTruthy();
   });
 
-  it('should render chevron', () => {
-    const { getByText } = render(
+  it('should render chevron', async () => {
+    const { getByText } = await render(
       <SettingButton
         item={baseItem}
         icon={undefined}
@@ -63,13 +63,13 @@ describe('SettingButton', () => {
     expect(getByText('›')).toBeTruthy();
   });
 
-  it('should render button with description', () => {
+  it('should render button with description', async () => {
     const item = {
       ...baseItem,
       description: 'This is a test description',
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingButton
         item={item}
         icon={undefined}
@@ -83,8 +83,8 @@ describe('SettingButton', () => {
     expect(getByText('This is a test description')).toBeTruthy();
   });
 
-  it('should render with icon', () => {
-    const { root } = render(
+  it('should render with icon', async () => {
+    const { root } = await render(
       <SettingButton
         item={baseItem}
         icon={{ name: 'cog', solid: true }}
@@ -97,10 +97,10 @@ describe('SettingButton', () => {
     expect(root).toBeTruthy();
   });
 
-  it('should call onPress when button is pressed', () => {
+  it('should call onPress when button is pressed', async () => {
     const mockOnPress = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingButton
         item={baseItem}
         icon={undefined}
@@ -110,20 +110,20 @@ describe('SettingButton', () => {
       />,
     );
 
-    fireEvent.press(
+    await fireEvent.press(
       getByText('Test Button').parent?.parent || getByText('Test Button'),
     );
 
     expect(mockOnPress).toHaveBeenCalled();
   });
 
-  it('should render disabled state', () => {
+  it('should render disabled state', async () => {
     const item = {
       ...baseItem,
       disabled: true,
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingButton
         item={item}
         icon={undefined}
@@ -136,13 +136,13 @@ describe('SettingButton', () => {
     expect(getByText('Test Button')).toBeTruthy();
   });
 
-  it('should render with descriptionNode', () => {
+  it('should render with descriptionNode', async () => {
     const item = {
       ...baseItem,
       descriptionNode: <Text testID="custom-node">Custom Node</Text>,
     };
 
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingButton
         item={item}
         icon={undefined}
@@ -155,13 +155,13 @@ describe('SettingButton', () => {
     expect(getByTestId('custom-node')).toBeTruthy();
   });
 
-  it('should render with numeric description', () => {
+  it('should render with numeric description', async () => {
     const item = {
       ...baseItem,
       description: 123,
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <SettingButton
         item={item}
         icon={undefined}

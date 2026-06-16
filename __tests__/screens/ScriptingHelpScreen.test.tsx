@@ -23,16 +23,16 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('ScriptingHelpScreen', () => {
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <ScriptingHelpScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('Scripting Help')).toBeNull();
   });
 
-  it('renders help sections when visible', () => {
-    const { getByText } = render(
+  it('renders help sections when visible', async () => {
+    const { getByText } = await render(
       <ScriptingHelpScreen visible onClose={jest.fn()} />,
     );
 
@@ -46,13 +46,13 @@ describe('ScriptingHelpScreen', () => {
     expect(getByText('Kick Protection')).toBeTruthy();
   });
 
-  it('calls onClose when close link is pressed', () => {
+  it('calls onClose when close link is pressed', async () => {
     const onClose = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ScriptingHelpScreen visible onClose={onClose} />,
     );
 
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

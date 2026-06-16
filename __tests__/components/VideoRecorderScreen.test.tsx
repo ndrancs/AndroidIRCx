@@ -59,7 +59,7 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('VideoRecorderScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
 
@@ -90,7 +90,7 @@ describe('VideoRecorderScreen', () => {
     mockRequestCameraPermission.mockResolvedValue(false);
     mockRequestMicPermission.mockResolvedValue(false);
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <VideoRecorderScreen
         visible
         onClose={jest.fn()}
@@ -99,7 +99,7 @@ describe('VideoRecorderScreen', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Grant Permissions'));
+      await fireEvent.press(getByText('Grant Permissions'));
     });
 
     expect(mockRequestCameraPermission).toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('VideoRecorderScreen', () => {
     const onVideoRecorded = jest.fn();
     const onClose = jest.fn();
 
-    const { UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = await render(
       <VideoRecorderScreen
         visible
         onClose={onClose}
@@ -124,7 +124,7 @@ describe('VideoRecorderScreen', () => {
     const recordButton = buttons[1];
 
     await act(async () => {
-      fireEvent.press(recordButton);
+      await fireEvent.press(recordButton);
     });
 
     expect(mockCreateRecorder).toHaveBeenCalledWith({
@@ -140,8 +140,8 @@ describe('VideoRecorderScreen', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('renders null when hidden', () => {
-    const { toJSON } = render(
+  it('renders null when hidden', async () => {
+    const { toJSON } = await render(
       <VideoRecorderScreen
         visible={false}
         onClose={jest.fn()}
@@ -151,11 +151,11 @@ describe('VideoRecorderScreen', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('shows camera unavailable state when no device is found', () => {
+  it('shows camera unavailable state when no device is found', async () => {
     const onClose = jest.fn();
     mockDevice = null;
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <VideoRecorderScreen
         visible
         onClose={onClose}
@@ -164,14 +164,14 @@ describe('VideoRecorderScreen', () => {
     );
 
     expect(getByText('Camera not available')).toBeTruthy();
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
     expect(onClose).toHaveBeenCalled();
   });
 
   it('shows error banner when start recording fails', async () => {
     mockStartRecording.mockRejectedValue(new Error('start failed'));
 
-    const { UNSAFE_getAllByType, getByText } = render(
+    const { UNSAFE_getAllByType, getByText } = await render(
       <VideoRecorderScreen
         visible
         onClose={jest.fn()}
@@ -185,7 +185,7 @@ describe('VideoRecorderScreen', () => {
     const recordButton = buttons[1];
 
     await act(async () => {
-      fireEvent.press(recordButton);
+      await fireEvent.press(recordButton);
     });
 
     expect(getByText('start failed')).toBeTruthy();

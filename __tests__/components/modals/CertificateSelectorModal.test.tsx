@@ -86,7 +86,7 @@ describe('CertificateSelectorModal', () => {
     createdAt: new Date('2026-01-02'),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockListCertificates.mockResolvedValue([certMeta]);
@@ -105,7 +105,7 @@ describe('CertificateSelectorModal', () => {
   it('loads certs and selects valid certificate', async () => {
     const onSelect = jest.fn();
     const onClose = jest.fn();
-    const screen = render(
+    const screen = await render(
       <CertificateSelectorModal
         visible
         onClose={onClose}
@@ -120,7 +120,7 @@ describe('CertificateSelectorModal', () => {
     expect(screen.getByText('Valid')).toBeTruthy();
 
     await act(async () => {
-      fireEvent.press((certButton.parent as any)?.parent ?? certButton);
+      await fireEvent.press((certButton.parent as any)?.parent ?? certButton);
     });
 
     expect(onSelect).toHaveBeenCalledWith(
@@ -134,7 +134,7 @@ describe('CertificateSelectorModal', () => {
       isExpired: true,
       daysUntilExpiry: -1,
     });
-    const screen = render(
+    const screen = await render(
       <CertificateSelectorModal
         visible
         onClose={jest.fn()}
@@ -147,7 +147,7 @@ describe('CertificateSelectorModal', () => {
     const certButton = screen.getByText('Work Cert');
     expect(certButton).toBeTruthy();
 
-    fireEvent.press((certButton.parent as any)?.parent ?? certButton);
+    await fireEvent.press((certButton.parent as any)?.parent ?? certButton);
     expect(Alert.alert).toHaveBeenCalledWith(
       'Certificate Expired',
       'This certificate has expired. Please generate a new one.',
@@ -156,7 +156,7 @@ describe('CertificateSelectorModal', () => {
   });
 
   it('deletes certificate through confirmation action', async () => {
-    const screen = render(
+    const screen = await render(
       <CertificateSelectorModal
         visible
         onClose={jest.fn()}
@@ -169,7 +169,7 @@ describe('CertificateSelectorModal', () => {
     const deleteButton = screen.getByText('🗑️');
     expect(deleteButton).toBeTruthy();
 
-    fireEvent.press((deleteButton.parent as any) ?? deleteButton);
+    await fireEvent.press((deleteButton.parent as any) ?? deleteButton);
 
     const deleteAction = (Alert.alert as jest.Mock).mock.calls.find(
       c => c[0] === 'Delete Certificate',

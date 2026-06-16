@@ -161,7 +161,7 @@ const mockBouncerService = jest.requireMock<any>(
 // ─── Tests ─────────────────────────────────────────────
 
 describe('useSettingsConnection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     mockStorage.clear();
@@ -183,13 +183,13 @@ describe('useSettingsConnection', () => {
     mockBouncerService.getBouncerInfo.mockReturnValue(defaultBouncerInfo);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
   describe('initial state loading', () => {
     it('should load networks on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       // Flush async useEffect
       await act(async () => {
@@ -201,7 +201,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load auto reconnect config on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -212,7 +212,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load rate limit config on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -221,7 +221,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load flood protection config on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -232,7 +232,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load lag monitoring config on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -243,7 +243,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load connection stats on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -252,7 +252,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load bouncer config on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -261,7 +261,7 @@ describe('useSettingsConnection', () => {
     });
 
     it('should load bouncer info on mount', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
       await act(async () => {
         jest.advanceTimersByTime(0);
       });
@@ -277,7 +277,7 @@ describe('useSettingsConnection', () => {
         messagesReceived: 300,
         uptime: 7200,
       };
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       // Wait for initial load
       await act(async () => {
@@ -289,7 +289,7 @@ describe('useSettingsConnection', () => {
       mockConnectionQualityService.getStatistics.mockReturnValue(updatedStats);
 
       // Advance timer by 1 second (periodic interval)
-      act(() => {
+      await act(() => {
         jest.advanceTimersByTime(1000);
       });
 
@@ -298,7 +298,7 @@ describe('useSettingsConnection', () => {
 
     it('should update bouncer info periodically', async () => {
       const updatedBouncerInfo = { connected: true, version: '1.8' };
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -307,7 +307,7 @@ describe('useSettingsConnection', () => {
 
       mockBouncerService.getBouncerInfo.mockReturnValue(updatedBouncerInfo);
 
-      act(() => {
+      await act(() => {
         jest.advanceTimersByTime(1000);
       });
 
@@ -315,18 +315,18 @@ describe('useSettingsConnection', () => {
     });
 
     it('should clean up interval on unmount', async () => {
-      const { unmount } = renderHook(() => useSettingsConnection());
+      const { unmount } = await renderHook(() => useSettingsConnection());
 
       // Wait for initial load
       await act(async () => {});
 
-      unmount();
+      await unmount();
 
       // After unmount, advancing timers should not call the services again
       const callCount =
         mockConnectionQualityService.getStatistics.mock.calls.length;
 
-      act(() => {
+      await act(() => {
         jest.advanceTimersByTime(5000);
       });
 
@@ -339,7 +339,7 @@ describe('useSettingsConnection', () => {
 
   describe('refreshNetworks', () => {
     it('should reload networks from service', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -368,7 +368,7 @@ describe('useSettingsConnection', () => {
 
   describe('updateAutoReconnectConfig', () => {
     it('should update with partial config', async () => {
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -396,7 +396,7 @@ describe('useSettingsConnection', () => {
         minReconnectInterval: 10000,
       };
 
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -418,7 +418,7 @@ describe('useSettingsConnection', () => {
         updatedConfig,
       );
 
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -448,7 +448,7 @@ describe('useSettingsConnection', () => {
         updatedConfig,
       );
 
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -476,7 +476,7 @@ describe('useSettingsConnection', () => {
         updatedConfig,
       );
 
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);
@@ -498,7 +498,7 @@ describe('useSettingsConnection', () => {
       const updatedConfig = { enabled: true, type: 'znc' as const };
       mockBouncerService.getConfig.mockReturnValue(updatedConfig);
 
-      const { result } = renderHook(() => useSettingsConnection());
+      const { result } = await renderHook(() => useSettingsConnection());
 
       await act(async () => {
         jest.advanceTimersByTime(0);

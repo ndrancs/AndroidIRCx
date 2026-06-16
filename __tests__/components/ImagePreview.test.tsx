@@ -1,7 +1,11 @@
 import React from 'react';
-import { Image, TouchableOpacity } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { TouchableOpacity } from 'react-native';
+import { render, fireEvent, cleanup } from '@testing-library/react-native';
 import { ImagePreview } from '../../src/components/ImagePreview';
+
+afterEach(() => {
+  cleanup();
+});
 
 jest.mock('../../src/hooks/useTheme', () => ({
   useTheme: () => ({
@@ -18,64 +22,64 @@ jest.mock('../../src/i18n/transifex', () => ({
 }));
 
 describe('ImagePreview', () => {
-  it('renders thumbnail image and opens/closes modal', () => {
-    const { UNSAFE_getAllByType, getByText } = render(
+  it('renders thumbnail image and opens/closes modal', async () => {
+    const { UNSAFE_getAllByType, getByText } = await render(
       <ImagePreview url="https://example.com/pic.jpg" />,
     );
 
-    const images = UNSAFE_getAllByType(Image);
+    const images = UNSAFE_getAllByType('Image');
     const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent(images[0], 'load');
-    fireEvent.press(touchables[0]);
+    await fireEvent(images[0], 'load');
+    await fireEvent.press(touchables[0]);
 
     expect(getByText('Close')).toBeTruthy();
 
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
   });
 
-  it('shows error state when thumbnail fails', () => {
-    const { UNSAFE_getByType, getByText } = render(
+  it('shows error state when thumbnail fails', async () => {
+    const { UNSAFE_getByType, getByText } = await render(
       <ImagePreview url="https://example.com/broken.jpg" />,
     );
 
-    const img = UNSAFE_getByType(Image);
-    fireEvent(img, 'error');
+    const img = UNSAFE_getByType('Image');
+    await fireEvent(img, 'error');
 
     expect(getByText('Failed to load image')).toBeTruthy();
   });
 
-  it('handles non-thumbnail mode', () => {
-    const { UNSAFE_getByType } = render(
+  it('handles non-thumbnail mode', async () => {
+    const { UNSAFE_getByType } = await render(
       <ImagePreview url="https://example.com/full.jpg" thumbnail={false} />,
     );
 
-    const img = UNSAFE_getByType(Image);
+    const img = UNSAFE_getByType('Image');
     expect(img.props.resizeMode).toBe('contain');
   });
 
-  it('shows modal loading text and clears it when modal image loads', () => {
-    const { UNSAFE_getAllByType, getByText, queryByText } = render(
+  it('shows modal loading text and clears it when modal image loads', async () => {
+    const { UNSAFE_getAllByType, getByText, queryByText } = await render(
       <ImagePreview url="https://example.com/pic.jpg" />,
     );
 
-    fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[0]);
+    await fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[0]);
     expect(getByText('Loading image...')).toBeTruthy();
 
-    fireEvent(UNSAFE_getAllByType(Image)[1], 'load');
+    await fireEvent(UNSAFE_getAllByType('Image')[1], 'load');
     expect(queryByText('Loading image...')).toBeNull();
   });
 
-  it('hides modal loader when modal image errors and supports request-close', () => {
-    const { UNSAFE_getAllByType, UNSAFE_getByType, queryByText } = render(
+  it('hides modal loader when modal image errors and supports request-close', async () => {
+    const { UNSAFE_getAllByType, UNSAFE_getByType, queryByText } = await render(
       <ImagePreview url="https://example.com/pic.jpg" />,
     );
 
-    fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[0]);
-    fireEvent(UNSAFE_getAllByType(Image)[1], 'error');
+    await fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[0]);
+    await fireEvent(UNSAFE_getAllByType('Image')[1], 'error');
     expect(queryByText('Loading image...')).toBeNull();
 
     const modal = UNSAFE_getByType('Modal');
-    fireEvent(modal, 'requestClose');
+    await fireEvent(modal, 'requestClose');
     expect(queryByText('Close')).toBeNull();
   });
 });

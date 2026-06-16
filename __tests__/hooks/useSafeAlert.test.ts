@@ -12,19 +12,19 @@ import { useSafeAlert } from '../../src/hooks/useSafeAlert';
 jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
 describe('useSafeAlert', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should show alert immediately when app is active', () => {
+  it('should show alert immediately when app is active', async () => {
     const appStateRef = { current: 'active' };
     const pendingAlertRef = { current: null as any };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.safeAlert('Title', 'Message', [{ text: 'OK' }]);
     });
 
@@ -34,15 +34,15 @@ describe('useSafeAlert', () => {
     expect(pendingAlertRef.current).toBeNull();
   });
 
-  it('should store alert in pendingAlertRef when app is in background', () => {
+  it('should store alert in pendingAlertRef when app is in background', async () => {
     const appStateRef = { current: 'background' };
     const pendingAlertRef = { current: null as any };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.safeAlert('Title', 'Message', [{ text: 'OK' }]);
     });
 
@@ -54,15 +54,15 @@ describe('useSafeAlert', () => {
     });
   });
 
-  it('should store alert when app state is inactive', () => {
+  it('should store alert when app state is inactive', async () => {
     const appStateRef = { current: 'inactive' };
     const pendingAlertRef = { current: null as any };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.safeAlert('Title', 'Message');
     });
 
@@ -70,46 +70,46 @@ describe('useSafeAlert', () => {
     expect(pendingAlertRef.current).toBeTruthy();
   });
 
-  it('should handle missing message parameter', () => {
+  it('should handle missing message parameter', async () => {
     const appStateRef = { current: 'active' };
     const pendingAlertRef = { current: null as any };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.safeAlert('Title');
     });
 
     expect(Alert.alert).toHaveBeenCalledWith('Title', undefined, undefined);
   });
 
-  it('should convert title and message to strings', () => {
+  it('should convert title and message to strings', async () => {
     const appStateRef = { current: 'active' };
     const pendingAlertRef = { current: null as any };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
-    act(() => {
+    await act(() => {
       result.current.safeAlert(123 as any, 456 as any);
     });
 
     expect(Alert.alert).toHaveBeenCalledWith('123', '456', undefined);
   });
 
-  it('should return stable safeAlert reference', () => {
+  it('should return stable safeAlert reference', async () => {
     const appStateRef = { current: 'active' };
     const pendingAlertRef = { current: null as any };
 
-    const { result, rerender } = renderHook(() =>
+    const { result, rerender } = await renderHook(() =>
       useSafeAlert({ appStateRef, pendingAlertRef }),
     );
 
     const first = result.current.safeAlert;
-    rerender();
+    await rerender();
     expect(result.current.safeAlert).toBe(first);
   });
 });

@@ -108,7 +108,7 @@ const { PrivacyRelayScreen } = require('../../src/screens/PrivacyRelayScreen');
 describe('PrivacyRelayScreen', () => {
   let consoleLogSpy: jest.SpyInstance;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -162,12 +162,12 @@ describe('PrivacyRelayScreen', () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     consoleLogSpy.mockRestore();
   });
 
   it('renders relay info and handles restore flow', async () => {
-    const { findByText, getByText } = render(
+    const { findByText, getByText } = await render(
       <PrivacyRelayScreen visible onClose={jest.fn()} />,
     );
 
@@ -175,14 +175,14 @@ describe('PrivacyRelayScreen', () => {
     expect(getByText('TURN setup')).toBeTruthy();
     expect(getByText('Host: turn.dbase.in.rs')).toBeTruthy();
 
-    fireEvent.press(getByText('Restore Purchases'));
+    await fireEvent.press(getByText('Restore Purchases'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockPrivacyRelayService.restoreFromPurchaseTokens,
       ).toHaveBeenCalled();
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockPrivacyRelayService.registerPurchaseWithBackend,
       ).toHaveBeenCalledWith('restored-token', null);
@@ -190,7 +190,7 @@ describe('PrivacyRelayScreen', () => {
         'restored-token',
       );
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         mockMediaSettingsService.setCallNicklistCallActionsEnabled,
       ).toHaveBeenCalledWith(true);
@@ -205,15 +205,15 @@ describe('PrivacyRelayScreen', () => {
       new Error('store down'),
     );
     const onClose = jest.fn();
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyRelayScreen visible onClose={onClose} />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith('Store Error', 'store down');
     });
 
-    fireEvent.press(await findByText('Close'));
+    await fireEvent.press(await findByText('Close'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -224,12 +224,12 @@ describe('PrivacyRelayScreen', () => {
     ]);
     mockPrivacyRelayService.restoreFromPurchaseTokens.mockResolvedValueOnce(0);
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyRelayScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Restore Purchases'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Restore Purchases'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Restore complete',
         'No Privacy Relay subscriptions were found to restore.',
@@ -239,8 +239,8 @@ describe('PrivacyRelayScreen', () => {
     mockPrivacyRelayService.restoreFromPurchaseTokens.mockRejectedValueOnce(
       new Error('restore broken'),
     );
-    fireEvent.press(await findByText('Restore Purchases'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Restore Purchases'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Restore failed',
         'restore broken',
@@ -264,12 +264,12 @@ describe('PrivacyRelayScreen', () => {
       subscription: { purchaseToken: 'token-123', basePlanId: 'monthly' },
     });
 
-    const { findByText } = render(
+    const { findByText } = await render(
       <PrivacyRelayScreen visible onClose={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Test Relay Credentials'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Test Relay Credentials'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Relay ready',
         'TURN credentials were fetched successfully.',
@@ -282,8 +282,8 @@ describe('PrivacyRelayScreen', () => {
     mockPrivacyRelayService.fetchTurnCredentials.mockRejectedValueOnce(
       new Error('turn failed'),
     );
-    fireEvent.press(await findByText('Test Relay Credentials'));
-    await waitFor(() => {
+    await fireEvent.press(await findByText('Test Relay Credentials'));
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Relay test failed',
         'turn failed',
@@ -293,9 +293,9 @@ describe('PrivacyRelayScreen', () => {
 
   it('handles purchase update success and failure branches', async () => {
     const RNIap = require('react-native-iap');
-    render(<PrivacyRelayScreen visible onClose={jest.fn()} />);
+    await render(<PrivacyRelayScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(purchaseUpdatedCallback).toBeDefined();
     });
 
@@ -305,7 +305,7 @@ describe('PrivacyRelayScreen', () => {
       transactionId: 'txn-1',
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(RNIap.finishTransaction).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Privacy Relay enabled',
@@ -322,7 +322,7 @@ describe('PrivacyRelayScreen', () => {
       transactionId: 'txn-2',
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Purchase Failed',
         'backend failed',
@@ -331,9 +331,9 @@ describe('PrivacyRelayScreen', () => {
   });
 
   it('handles missing purchase token and purchase error callbacks', async () => {
-    render(<PrivacyRelayScreen visible onClose={jest.fn()} />);
+    await render(<PrivacyRelayScreen visible onClose={jest.fn()} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(purchaseUpdatedCallback).toBeDefined();
       expect(purchaseErrorCallback).toBeDefined();
     });
@@ -345,7 +345,7 @@ describe('PrivacyRelayScreen', () => {
       transactionId: 'txn-3',
     });
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Purchase Failed',
         'Missing purchase token for Privacy Relay subscription.',

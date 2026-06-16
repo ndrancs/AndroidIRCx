@@ -111,7 +111,7 @@ describe('useDeepLinkHandler hook', () => {
     return result;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockInitialUrl = null;
     mockUrlListener = null;
@@ -138,14 +138,14 @@ describe('useDeepLinkHandler hook', () => {
     (settingsService.loadNetworks as jest.Mock).mockResolvedValue([]);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
   it('processes initial URL and connects using matched network', async () => {
     mockInitialUrl = 'ircs://irc.test.net:6697';
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -170,23 +170,26 @@ describe('useDeepLinkHandler hook', () => {
   it('queues URL while locked and processes it after unlock', async () => {
     mockInitialUrl = 'ircs://irc.test.net:6697';
 
-    const { rerender } = renderHook((props: any) => useDeepLinkHandler(props), {
-      initialProps: {
-        handleConnect,
-        handleJoinChannel,
-        isAppLocked: true,
-        isFirstRunComplete: true,
-        activeConnectionId: null,
-        tabs: [],
-        safeAlert,
-        t,
+    const { rerender } = await renderHook(
+      (props: any) => useDeepLinkHandler(props),
+      {
+        initialProps: {
+          handleConnect,
+          handleJoinChannel,
+          isAppLocked: true,
+          isFirstRunComplete: true,
+          activeConnectionId: null,
+          tabs: [],
+          safeAlert,
+          t,
+        },
       },
-    });
+    );
 
     await new Promise(r => setTimeout(r, 0));
     expect(handleConnect).not.toHaveBeenCalled();
 
-    rerender({
+    await rerender({
       handleConnect,
       handleJoinChannel,
       isAppLocked: false,
@@ -211,7 +214,7 @@ describe('useDeepLinkHandler hook', () => {
       },
     ]);
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -234,7 +237,7 @@ describe('useDeepLinkHandler hook', () => {
     mockInitialUrl = 'not-an-irc-url';
     mockParseIRCUrl.mockReturnValue({ isValid: false, error: 'bad format' });
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -261,7 +264,7 @@ describe('useDeepLinkHandler hook', () => {
     const nowSpy = jest.spyOn(Date, 'now');
     nowSpy.mockReturnValueOnce(1000).mockReturnValueOnce(1500);
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -293,7 +296,7 @@ describe('useDeepLinkHandler hook', () => {
     mockInitialUrl = 'ircs://nick:pass@irc.test.net:6697';
     mockParseIRCUrl.mockReturnValue(makeParsed({ password: 'pass' }));
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -330,7 +333,7 @@ describe('useDeepLinkHandler hook', () => {
       },
     ]);
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -377,7 +380,7 @@ describe('useDeepLinkHandler hook', () => {
       },
     ]);
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -410,7 +413,7 @@ describe('useDeepLinkHandler hook', () => {
       makeParsed({ server: 'new.server.net', channel: '#chan' }),
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -451,7 +454,7 @@ describe('useDeepLinkHandler hook', () => {
       }),
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -505,7 +508,7 @@ describe('useDeepLinkHandler hook', () => {
         },
       ]);
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -530,7 +533,7 @@ describe('useDeepLinkHandler hook', () => {
       makeParsed({ channel: '#chan', channelKey: 'k123' }),
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -569,7 +572,7 @@ describe('useDeepLinkHandler hook', () => {
     );
     handleConnect.mockRejectedValueOnce(new Error('temp connect fail'));
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -601,7 +604,7 @@ describe('useDeepLinkHandler hook', () => {
     mockInitialUrl = 'ircs://irc.test.net:6697';
     handleConnect.mockRejectedValueOnce(new Error('saved connect fail'));
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -631,7 +634,7 @@ describe('useDeepLinkHandler hook', () => {
         }),
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -669,7 +672,7 @@ describe('useDeepLinkHandler hook', () => {
       makeParsed({ channel: '#chan', channelKey: 'cleanup' }),
     );
 
-    const { unmount } = renderHook(() =>
+    const { unmount } = await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -687,7 +690,7 @@ describe('useDeepLinkHandler hook', () => {
       await Promise.resolve();
     });
 
-    unmount();
+    await unmount();
     expect(clearSpy).toHaveBeenCalled();
     clearSpy.mockRestore();
   });
@@ -698,7 +701,7 @@ describe('useDeepLinkHandler hook', () => {
       new Error('load failed'),
     );
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,
@@ -729,7 +732,7 @@ describe('useDeepLinkHandler hook', () => {
     );
     mockInitialUrl = null;
 
-    renderHook(() =>
+    await renderHook(() =>
       useDeepLinkHandler({
         handleConnect,
         handleJoinChannel,

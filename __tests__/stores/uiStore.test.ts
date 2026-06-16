@@ -30,9 +30,9 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 describe('uiStore', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockStorage.clear();
-    act(() => {
+    await act(() => {
       useUIStore.getState().reset();
     });
   });
@@ -136,15 +136,15 @@ describe('uiStore', () => {
   });
 
   describe('first run actions', () => {
-    it('should set showFirstRunSetup', () => {
-      act(() => {
+    it('should set showFirstRunSetup', async () => {
+      await act(() => {
         useUIStore.getState().setShowFirstRunSetup(true);
       });
       expect(useUIStore.getState().showFirstRunSetup).toBe(true);
     });
 
-    it('should set isCheckingFirstRun', () => {
-      act(() => {
+    it('should set isCheckingFirstRun', async () => {
+      await act(() => {
         useUIStore.getState().setIsCheckingFirstRun(false);
       });
       expect(useUIStore.getState().isCheckingFirstRun).toBe(false);
@@ -152,71 +152,71 @@ describe('uiStore', () => {
   });
 
   describe('app lock actions', () => {
-    it('should set appLockEnabled', () => {
-      act(() => {
+    it('should set appLockEnabled', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockEnabled(true);
       });
       expect(useUIStore.getState().appLockEnabled).toBe(true);
     });
 
-    it('should set appLockUseBiometric', () => {
-      act(() => {
+    it('should set appLockUseBiometric', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockUseBiometric(true);
       });
       expect(useUIStore.getState().appLockUseBiometric).toBe(true);
     });
 
-    it('should set appLockAutoBiometricPrompt', () => {
-      act(() => {
+    it('should set appLockAutoBiometricPrompt', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockAutoBiometricPrompt(true);
       });
       expect(useUIStore.getState().appLockAutoBiometricPrompt).toBe(true);
     });
 
-    it('should set appLockUsePin', () => {
-      act(() => {
+    it('should set appLockUsePin', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockUsePin(true);
       });
       expect(useUIStore.getState().appLockUsePin).toBe(true);
     });
 
-    it('should set appLockOnLaunch', () => {
-      act(() => {
+    it('should set appLockOnLaunch', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockOnLaunch(false);
       });
       expect(useUIStore.getState().appLockOnLaunch).toBe(false);
     });
 
-    it('should set appLockOnBackground', () => {
-      act(() => {
+    it('should set appLockOnBackground', async () => {
+      await act(() => {
         useUIStore.getState().setAppLockOnBackground(false);
       });
       expect(useUIStore.getState().appLockOnBackground).toBe(false);
     });
 
-    it('should set appLocked', () => {
-      act(() => {
+    it('should set appLocked', async () => {
+      await act(() => {
         useUIStore.getState().setAppLocked(true);
       });
       expect(useUIStore.getState().appLocked).toBe(true);
     });
 
-    it('should set appUnlockModalVisible', () => {
-      act(() => {
+    it('should set appUnlockModalVisible', async () => {
+      await act(() => {
         useUIStore.getState().setAppUnlockModalVisible(true);
       });
       expect(useUIStore.getState().appUnlockModalVisible).toBe(true);
     });
 
-    it('should set appPinEntry', () => {
-      act(() => {
+    it('should set appPinEntry', async () => {
+      await act(() => {
         useUIStore.getState().setAppPinEntry('1234');
       });
       expect(useUIStore.getState().appPinEntry).toBe('1234');
     });
 
-    it('should set appPinError', () => {
-      act(() => {
+    it('should set appPinError', async () => {
+      await act(() => {
         useUIStore.getState().setAppPinError('Invalid PIN');
       });
       expect(useUIStore.getState().appPinError).toBe('Invalid PIN');
@@ -224,69 +224,69 @@ describe('uiStore', () => {
   });
 
   describe('banner actions', () => {
-    it('should set bannerVisible', () => {
-      act(() => {
+    it('should set bannerVisible', async () => {
+      await act(() => {
         useUIStore.getState().setBannerVisible(true);
       });
       expect(useUIStore.getState().bannerVisible).toBe(true);
     });
 
-    it('should set scriptingTimeMs', () => {
-      act(() => {
+    it('should set scriptingTimeMs', async () => {
+      await act(() => {
         useUIStore.getState().setScriptingTimeMs(5000);
       });
       expect(useUIStore.getState().scriptingTimeMs).toBe(5000);
     });
 
-    it('should set adFreeTimeMs', () => {
-      act(() => {
+    it('should set adFreeTimeMs', async () => {
+      await act(() => {
         useUIStore.getState().setAdFreeTimeMs(10000);
       });
       expect(useUIStore.getState().adFreeTimeMs).toBe(10000);
     });
 
-    it('should increment scripting time', () => {
-      act(() => {
+    it('should increment scripting time', async () => {
+      await act(() => {
         useUIStore.getState().setScriptingTimeMs(1000);
         useUIStore.getState().incrementScriptingTime(500);
       });
       expect(useUIStore.getState().scriptingTimeMs).toBe(1500);
     });
 
-    it('should increment ad free time', () => {
-      act(() => {
+    it('should increment ad free time', async () => {
+      await act(() => {
         useUIStore.getState().setAdFreeTimeMs(2000);
         useUIStore.getState().incrementAdFreeTime(1000);
       });
       expect(useUIStore.getState().adFreeTimeMs).toBe(3000);
     });
 
-    it('should decrement scripting time', () => {
-      act(() => {
+    it('should decrement scripting time', async () => {
+      await act(() => {
         useUIStore.getState().setScriptingTimeMs(1000);
         useUIStore.getState().decrementScriptingTime(300);
       });
       expect(useUIStore.getState().scriptingTimeMs).toBe(700);
     });
 
-    it('should not decrement scripting time below zero', () => {
-      act(() => {
+    it('should not decrement scripting time below zero', async () => {
+      await act(() => {
         useUIStore.getState().setScriptingTimeMs(100);
         useUIStore.getState().decrementScriptingTime(500);
       });
       expect(useUIStore.getState().scriptingTimeMs).toBe(0);
     });
 
-    it('should decrement ad free time', () => {
-      act(() => {
+    it('should decrement ad free time', async () => {
+      await act(() => {
         useUIStore.getState().setAdFreeTimeMs(2000);
         useUIStore.getState().decrementAdFreeTime(800);
       });
       expect(useUIStore.getState().adFreeTimeMs).toBe(1200);
     });
 
-    it('should not decrement ad free time below zero', () => {
-      act(() => {
+    it('should not decrement ad free time below zero', async () => {
+      await act(() => {
         useUIStore.getState().setAdFreeTimeMs(100);
         useUIStore.getState().decrementAdFreeTime(500);
       });
@@ -295,14 +295,14 @@ describe('uiStore', () => {
   });
 
   describe('message display actions', () => {
-    it('should set showRawCommands', () => {
-      act(() => {
+    it('should set showRawCommands', async () => {
+      await act(() => {
         useUIStore.getState().setShowRawCommands(false);
       });
       expect(useUIStore.getState().showRawCommands).toBe(false);
     });
 
-    it('should set rawCategoryVisibility', () => {
+    it('should set rawCategoryVisibility', async () => {
       const visibility: Record<RawMessageCategory, boolean> = {
         connection: true,
         channel: false,
@@ -311,21 +311,21 @@ describe('uiStore', () => {
         error: true,
         other: false,
       };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setRawCategoryVisibility(visibility);
       });
       expect(useUIStore.getState().rawCategoryVisibility).toEqual(visibility);
     });
 
-    it('should toggle raw category', () => {
-      act(() => {
+    it('should toggle raw category', async () => {
+      await act(() => {
         useUIStore
           .getState()
           .toggleRawCategory('connection' as RawMessageCategory);
       });
       expect(useUIStore.getState().rawCategoryVisibility.connection).toBe(true);
 
-      act(() => {
+      await act(() => {
         useUIStore
           .getState()
           .toggleRawCategory('connection' as RawMessageCategory);
@@ -335,8 +335,8 @@ describe('uiStore', () => {
       );
     });
 
-    it('should toggle multiple categories independently', () => {
-      act(() => {
+    it('should toggle multiple categories independently', async () => {
+      await act(() => {
         useUIStore
           .getState()
           .toggleRawCategory('connection' as RawMessageCategory);
@@ -349,14 +349,14 @@ describe('uiStore', () => {
       expect(state.channel).toBe(true);
     });
 
-    it('should preserve existing categories when toggling', () => {
-      act(() => {
+    it('should preserve existing categories when toggling', async () => {
+      await act(() => {
         useUIStore
           .getState()
           .toggleRawCategory('connection' as RawMessageCategory);
       });
 
-      act(() => {
+      await act(() => {
         useUIStore
           .getState()
           .toggleRawCategory('channel' as RawMessageCategory);
@@ -365,36 +365,36 @@ describe('uiStore', () => {
       expect(useUIStore.getState().rawCategoryVisibility.connection).toBe(true);
     });
 
-    it('should set showTypingIndicators', () => {
-      act(() => {
+    it('should set showTypingIndicators', async () => {
+      await act(() => {
         useUIStore.getState().setShowTypingIndicators(false);
       });
       expect(useUIStore.getState().showTypingIndicators).toBe(false);
     });
 
-    it('should set hideJoinMessages', () => {
-      act(() => {
+    it('should set hideJoinMessages', async () => {
+      await act(() => {
         useUIStore.getState().setHideJoinMessages(true);
       });
       expect(useUIStore.getState().hideJoinMessages).toBe(true);
     });
 
-    it('should set hidePartMessages', () => {
-      act(() => {
+    it('should set hidePartMessages', async () => {
+      await act(() => {
         useUIStore.getState().setHidePartMessages(true);
       });
       expect(useUIStore.getState().hidePartMessages).toBe(true);
     });
 
-    it('should set hideQuitMessages', () => {
-      act(() => {
+    it('should set hideQuitMessages', async () => {
+      await act(() => {
         useUIStore.getState().setHideQuitMessages(true);
       });
       expect(useUIStore.getState().hideQuitMessages).toBe(true);
     });
 
-    it('should set hideIrcServiceListenerMessages', () => {
-      act(() => {
+    it('should set hideIrcServiceListenerMessages', async () => {
+      await act(() => {
         useUIStore.getState().setHideIrcServiceListenerMessages(false);
       });
       expect(useUIStore.getState().hideIrcServiceListenerMessages).toBe(false);
@@ -402,159 +402,159 @@ describe('uiStore', () => {
   });
 
   describe('modal actions - basic', () => {
-    it('should set showChannelModal', () => {
-      act(() => {
+    it('should set showChannelModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelModal(true);
       });
       expect(useUIStore.getState().showChannelModal).toBe(true);
     });
 
-    it('should set channelName', () => {
-      act(() => {
+    it('should set channelName', async () => {
+      await act(() => {
         useUIStore.getState().setChannelName('#general');
       });
       expect(useUIStore.getState().channelName).toBe('#general');
     });
 
-    it('should set showNetworksList', () => {
-      act(() => {
+    it('should set showNetworksList', async () => {
+      await act(() => {
         useUIStore.getState().setShowNetworksList(true);
       });
       expect(useUIStore.getState().showNetworksList).toBe(true);
     });
 
-    it('should set showSettings', () => {
-      act(() => {
+    it('should set showSettings', async () => {
+      await act(() => {
         useUIStore.getState().setShowSettings(true);
       });
       expect(useUIStore.getState().showSettings).toBe(true);
     });
 
-    it('should set showPurchaseScreen', () => {
-      act(() => {
+    it('should set showPurchaseScreen', async () => {
+      await act(() => {
         useUIStore.getState().setShowPurchaseScreen(true);
       });
       expect(useUIStore.getState().showPurchaseScreen).toBe(true);
     });
 
-    it('should set showIgnoreList', () => {
-      act(() => {
+    it('should set showIgnoreList', async () => {
+      await act(() => {
         useUIStore.getState().setShowIgnoreList(true);
       });
       expect(useUIStore.getState().showIgnoreList).toBe(true);
     });
 
-    it('should set showBlacklist', () => {
-      act(() => {
+    it('should set showBlacklist', async () => {
+      await act(() => {
         useUIStore.getState().setShowBlacklist(true);
       });
       expect(useUIStore.getState().showBlacklist).toBe(true);
     });
 
-    it('should set showWHOIS', () => {
-      act(() => {
+    it('should set showWHOIS', async () => {
+      await act(() => {
         useUIStore.getState().setShowWHOIS(true);
       });
       expect(useUIStore.getState().showWHOIS).toBe(true);
     });
 
-    it('should set whoisNick', () => {
-      act(() => {
+    it('should set whoisNick', async () => {
+      await act(() => {
         useUIStore.getState().setWhoisNick('nickname');
       });
       expect(useUIStore.getState().whoisNick).toBe('nickname');
     });
 
-    it('should set showQueryEncryptionMenu', () => {
-      act(() => {
+    it('should set showQueryEncryptionMenu', async () => {
+      await act(() => {
         useUIStore.getState().setShowQueryEncryptionMenu(true);
       });
       expect(useUIStore.getState().showQueryEncryptionMenu).toBe(true);
     });
 
-    it('should set showChannelList', () => {
-      act(() => {
+    it('should set showChannelList', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelList(true);
       });
       expect(useUIStore.getState().showChannelList).toBe(true);
     });
 
-    it('should set showUserList', () => {
-      act(() => {
+    it('should set showUserList', async () => {
+      await act(() => {
         useUIStore.getState().setShowUserList(true);
       });
       expect(useUIStore.getState().showUserList).toBe(true);
     });
 
-    it('should set showChannelSettings', () => {
-      act(() => {
+    it('should set showChannelSettings', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelSettings(true);
       });
       expect(useUIStore.getState().showChannelSettings).toBe(true);
     });
 
-    it('should set channelSettingsTarget', () => {
-      act(() => {
+    it('should set channelSettingsTarget', async () => {
+      await act(() => {
         useUIStore.getState().setChannelSettingsTarget('#general');
       });
       expect(useUIStore.getState().channelSettingsTarget).toBe('#general');
     });
 
-    it('should set channelSettingsNetwork', () => {
-      act(() => {
+    it('should set channelSettingsNetwork', async () => {
+      await act(() => {
         useUIStore.getState().setChannelSettingsNetwork('freenode');
       });
       expect(useUIStore.getState().channelSettingsNetwork).toBe('freenode');
     });
 
-    it('should set showOptionsMenu', () => {
-      act(() => {
+    it('should set showOptionsMenu', async () => {
+      await act(() => {
         useUIStore.getState().setShowOptionsMenu(true);
       });
       expect(useUIStore.getState().showOptionsMenu).toBe(true);
     });
 
-    it('should set showRenameModal', () => {
-      act(() => {
+    it('should set showRenameModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowRenameModal(true);
       });
       expect(useUIStore.getState().showRenameModal).toBe(true);
     });
 
-    it('should set renameTargetTabId', () => {
-      act(() => {
+    it('should set renameTargetTabId', async () => {
+      await act(() => {
         useUIStore.getState().setRenameTargetTabId('tab-123');
       });
       expect(useUIStore.getState().renameTargetTabId).toBe('tab-123');
     });
 
-    it('should set renameValue', () => {
-      act(() => {
+    it('should set renameValue', async () => {
+      await act(() => {
         useUIStore.getState().setRenameValue('New Name');
       });
       expect(useUIStore.getState().renameValue).toBe('New Name');
     });
 
-    it('should set showTabOptionsModal', () => {
-      act(() => {
+    it('should set showTabOptionsModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowTabOptionsModal(true);
       });
       expect(useUIStore.getState().showTabOptionsModal).toBe(true);
     });
 
-    it('should set tabOptionsTitle', () => {
-      act(() => {
+    it('should set tabOptionsTitle', async () => {
+      await act(() => {
         useUIStore.getState().setTabOptionsTitle('Tab Options');
       });
       expect(useUIStore.getState().tabOptionsTitle).toBe('Tab Options');
     });
 
-    it('should set tabOptions', () => {
+    it('should set tabOptions', async () => {
       const options = [
         { text: 'Option 1', onPress: jest.fn() },
         { text: 'Option 2', onPress: jest.fn(), style: 'destructive' as const },
       ];
-      act(() => {
+      await act(() => {
         useUIStore.getState().setTabOptions(options);
       });
       expect(useUIStore.getState().tabOptions).toHaveLength(2);
@@ -562,23 +562,23 @@ describe('uiStore', () => {
   });
 
   describe('channel note actions', () => {
-    it('should set showChannelNoteModal', () => {
-      act(() => {
+    it('should set showChannelNoteModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelNoteModal(true);
       });
       expect(useUIStore.getState().showChannelNoteModal).toBe(true);
     });
 
-    it('should set channelNoteTarget', () => {
+    it('should set channelNoteTarget', async () => {
       const target = { networkId: 'net1', channel: '#general' };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setChannelNoteTarget(target);
       });
       expect(useUIStore.getState().channelNoteTarget).toEqual(target);
     });
 
-    it('should set channelNoteValue', () => {
-      act(() => {
+    it('should set channelNoteValue', async () => {
+      await act(() => {
         useUIStore.getState().setChannelNoteValue('This is a note');
       });
       expect(useUIStore.getState().channelNoteValue).toBe('This is a note');
@@ -586,14 +586,14 @@ describe('uiStore', () => {
   });
 
   describe('channel log actions', () => {
-    it('should set showChannelLogModal', () => {
-      act(() => {
+    it('should set showChannelLogModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelLogModal(true);
       });
       expect(useUIStore.getState().showChannelLogModal).toBe(true);
     });
 
-    it('should set channelLogEntries', () => {
+    it('should set channelLogEntries', async () => {
       const entries = [
         {
           id: '1',
@@ -610,7 +610,7 @@ describe('uiStore', () => {
           message: 'left',
         },
       ];
-      act(() => {
+      await act(() => {
         useUIStore.getState().setChannelLogEntries(entries);
       });
       expect(useUIStore.getState().channelLogEntries).toEqual(entries);
@@ -618,15 +618,15 @@ describe('uiStore', () => {
   });
 
   describe('prefill message actions', () => {
-    it('should set prefillMessage', () => {
-      act(() => {
+    it('should set prefillMessage', async () => {
+      await act(() => {
         useUIStore.getState().setPrefillMessage('/msg nick hello');
       });
       expect(useUIStore.getState().prefillMessage).toBe('/msg nick hello');
     });
 
-    it('should clear prefillMessage with null', () => {
-      act(() => {
+    it('should clear prefillMessage with null', async () => {
+      await act(() => {
         useUIStore.getState().setPrefillMessage('test');
         useUIStore.getState().setPrefillMessage(null);
       });
@@ -635,37 +635,37 @@ describe('uiStore', () => {
   });
 
   describe('DCC actions', () => {
-    it('should set showDccTransfers', () => {
-      act(() => {
+    it('should set showDccTransfers', async () => {
+      await act(() => {
         useUIStore.getState().setShowDccTransfers(true);
       });
       expect(useUIStore.getState().showDccTransfers).toBe(true);
     });
 
-    it('should set dccTransfersMinimized', () => {
-      act(() => {
+    it('should set dccTransfersMinimized', async () => {
+      await act(() => {
         useUIStore.getState().setDccTransfersMinimized(true);
       });
       expect(useUIStore.getState().dccTransfersMinimized).toBe(true);
     });
 
-    it('should set showDccSendModal', () => {
-      act(() => {
+    it('should set showDccSendModal', async () => {
+      await act(() => {
         useUIStore.getState().setShowDccSendModal(true);
       });
       expect(useUIStore.getState().showDccSendModal).toBe(true);
     });
 
-    it('should set dccSendTarget', () => {
+    it('should set dccSendTarget', async () => {
       const target = { nick: 'user1', networkId: 'net1' };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setDccSendTarget(target);
       });
       expect(useUIStore.getState().dccSendTarget).toEqual(target);
     });
 
-    it('should set dccSendPath', () => {
-      act(() => {
+    it('should set dccSendPath', async () => {
+      await act(() => {
         useUIStore.getState().setDccSendPath('/path/to/file.txt');
       });
       expect(useUIStore.getState().dccSendPath).toBe('/path/to/file.txt');
@@ -673,44 +673,44 @@ describe('uiStore', () => {
   });
 
   describe('blacklist actions', () => {
-    it('should set blacklistTarget for channel', () => {
+    it('should set blacklistTarget for channel', async () => {
       const target = {
         type: 'channel' as const,
         networkId: 'net1',
         channel: '#spam',
       };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setBlacklistTarget(target);
       });
       expect(useUIStore.getState().blacklistTarget).toEqual(target);
     });
 
-    it('should set blacklistTarget for query', () => {
+    it('should set blacklistTarget for query', async () => {
       const target = {
         type: 'query' as const,
         networkId: 'net1',
         nick: 'spammer',
       };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setBlacklistTarget(target);
       });
       expect(useUIStore.getState().blacklistTarget).toEqual(target);
     });
 
-    it('should set blacklistTarget for nick', () => {
+    it('should set blacklistTarget for nick', async () => {
       const target = {
         type: 'nick' as const,
         networkId: 'net1',
         nick: 'baduser',
       };
-      act(() => {
+      await act(() => {
         useUIStore.getState().setBlacklistTarget(target);
       });
       expect(useUIStore.getState().blacklistTarget).toEqual(target);
     });
 
-    it('should clear blacklistTarget', () => {
-      act(() => {
+    it('should clear blacklistTarget', async () => {
+      await act(() => {
         useUIStore.getState().setBlacklistTarget({
           type: 'nick',
           networkId: 'net1',
@@ -723,43 +723,43 @@ describe('uiStore', () => {
   });
 
   describe('help screen actions', () => {
-    it('should set showHelpConnection', () => {
-      act(() => {
+    it('should set showHelpConnection', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpConnection(true);
       });
       expect(useUIStore.getState().showHelpConnection).toBe(true);
     });
 
-    it('should set showHelpCommands', () => {
-      act(() => {
+    it('should set showHelpCommands', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpCommands(true);
       });
       expect(useUIStore.getState().showHelpCommands).toBe(true);
     });
 
-    it('should set showHelpEncryption', () => {
-      act(() => {
+    it('should set showHelpEncryption', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpEncryption(true);
       });
       expect(useUIStore.getState().showHelpEncryption).toBe(true);
     });
 
-    it('should set showHelpMedia', () => {
-      act(() => {
+    it('should set showHelpMedia', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpMedia(true);
       });
       expect(useUIStore.getState().showHelpMedia).toBe(true);
     });
 
-    it('should set showHelpChannelManagement', () => {
-      act(() => {
+    it('should set showHelpChannelManagement', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpChannelManagement(true);
       });
       expect(useUIStore.getState().showHelpChannelManagement).toBe(true);
     });
 
-    it('should set showHelpTroubleshooting', () => {
-      act(() => {
+    it('should set showHelpTroubleshooting', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpTroubleshooting(true);
       });
       expect(useUIStore.getState().showHelpTroubleshooting).toBe(true);
@@ -767,8 +767,8 @@ describe('uiStore', () => {
   });
 
   describe('updateUIState', () => {
-    it('should update multiple state values at once', () => {
-      act(() => {
+    it('should update multiple state values at once', async () => {
+      await act(() => {
         useUIStore.getState().updateUIState({
           showSettings: true,
           channelName: '#test',
@@ -782,8 +782,8 @@ describe('uiStore', () => {
       expect(state.appLocked).toBe(true);
     });
 
-    it('should merge with existing state', () => {
-      act(() => {
+    it('should merge with existing state', async () => {
+      await act(() => {
         useUIStore.getState().setAppPinEntry('1234');
         useUIStore.getState().updateUIState({ showSettings: true });
       });
@@ -795,8 +795,8 @@ describe('uiStore', () => {
   });
 
   describe('reset', () => {
-    it('should reset to initial state', () => {
-      act(() => {
+    it('should reset to initial state', async () => {
+      await act(() => {
         useUIStore.getState().setShowSettings(true);
         useUIStore.getState().setAppLocked(true);
         useUIStore.getState().setChannelName('#test');
@@ -811,8 +811,8 @@ describe('uiStore', () => {
       expect(state.scriptingTimeMs).toBe(0);
     });
 
-    it('should reset all modal states', () => {
-      act(() => {
+    it('should reset all modal states', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelModal(true);
         useUIStore.getState().setShowNetworksList(true);
         useUIStore.getState().setShowSettings(true);
@@ -827,8 +827,8 @@ describe('uiStore', () => {
   });
 
   describe('resetModalStates', () => {
-    it('should reset only modal states to false', () => {
-      act(() => {
+    it('should reset only modal states to false', async () => {
+      await act(() => {
         useUIStore.getState().setShowChannelModal(true);
         useUIStore.getState().setShowSettings(true);
         useUIStore.getState().setAppLocked(true);
@@ -846,8 +846,8 @@ describe('uiStore', () => {
       expect(state.scriptingTimeMs).toBe(5000);
     });
 
-    it('should reset blacklistTarget to null', () => {
-      act(() => {
+    it('should reset blacklistTarget to null', async () => {
+      await act(() => {
         useUIStore.getState().setBlacklistTarget({
           type: 'nick',
           networkId: 'net1',
@@ -860,8 +860,8 @@ describe('uiStore', () => {
       expect(useUIStore.getState().blacklistTarget).toBeNull();
     });
 
-    it('should reset all help screens', () => {
-      act(() => {
+    it('should reset all help screens', async () => {
+      await act(() => {
         useUIStore.getState().setShowHelpConnection(true);
         useUIStore.getState().setShowHelpCommands(true);
         useUIStore.getState().setShowHelpEncryption(true);
@@ -875,8 +875,8 @@ describe('uiStore', () => {
       expect(state.showHelpEncryption).toBe(false);
     });
 
-    it('should reset DCC modal states', () => {
-      act(() => {
+    it('should reset DCC modal states', async () => {
+      await act(() => {
         useUIStore.getState().setShowDccTransfers(true);
         useUIStore.getState().setDccTransfersMinimized(true);
         useUIStore.getState().setShowDccSendModal(true);
@@ -892,8 +892,8 @@ describe('uiStore', () => {
   });
 
   describe('complex scenarios', () => {
-    it('should handle multiple modal state changes', () => {
-      act(() => {
+    it('should handle multiple modal state changes', async () => {
+      await act(() => {
         useUIStore.getState().setShowSettings(true);
         useUIStore.getState().setShowChannelModal(true);
         useUIStore.getState().setShowWHOIS(true);
@@ -905,28 +905,28 @@ describe('uiStore', () => {
       expect(state.showWHOIS).toBe(true);
     });
 
-    it('should handle complete workflow', () => {
+    it('should handle complete workflow', async () => {
       // User opens settings
-      act(() => {
+      await act(() => {
         useUIStore.getState().setShowSettings(true);
       });
       expect(useUIStore.getState().showSettings).toBe(true);
 
       // User enables app lock
-      act(() => {
+      await act(() => {
         useUIStore.getState().setAppLockEnabled(true);
         useUIStore.getState().setAppLockUsePin(true);
       });
       expect(useUIStore.getState().appLockEnabled).toBe(true);
 
       // User closes settings
-      act(() => {
+      await act(() => {
         useUIStore.getState().setShowSettings(false);
       });
       expect(useUIStore.getState().showSettings).toBe(false);
 
       // App gets locked
-      act(() => {
+      await act(() => {
         useUIStore.getState().setAppLocked(true);
         useUIStore.getState().setAppUnlockModalVisible(true);
       });
@@ -934,13 +934,13 @@ describe('uiStore', () => {
       expect(useUIStore.getState().appUnlockModalVisible).toBe(true);
 
       // User enters PIN
-      act(() => {
+      await act(() => {
         useUIStore.getState().setAppPinEntry('1234');
       });
       expect(useUIStore.getState().appPinEntry).toBe('1234');
 
       // Reset after unlock
-      act(() => {
+      await act(() => {
         useUIStore.getState().setAppPinEntry('');
         useUIStore.getState().setAppUnlockModalVisible(false);
         useUIStore.getState().setAppLocked(false);
@@ -948,15 +948,15 @@ describe('uiStore', () => {
       expect(useUIStore.getState().appLocked).toBe(false);
     });
 
-    it('should handle channel operations workflow', () => {
+    it('should handle channel operations workflow', async () => {
       // Open channel modal
-      act(() => {
+      await act(() => {
         useUIStore.getState().setChannelName('#general');
         useUIStore.getState().setShowChannelModal(true);
       });
 
       // Close modal and open settings
-      act(() => {
+      await act(() => {
         useUIStore.getState().setShowChannelModal(false);
         useUIStore.getState().setShowChannelSettings(true);
         useUIStore.getState().setChannelSettingsTarget('#general');
@@ -970,8 +970,8 @@ describe('uiStore', () => {
       expect(state.channelSettingsNetwork).toBe('freenode');
     });
 
-    it('should maintain independent boolean states', () => {
-      act(() => {
+    it('should maintain independent boolean states', async () => {
+      await act(() => {
         useUIStore.getState().setHideJoinMessages(true);
         useUIStore.getState().setHidePartMessages(false);
         useUIStore.getState().setHideQuitMessages(true);

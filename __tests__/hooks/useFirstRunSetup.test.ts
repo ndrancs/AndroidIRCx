@@ -43,14 +43,14 @@ describe('useFirstRunSetup', () => {
   const mockSetShowFirstRunSetup = jest.fn();
   const mockHandleConnect = jest.fn(async () => {});
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
     mockSetShowNetworksList.mockReset();
   });
 
-  it('should return handleFirstRunSetupComplete function', () => {
-    const { result } = renderHook(() =>
+  it('should return handleFirstRunSetupComplete function', async () => {
+    const { result } = await renderHook(() =>
       useFirstRunSetup({
         setShowFirstRunSetup: mockSetShowFirstRunSetup,
         handleConnect: mockHandleConnect,
@@ -70,7 +70,7 @@ describe('useFirstRunSetup', () => {
     };
     mockSettingsService.loadNetworks.mockResolvedValue([savedNetwork]);
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useFirstRunSetup({
         setShowFirstRunSetup: mockSetShowFirstRunSetup,
         handleConnect: mockHandleConnect,
@@ -88,7 +88,7 @@ describe('useFirstRunSetup', () => {
   it('should not connect when network is not found after reload', async () => {
     mockSettingsService.loadNetworks.mockResolvedValue([]);
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useFirstRunSetup({
         setShowFirstRunSetup: mockSetShowFirstRunSetup,
         handleConnect: mockHandleConnect,
@@ -110,7 +110,7 @@ describe('useFirstRunSetup', () => {
   });
 
   it('should open Choose Network when setup finishes without a selected network', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useFirstRunSetup({
         setShowFirstRunSetup: mockSetShowFirstRunSetup,
         handleConnect: mockHandleConnect,
@@ -126,8 +126,8 @@ describe('useFirstRunSetup', () => {
     expect(mockHandleConnect).not.toHaveBeenCalled();
   });
 
-  it('should return stable handleFirstRunSetupComplete reference', () => {
-    const { result, rerender } = renderHook(() =>
+  it('should return stable handleFirstRunSetupComplete reference', async () => {
+    const { result, rerender } = await renderHook(() =>
       useFirstRunSetup({
         setShowFirstRunSetup: mockSetShowFirstRunSetup,
         handleConnect: mockHandleConnect,
@@ -135,7 +135,7 @@ describe('useFirstRunSetup', () => {
     );
 
     const first = result.current.handleFirstRunSetupComplete;
-    rerender();
+    await rerender();
     expect(result.current.handleFirstRunSetupComplete).toBe(first);
   });
 });

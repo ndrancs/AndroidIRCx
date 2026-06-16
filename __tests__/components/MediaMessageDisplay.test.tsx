@@ -54,9 +54,14 @@ jest.mock('../../src/services/MediaDownloadService', () => ({
   },
 }));
 
-jest.mock('../../src/components/ImagePreview', () => ({
-  ImagePreview: ({ url }: { url: string }) => <>{`ImagePreview:${url}`}</>,
-}));
+jest.mock('../../src/components/ImagePreview', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    ImagePreview: ({ url }: { url: string }) =>
+      React.createElement(Text, null, `ImagePreview:${url}`),
+  };
+});
 
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
@@ -73,7 +78,7 @@ const mockDownload = mediaDownloadService as unknown as {
 };
 
 describe('MediaMessageDisplay', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockSettings.shouldShowEncryptionIndicator.mockResolvedValue(true);
     mockRNFS.exists.mockResolvedValue(true);
@@ -86,7 +91,7 @@ describe('MediaMessageDisplay', () => {
       mimeType: 'image/jpeg',
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaMessageDisplay
         mediaId="id-1"
         network="net"
@@ -95,7 +100,7 @@ describe('MediaMessageDisplay', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Encrypted')).toBeTruthy();
       expect(getByText('hello cap')).toBeTruthy();
       expect(mockDownload.downloadMediaWithRetry).toHaveBeenCalledWith(
@@ -109,11 +114,11 @@ describe('MediaMessageDisplay', () => {
   });
 
   it('shows insufficient context error when tabId is missing', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaMessageDisplay mediaId="id-2" network="net" tabId="" />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(
         getByText(
           'Cannot decrypt media: insufficient context. This may happen if the message is viewed outside its original channel or if encryption keys are not available.',
@@ -131,7 +136,7 @@ describe('MediaMessageDisplay', () => {
         mimeType: 'video/mp4',
       });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaMessageDisplay
         mediaId="id-3"
         network="net"
@@ -139,13 +144,13 @@ describe('MediaMessageDisplay', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Temporary fail')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('Retry'));
+    await fireEvent.press(getByText('Retry'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockDownload.downloadMediaWithRetry).toHaveBeenCalledTimes(2);
       expect(getByText('Encrypted')).toBeTruthy();
     });
@@ -158,7 +163,7 @@ describe('MediaMessageDisplay', () => {
       mimeType: 'application/octet-stream',
     });
 
-    const { UNSAFE_getByType, getByText } = render(
+    const { UNSAFE_getByType, getByText } = await render(
       <MediaMessageDisplay
         mediaId="id-4"
         network="net"
@@ -166,13 +171,13 @@ describe('MediaMessageDisplay', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Tap to open')).toBeTruthy();
     });
 
-    fireEvent.press(UNSAFE_getByType(TouchableOpacity));
+    await fireEvent.press(UNSAFE_getByType(TouchableOpacity));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockShare.open).toHaveBeenCalledWith({
         url: 'file:///tmp/file.bin',
         type: 'application/octet-stream',
@@ -187,7 +192,7 @@ describe('MediaMessageDisplay', () => {
       mimeType: 'audio/mpeg',
     });
 
-    const { getByText, UNSAFE_root } = render(
+    const { getByText, UNSAFE_root } = await render(
       <MediaMessageDisplay
         mediaId="id-audio"
         network="net"
@@ -195,16 +200,16 @@ describe('MediaMessageDisplay', () => {
       />,
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Audio Message')).toBeTruthy();
       expect(getByText('Play')).toBeTruthy();
     });
 
     expect(UNSAFE_root.findAllByType('Video')).toHaveLength(0);
 
-    fireEvent.press(getByText('Play'));
+    await fireEvent.press(getByText('Play'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(UNSAFE_root.findAllByType('Video')).toHaveLength(1);
     });
   });

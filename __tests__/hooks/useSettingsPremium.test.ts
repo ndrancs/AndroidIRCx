@@ -60,10 +60,10 @@ import { inAppPurchaseService } from '../../src/services/InAppPurchaseService';
 import { adRewardService } from '../../src/services/AdRewardService';
 import { settingsService } from '../../src/services/SettingsService';
 
-const flushMicrotasks = () => act(async () => {});
+const flushMicrotasks = async () => await act(async () => {});
 
 describe('useSettingsPremium', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     purchaseListener = null;
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(false);
@@ -88,7 +88,7 @@ describe('useSettingsPremium', () => {
   });
 
   it('should return initial premium status', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -98,7 +98,7 @@ describe('useSettingsPremium', () => {
   });
 
   it('should return initial ad status', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -111,7 +111,7 @@ describe('useSettingsPremium', () => {
   });
 
   it('should show watch ad button for non-premium users', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -119,13 +119,13 @@ describe('useSettingsPremium', () => {
   });
 
   it('should update premium status when purchase listener fires', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(true);
 
-    act(() => {
+    await act(() => {
       if (purchaseListener) purchaseListener();
     });
 
@@ -135,7 +135,7 @@ describe('useSettingsPremium', () => {
   it('should hide watch ad button for premium users', async () => {
     (inAppPurchaseService.hasNoAds as jest.Mock).mockReturnValue(true);
 
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -145,12 +145,12 @@ describe('useSettingsPremium', () => {
   it('should poll ad status with interval', async () => {
     jest.useFakeTimers();
 
-    renderHook(() => useSettingsPremium());
+    await renderHook(() => useSettingsPremium());
 
     const initialCalls = (adRewardService.getAdStatus as jest.Mock).mock.calls
       .length;
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(3000);
     });
 
@@ -172,9 +172,9 @@ describe('useSettingsPremium', () => {
 
     jest.useFakeTimers();
 
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(1000);
     });
 
@@ -188,7 +188,7 @@ describe('useSettingsPremium', () => {
   });
 
   it('should try to manually load ad when not ready', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -200,7 +200,7 @@ describe('useSettingsPremium', () => {
   });
 
   it('should set watchAdButtonEnabledForPremium', async () => {
-    const { result } = renderHook(() => useSettingsPremium());
+    const { result } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
@@ -216,11 +216,11 @@ describe('useSettingsPremium', () => {
   });
 
   it('should clean up purchase listener on unmount', async () => {
-    const { unmount } = renderHook(() => useSettingsPremium());
+    const { unmount } = await renderHook(() => useSettingsPremium());
 
     await flushMicrotasks();
 
-    unmount();
+    await unmount();
 
     expect(purchaseListener).toBeNull();
   });
@@ -238,8 +238,8 @@ describe('useSettingsPremium', () => {
     (adRewardService.showRewardedAd as jest.Mock).mockResolvedValue(false);
 
     jest.useFakeTimers();
-    const { result } = renderHook(() => useSettingsPremium());
-    act(() => {
+    const { result } = await renderHook(() => useSettingsPremium());
+    await act(() => {
       jest.advanceTimersByTime(1000);
     });
     jest.useRealTimers();
@@ -270,8 +270,8 @@ describe('useSettingsPremium', () => {
     );
 
     jest.useFakeTimers();
-    const { result } = renderHook(() => useSettingsPremium());
-    act(() => {
+    const { result } = await renderHook(() => useSettingsPremium());
+    await act(() => {
       jest.advanceTimersByTime(1000);
     });
     jest.useRealTimers();

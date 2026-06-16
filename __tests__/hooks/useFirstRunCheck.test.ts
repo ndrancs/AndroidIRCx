@@ -32,7 +32,7 @@ const mockSettingsService = jest.requireMock<any>(
 ).settingsService;
 
 describe('useFirstRunCheck', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
   });
@@ -42,11 +42,11 @@ describe('useFirstRunCheck', () => {
     const setShowFirstRunSetup = jest.fn();
     const setIsCheckingFirstRun = jest.fn();
 
-    renderHook(() =>
+    await renderHook(() =>
       useFirstRunCheck({ setShowFirstRunSetup, setIsCheckingFirstRun }),
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(setShowFirstRunSetup).toHaveBeenCalledWith(true);
       expect(setIsCheckingFirstRun).toHaveBeenCalledWith(false);
     });
@@ -57,11 +57,11 @@ describe('useFirstRunCheck', () => {
     const setShowFirstRunSetup = jest.fn();
     const setIsCheckingFirstRun = jest.fn();
 
-    renderHook(() =>
+    await renderHook(() =>
       useFirstRunCheck({ setShowFirstRunSetup, setIsCheckingFirstRun }),
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(setShowFirstRunSetup).toHaveBeenCalledWith(false);
       expect(setIsCheckingFirstRun).toHaveBeenCalledWith(false);
     });
@@ -74,11 +74,11 @@ describe('useFirstRunCheck', () => {
     const setShowFirstRunSetup = jest.fn();
     const setIsCheckingFirstRun = jest.fn();
 
-    renderHook(() =>
+    await renderHook(() =>
       useFirstRunCheck({ setShowFirstRunSetup, setIsCheckingFirstRun }),
     );
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(setIsCheckingFirstRun).toHaveBeenCalledWith(false);
     });
 

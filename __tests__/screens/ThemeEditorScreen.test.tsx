@@ -137,7 +137,7 @@ jest.mock('../../src/screens/MessageFormatEditorScreen', () => ({
 const { themeService } = require('../../src/services/ThemeService');
 
 describe('ThemeEditorScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     themeService.createCustomTheme.mockResolvedValue({
@@ -149,8 +149,8 @@ describe('ThemeEditorScreen', () => {
     themeService.updateCustomTheme.mockResolvedValue(undefined);
   });
 
-  it('renders nothing when hidden', () => {
-    const { queryByText } = render(
+  it('renders nothing when hidden', async () => {
+    const { queryByText } = await render(
       <ThemeEditorScreen
         visible={false}
         onClose={jest.fn()}
@@ -164,17 +164,17 @@ describe('ThemeEditorScreen', () => {
   it('creates a new theme and saves it', async () => {
     const onSave = jest.fn();
     const onClose = jest.fn();
-    const { findByPlaceholderText, findByText } = render(
+    const { findByPlaceholderText, findByText } = await render(
       <ThemeEditorScreen visible onClose={onClose} onSave={onSave} />,
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       await findByPlaceholderText('Enter theme name'),
       'Night Sky',
     );
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press(await findByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(themeService.createCustomTheme).toHaveBeenCalledWith(
         'Night Sky',
         'dark',
@@ -190,11 +190,11 @@ describe('ThemeEditorScreen', () => {
   });
 
   it('validates missing theme name', async () => {
-    const { findByText } = render(
+    const { findByText } = await render(
       <ThemeEditorScreen visible onClose={jest.fn()} onSave={jest.fn()} />,
     );
 
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press(await findByText('Save'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
@@ -204,7 +204,7 @@ describe('ThemeEditorScreen', () => {
 
   it('updates an existing theme', async () => {
     const onSave = jest.fn();
-    const { findByDisplayValue, findByText } = render(
+    const { findByDisplayValue, findByText } = await render(
       <ThemeEditorScreen
         visible
         theme={mockTheme as any}
@@ -213,10 +213,10 @@ describe('ThemeEditorScreen', () => {
       />,
     );
 
-    fireEvent.changeText(await findByDisplayValue('Ocean'), 'Ocean 2');
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.changeText(await findByDisplayValue('Ocean'), 'Ocean 2');
+    await fireEvent.press(await findByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(themeService.updateCustomTheme).toHaveBeenCalledWith(
         'custom-1',
         expect.objectContaining({
@@ -229,7 +229,7 @@ describe('ThemeEditorScreen', () => {
 
   it('opens message format editor and saves custom formats', async () => {
     const onSave = jest.fn();
-    const { findByText } = render(
+    const { findByText } = await render(
       <ThemeEditorScreen
         visible
         theme={mockTheme as any}
@@ -238,11 +238,11 @@ describe('ThemeEditorScreen', () => {
       />,
     );
 
-    fireEvent.press(await findByText('Edit format'));
-    fireEvent.press(await findByText('Save Message Formats'));
-    fireEvent.press(await findByText('Save'));
+    await fireEvent.press(await findByText('Edit format'));
+    await fireEvent.press(await findByText('Save Message Formats'));
+    await fireEvent.press(await findByText('Save'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(themeService.updateCustomTheme).toHaveBeenCalledWith(
         'custom-1',
         expect.objectContaining({
@@ -254,21 +254,25 @@ describe('ThemeEditorScreen', () => {
 
   it('edits a color with the picker', async () => {
     const onSave = jest.fn();
-    const { UNSAFE_getAllByType, findByText, findByPlaceholderText } = render(
-      <ThemeEditorScreen
-        visible
-        theme={mockTheme as any}
-        onClose={jest.fn()}
-        onSave={onSave}
-      />,
+    const { UNSAFE_getAllByType, findByText, findByPlaceholderText } =
+      await render(
+        <ThemeEditorScreen
+          visible
+          theme={mockTheme as any}
+          onClose={jest.fn()}
+          onSave={onSave}
+        />,
+      );
+
+    await fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[3]);
+    await fireEvent.changeText(
+      await findByPlaceholderText('#FFFFFF'),
+      '#123456',
     );
+    await fireEvent.press(await findByText('Done'));
+    await fireEvent.press(await findByText('Save'));
 
-    fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[3]);
-    fireEvent.changeText(await findByPlaceholderText('#FFFFFF'), '#123456');
-    fireEvent.press(await findByText('Done'));
-    fireEvent.press(await findByText('Save'));
-
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(themeService.updateCustomTheme).toHaveBeenCalledWith(
         'custom-1',
         expect.objectContaining({
@@ -281,18 +285,19 @@ describe('ThemeEditorScreen', () => {
   });
 
   it('shows invalid color alert for bad hex input', async () => {
-    const { UNSAFE_getAllByType, findByText, findByPlaceholderText } = render(
-      <ThemeEditorScreen
-        visible
-        theme={mockTheme as any}
-        onClose={jest.fn()}
-        onSave={jest.fn()}
-      />,
-    );
+    const { UNSAFE_getAllByType, findByText, findByPlaceholderText } =
+      await render(
+        <ThemeEditorScreen
+          visible
+          theme={mockTheme as any}
+          onClose={jest.fn()}
+          onSave={jest.fn()}
+        />,
+      );
 
-    fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[3]);
-    fireEvent.changeText(await findByPlaceholderText('#FFFFFF'), 'oops');
-    fireEvent.press(await findByText('Done'));
+    await fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[3]);
+    await fireEvent.changeText(await findByPlaceholderText('#FFFFFF'), 'oops');
+    await fireEvent.press(await findByText('Done'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Invalid Color',

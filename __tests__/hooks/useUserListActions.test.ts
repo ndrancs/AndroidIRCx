@@ -57,12 +57,12 @@ describe('useUserListActions', () => {
     setActiveTabId: mockSetActiveTabId,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
-  it('should return action handlers', () => {
-    const { result } = renderHook(() => useUserListActions(defaultProps));
+  it('should return action handlers', async () => {
+    const { result } = await renderHook(() => useUserListActions(defaultProps));
 
     expect(result.current.handleUserPress).toBeDefined();
     expect(result.current.handleWHOISPress).toBeDefined();
@@ -80,7 +80,7 @@ describe('useUserListActions', () => {
       },
     ];
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useUserListActions({ ...defaultProps, tabs: existingTabs }),
     );
 
@@ -93,7 +93,7 @@ describe('useUserListActions', () => {
   });
 
   it('should create new query tab when user press and tab does not exist', async () => {
-    const { result } = renderHook(() => useUserListActions(defaultProps));
+    const { result } = await renderHook(() => useUserListActions(defaultProps));
 
     await act(async () => {
       await result.current.handleUserPress({ nick: 'NewUser' });
@@ -113,7 +113,7 @@ describe('useUserListActions', () => {
       true,
     );
 
-    const { result } = renderHook(() => useUserListActions(defaultProps));
+    const { result } = await renderHook(() => useUserListActions(defaultProps));
 
     await act(async () => {
       await result.current.handleUserPress({ nick: 'SecureUser' });
@@ -132,10 +132,10 @@ describe('useUserListActions', () => {
     expect(queryTab.isEncrypted).toBe(true);
   });
 
-  it('should handle WHOIS press', () => {
-    const { result } = renderHook(() => useUserListActions(defaultProps));
+  it('should handle WHOIS press', async () => {
+    const { result } = await renderHook(() => useUserListActions(defaultProps));
 
-    act(() => {
+    await act(() => {
       result.current.handleWHOISPress('John');
     });
 
@@ -154,7 +154,7 @@ describe('useUserListActions', () => {
       } as any,
     };
 
-    const { result } = renderHook(() => useUserListActions(customProps));
+    const { result } = await renderHook(() => useUserListActions(customProps));
 
     await act(async () => {
       await result.current.handleUserPress({ nick: 'TestUser' });

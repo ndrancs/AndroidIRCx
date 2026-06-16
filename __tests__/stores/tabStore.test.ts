@@ -50,10 +50,10 @@ jest.mock('../../src/utils/TabUpdateBatcher', () => ({
 }));
 
 describe('tabStore', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockStorage.clear();
     mockGetTabs.mockResolvedValue([]);
-    act(() => {
+    await act(() => {
       useTabStore.getState().reset();
     });
     jest.clearAllMocks();
@@ -74,20 +74,20 @@ describe('tabStore', () => {
   });
 
   describe('initial state', () => {
-    it('should have empty tabs array initially', () => {
+    it('should have empty tabs array initially', async () => {
       expect(useTabStore.getState().tabs).toEqual([]);
     });
 
-    it('should have empty activeTabId initially', () => {
+    it('should have empty activeTabId initially', async () => {
       expect(useTabStore.getState().activeTabId).toBe('');
     });
   });
 
   describe('setTabs', () => {
-    it('should set tabs array', () => {
+    it('should set tabs array', async () => {
       const tabs = [createMockTab('tab1'), createMockTab('tab2')];
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs(tabs);
       });
 
@@ -95,8 +95,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].id).toBe('tab1');
     });
 
-    it('should replace existing tabs', () => {
-      act(() => {
+    it('should replace existing tabs', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore
           .getState()
@@ -109,8 +109,8 @@ describe('tabStore', () => {
   });
 
   describe('setActiveTabId', () => {
-    it('should set active tab id', () => {
-      act(() => {
+    it('should set active tab id', async () => {
+      await act(() => {
         useTabStore.getState().setActiveTabId('tab1');
       });
 
@@ -120,7 +120,7 @@ describe('tabStore', () => {
     it('should persist last active tab to AsyncStorage when tab has networkId', async () => {
       const tab = createMockTab('tab1', 'network1');
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([tab]);
         useTabStore.getState().setActiveTabId('tab1');
       });
@@ -139,7 +139,7 @@ describe('tabStore', () => {
     it('should not persist when tab has no networkId', async () => {
       const tab = createMockTab('tab1', '');
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([tab]);
         useTabStore.getState().setActiveTabId('tab1');
       });
@@ -159,7 +159,7 @@ describe('tabStore', () => {
 
       const tab = createMockTab('tab1', 'network1');
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([tab]);
         useTabStore.getState().setActiveTabId('tab1');
       });
@@ -174,8 +174,8 @@ describe('tabStore', () => {
   });
 
   describe('addTab', () => {
-    it('should add new tab', () => {
-      act(() => {
+    it('should add new tab', async () => {
+      await act(() => {
         useTabStore.getState().addTab(createMockTab('tab1'));
       });
 
@@ -183,10 +183,10 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].id).toBe('tab1');
     });
 
-    it('should not add duplicate tab', () => {
+    it('should not add duplicate tab', async () => {
       const tab = createMockTab('tab1');
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().addTab(tab);
         useTabStore.getState().addTab(tab);
       });
@@ -194,8 +194,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs).toHaveLength(1);
     });
 
-    it('should add multiple different tabs', () => {
-      act(() => {
+    it('should add multiple different tabs', async () => {
+      await act(() => {
         useTabStore.getState().addTab(createMockTab('tab1'));
         useTabStore.getState().addTab(createMockTab('tab2'));
         useTabStore.getState().addTab(createMockTab('tab3'));
@@ -206,8 +206,8 @@ describe('tabStore', () => {
   });
 
   describe('removeTab', () => {
-    it('should remove tab by id', () => {
-      act(() => {
+    it('should remove tab by id', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -218,8 +218,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].id).toBe('tab2');
     });
 
-    it('should handle removing non-existent tab', () => {
-      act(() => {
+    it('should handle removing non-existent tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().removeTab('nonexistent');
       });
@@ -227,8 +227,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs).toHaveLength(1);
     });
 
-    it('should remove all tabs when called for each', () => {
-      act(() => {
+    it('should remove all tabs when called for each', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -241,8 +241,8 @@ describe('tabStore', () => {
   });
 
   describe('updateTab', () => {
-    it('should update tab properties', () => {
-      act(() => {
+    it('should update tab properties', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1', 'net1', { label: 'Original' })]);
@@ -252,8 +252,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].label).toBe('Updated');
     });
 
-    it('should update multiple properties', () => {
-      act(() => {
+    it('should update multiple properties', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore
           .getState()
@@ -264,8 +264,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].hasActivity).toBe(true);
     });
 
-    it('should not update non-existent tab', () => {
-      act(() => {
+    it('should not update non-existent tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().updateTab('nonexistent', { label: 'Updated' });
       });
@@ -273,8 +273,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].label).toBe('Channel tab1');
     });
 
-    it('should merge updates with existing properties', () => {
-      act(() => {
+    it('should merge updates with existing properties', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([
           createMockTab('tab1', 'net1', {
             label: 'Original',
@@ -290,10 +290,10 @@ describe('tabStore', () => {
   });
 
   describe('addMessageToTab', () => {
-    it('should add message to tab', () => {
+    it('should add message to tab', async () => {
       const message = { id: 'msg1', text: 'Hello' };
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().addMessageToTab('tab1', message);
       });
@@ -302,11 +302,11 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].messages![0]).toEqual(message);
     });
 
-    it('should append messages to existing messages', () => {
+    it('should append messages to existing messages', async () => {
       const message1 = { id: 'msg1', text: 'Hello' };
       const message2 = { id: 'msg2', text: 'World' };
 
-      act(() => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1', 'net1', { messages: [message1] })]);
@@ -316,8 +316,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].messages).toHaveLength(2);
     });
 
-    it('should not add message to non-existent tab', () => {
-      act(() => {
+    it('should not add message to non-existent tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore
           .getState()
@@ -327,8 +327,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].messages).toHaveLength(0);
     });
 
-    it('should create messages array if undefined', () => {
-      act(() => {
+    it('should create messages array if undefined', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1', 'net1', { messages: undefined })]);
@@ -342,8 +342,8 @@ describe('tabStore', () => {
   });
 
   describe('setTabActivity', () => {
-    it('should set hasActivity flag', () => {
-      act(() => {
+    it('should set hasActivity flag', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().setTabActivity('tab1', true);
       });
@@ -351,8 +351,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].hasActivity).toBe(true);
     });
 
-    it('should clear activity flag', () => {
-      act(() => {
+    it('should clear activity flag', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1', 'net1', { hasActivity: true })]);
@@ -362,8 +362,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].hasActivity).toBe(false);
     });
 
-    it('should not affect other tabs', () => {
-      act(() => {
+    it('should not affect other tabs', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -376,8 +376,8 @@ describe('tabStore', () => {
   });
 
   describe('clearTabMessages', () => {
-    it('should clear all messages from tab', () => {
-      act(() => {
+    it('should clear all messages from tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([
           createMockTab('tab1', 'net1', {
             messages: [{ id: 'msg1' }, { id: 'msg2' }],
@@ -389,8 +389,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].messages).toEqual([]);
     });
 
-    it('should not affect other tabs', () => {
-      act(() => {
+    it('should not affect other tabs', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -404,8 +404,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[1].messages).toHaveLength(1);
     });
 
-    it('should handle non-existent tab gracefully', () => {
-      act(() => {
+    it('should handle non-existent tab gracefully', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().clearTabMessages('nonexistent');
       });
@@ -416,8 +416,8 @@ describe('tabStore', () => {
   });
 
   describe('addTabs', () => {
-    it('should add multiple tabs at once', () => {
-      act(() => {
+    it('should add multiple tabs at once', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .addTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -426,8 +426,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs).toHaveLength(2);
     });
 
-    it('should skip existing tabs', () => {
-      act(() => {
+    it('should skip existing tabs', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore
           .getState()
@@ -437,8 +437,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs).toHaveLength(2);
     });
 
-    it('should handle empty array', () => {
-      act(() => {
+    it('should handle empty array', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().addTabs([]);
       });
@@ -448,8 +448,8 @@ describe('tabStore', () => {
   });
 
   describe('removeTabs', () => {
-    it('should remove multiple tabs at once', () => {
-      act(() => {
+    it('should remove multiple tabs at once', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -464,8 +464,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].id).toBe('tab3');
     });
 
-    it('should handle non-existent tab ids', () => {
-      act(() => {
+    it('should handle non-existent tab ids', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().removeTabs(['tab1', 'nonexistent']);
       });
@@ -473,8 +473,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs).toHaveLength(0);
     });
 
-    it('should handle empty array', () => {
-      act(() => {
+    it('should handle empty array', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().removeTabs([]);
       });
@@ -484,8 +484,8 @@ describe('tabStore', () => {
   });
 
   describe('updateTabs', () => {
-    it('should update multiple tabs at once', () => {
-      act(() => {
+    it('should update multiple tabs at once', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -502,8 +502,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[1].label).toBe('Updated 2');
     });
 
-    it('should skip non-existent tabs', () => {
-      act(() => {
+    it('should skip non-existent tabs', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1', 'net1', { label: 'Original' })]);
@@ -516,8 +516,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().tabs[0].label).toBe('Updated');
     });
 
-    it('should handle empty updates array', () => {
-      act(() => {
+    it('should handle empty updates array', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().updateTabs([]);
       });
@@ -527,10 +527,10 @@ describe('tabStore', () => {
   });
 
   describe('getTabById', () => {
-    it('should return tab by id', () => {
+    it('should return tab by id', async () => {
       const tab = createMockTab('tab1');
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([tab, createMockTab('tab2')]);
       });
 
@@ -538,8 +538,8 @@ describe('tabStore', () => {
       expect(result).toEqual(expect.objectContaining({ id: 'tab1' }));
     });
 
-    it('should return undefined for non-existent tab', () => {
-      act(() => {
+    it('should return undefined for non-existent tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
       });
 
@@ -547,15 +547,15 @@ describe('tabStore', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return undefined when no tabs', () => {
+    it('should return undefined when no tabs', async () => {
       const result = useTabStore.getState().getTabById('tab1');
       expect(result).toBeUndefined();
     });
   });
 
   describe('getTabsByNetwork', () => {
-    it('should return tabs for specific network', () => {
-      act(() => {
+    it('should return tabs for specific network', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -570,8 +570,8 @@ describe('tabStore', () => {
       expect(result.every(t => t.networkId === 'network1')).toBe(true);
     });
 
-    it('should return empty array for non-existent network', () => {
-      act(() => {
+    it('should return empty array for non-existent network', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1', 'network1')]);
       });
 
@@ -579,15 +579,15 @@ describe('tabStore', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array when no tabs', () => {
+    it('should return empty array when no tabs', async () => {
       const result = useTabStore.getState().getTabsByNetwork('network1');
       expect(result).toEqual([]);
     });
   });
 
   describe('getActiveTab', () => {
-    it('should return active tab', () => {
-      act(() => {
+    it('should return active tab', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -598,8 +598,8 @@ describe('tabStore', () => {
       expect(result?.id).toBe('tab2');
     });
 
-    it('should auto-select first tab when no active tab is set', () => {
-      act(() => {
+    it('should auto-select first tab when no active tab is set', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
       });
 
@@ -607,8 +607,8 @@ describe('tabStore', () => {
       expect(result?.id).toBe('tab1');
     });
 
-    it('should return undefined when active tab id not found', () => {
-      act(() => {
+    it('should return undefined when active tab id not found', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().setActiveTabId('nonexistent');
       });
@@ -619,8 +619,8 @@ describe('tabStore', () => {
   });
 
   describe('getTabCount', () => {
-    it('should return number of tabs', () => {
-      act(() => {
+    it('should return number of tabs', async () => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([createMockTab('tab1'), createMockTab('tab2')]);
@@ -629,36 +629,36 @@ describe('tabStore', () => {
       expect(useTabStore.getState().getTabCount()).toBe(2);
     });
 
-    it('should return 0 when no tabs', () => {
+    it('should return 0 when no tabs', async () => {
       expect(useTabStore.getState().getTabCount()).toBe(0);
     });
   });
 
   describe('hasTab', () => {
-    it('should return true for existing tab', () => {
-      act(() => {
+    it('should return true for existing tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
       });
 
       expect(useTabStore.getState().hasTab('tab1')).toBe(true);
     });
 
-    it('should return false for non-existent tab', () => {
-      act(() => {
+    it('should return false for non-existent tab', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
       });
 
       expect(useTabStore.getState().hasTab('nonexistent')).toBe(false);
     });
 
-    it('should return false when no tabs', () => {
+    it('should return false when no tabs', async () => {
       expect(useTabStore.getState().hasTab('tab1')).toBe(false);
     });
   });
 
   describe('saveTabsToStorage', () => {
     it('should queue save for network tabs', async () => {
-      act(() => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -711,7 +711,7 @@ describe('tabStore', () => {
 
       mockGetTabs.mockResolvedValueOnce(loadedTabs);
 
-      act(() => {
+      await act(() => {
         useTabStore
           .getState()
           .setTabs([
@@ -742,7 +742,7 @@ describe('tabStore', () => {
     it('should preserve other network tabs when loading', async () => {
       mockGetTabs.mockResolvedValueOnce([createMockTab('loaded', 'network2')]);
 
-      act(() => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('existing', 'network1')]);
       });
 
@@ -770,8 +770,8 @@ describe('tabStore', () => {
   });
 
   describe('reset', () => {
-    it('should reset to initial state', () => {
-      act(() => {
+    it('should reset to initial state', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().setActiveTabId('tab1');
         useTabStore.getState().reset();
@@ -781,8 +781,8 @@ describe('tabStore', () => {
       expect(useTabStore.getState().activeTabId).toBe('');
     });
 
-    it('should allow operations after reset', () => {
-      act(() => {
+    it('should allow operations after reset', async () => {
+      await act(() => {
         useTabStore.getState().setTabs([createMockTab('tab1')]);
         useTabStore.getState().reset();
         useTabStore.getState().addTab(createMockTab('tab2'));

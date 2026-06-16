@@ -17,45 +17,45 @@ const colors = {
 };
 
 describe('ColorPalettePicker', () => {
-  it('inserts selected foreground color in mirc mode', () => {
+  it('inserts selected foreground color in mirc mode', async () => {
     const onInsert = jest.fn();
 
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <ColorPalettePicker colors={colors} onInsert={onInsert} />,
     );
 
     const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(touchables[4]);
-    fireEvent.press(getByText('Insert'));
+    await fireEvent.press(touchables[4]);
+    await fireEvent.press(getByText('Insert'));
 
     const inserted = onInsert.mock.calls[0][0] as string;
     expect(inserted.endsWith('00')).toBe(true);
   });
 
-  it('auto-inserts when background is chosen', () => {
+  it('auto-inserts when background is chosen', async () => {
     const onInsert = jest.fn();
 
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <ColorPalettePicker colors={colors} onInsert={onInsert} autoInsertOnBg />,
     );
 
     const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(touchables[4]);
-    fireEvent.press(getByText('BG'));
+    await fireEvent.press(touchables[4]);
+    await fireEvent.press(getByText('BG'));
 
     const touchablesAfter = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(touchablesAfter[5]);
+    await fireEvent.press(touchablesAfter[5]);
 
     expect(onInsert).toHaveBeenCalled();
     const inserted = onInsert.mock.calls[0][0] as string;
     expect(inserted.includes(',')).toBe(true);
   });
 
-  it('supports single target hex mode and clear callback', () => {
+  it('supports single target hex mode and clear callback', async () => {
     const onInsert = jest.fn();
     const onClear = jest.fn();
 
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { getByText, UNSAFE_getAllByType } = await render(
       <ColorPalettePicker
         colors={colors}
         onInsert={onInsert}
@@ -66,22 +66,22 @@ describe('ColorPalettePicker', () => {
     );
 
     const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    fireEvent.press(touchables[2]);
-    fireEvent.press(getByText('Insert'));
+    await fireEvent.press(touchables[2]);
+    await fireEvent.press(getByText('Insert'));
 
     expect(onInsert).toHaveBeenCalledWith(expect.stringMatching(/^#/));
 
-    fireEvent.press(getByText('Clear'));
+    await fireEvent.press(getByText('Clear'));
     expect(onClear).toHaveBeenCalled();
   });
 
-  it('switches between standard and extended tabs', () => {
-    const { getByText } = render(
+  it('switches between standard and extended tabs', async () => {
+    const { getByText } = await render(
       <ColorPalettePicker colors={colors} onInsert={jest.fn()} />,
     );
 
-    fireEvent.press(getByText('Extended'));
-    fireEvent.press(getByText('Standard'));
+    await fireEvent.press(getByText('Extended'));
+    await fireEvent.press(getByText('Standard'));
 
     expect(getByText('FG')).toBeTruthy();
     expect(getByText('BG')).toBeTruthy();

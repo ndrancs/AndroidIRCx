@@ -131,7 +131,7 @@ describe('useMessageSending', () => {
     ...overrides,
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockTabStore.tabs = [];
     (scriptingService.processOutgoingCommand as jest.Mock).mockImplementation(
@@ -153,12 +153,14 @@ describe('useMessageSending', () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     cleanup();
   });
 
-  it('should return handleSendMessage function', () => {
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+  it('should return handleSendMessage function', async () => {
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     expect(result.current.handleSendMessage).toBeDefined();
     expect(typeof result.current.handleSendMessage).toBe('function');
   });
@@ -166,7 +168,9 @@ describe('useMessageSending', () => {
   it('should not send message when no valid tab exists', async () => {
     mockTabStore.tabs = [];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('Hello');
@@ -187,7 +191,9 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('Hello everyone!');
@@ -207,7 +213,9 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('/join #test');
@@ -227,7 +235,7 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageSending(createMockParams({ isConnected: false })),
     );
 
@@ -252,7 +260,9 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('/ctcp OtherUser VERSION');
@@ -276,7 +286,9 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('/dcc chat OtherUser');
@@ -296,7 +308,7 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageSending(createMockParams({ isConnected: false })),
     );
 
@@ -325,7 +337,9 @@ describe('useMessageSending', () => {
       },
     ];
 
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
 
     await act(async () => {
       await result.current.handleSendMessage('test message');
@@ -345,7 +359,9 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('/quote RAW');
     });
@@ -363,7 +379,9 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('/ctcp');
     });
@@ -382,7 +400,7 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useMessageSending(createMockParams({ isConnected: false })),
     );
     await act(async () => {
@@ -404,7 +422,9 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('/xdcc send');
     });
@@ -421,7 +441,9 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage(
         '/dcc send Alice "C:\\\\tmp\\\\file.bin" 9000',
@@ -452,7 +474,9 @@ describe('useMessageSending', () => {
         messages: [],
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('/dcc send Alice /tmp/file.bin');
     });
@@ -472,7 +496,9 @@ describe('useMessageSending', () => {
         dccSessionId: 'sess-1',
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('hello dcc');
     });
@@ -502,7 +528,9 @@ describe('useMessageSending', () => {
         isEncrypted: true,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('secret');
     });
@@ -527,7 +555,9 @@ describe('useMessageSending', () => {
         isEncrypted: false,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('secret');
     });
@@ -555,7 +585,9 @@ describe('useMessageSending', () => {
         isEncrypted: true,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('secret');
     });
@@ -580,7 +612,9 @@ describe('useMessageSending', () => {
         isEncrypted: true,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('chan secret');
     });
@@ -604,7 +638,9 @@ describe('useMessageSending', () => {
         isEncrypted: true,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('chan secret');
     });
@@ -628,7 +664,9 @@ describe('useMessageSending', () => {
         sendEncrypted: false,
       },
     ];
-    const { result } = renderHook(() => useMessageSending(createMockParams()));
+    const { result } = await renderHook(() =>
+      useMessageSending(createMockParams()),
+    );
     await act(async () => {
       await result.current.handleSendMessage('decor me');
     });

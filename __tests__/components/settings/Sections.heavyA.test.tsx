@@ -122,7 +122,7 @@ const styles = {
 };
 
 describe('Heavy sections A', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCapturedItems.clear();
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
@@ -130,7 +130,7 @@ describe('Heavy sections A', () => {
 
   it('AwaySection triggers away now/back actions and options tab updates', async () => {
     const onClose = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -146,7 +146,7 @@ describe('Heavy sections A', () => {
     expect(mockAwayClear).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(2);
 
-    fireEvent.press(getByText('Options'));
+    await fireEvent.press(getByText('Options'));
     await waitFor(() =>
       expect(mockCapturedItems.has('auto-away-enabled')).toBe(true),
     );
@@ -155,7 +155,7 @@ describe('Heavy sections A', () => {
   });
 
   it('AwaySection updates core system and options values', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -174,7 +174,7 @@ describe('Heavy sections A', () => {
     expect(mockSetSetting).toHaveBeenCalledWith('awayDisableSounds', true);
     expect(mockSetSetting).toHaveBeenCalledWith('awayAutoAnswerEnabled', true);
 
-    fireEvent.press(getByText('Options'));
+    await fireEvent.press(getByText('Options'));
     await waitFor(() =>
       expect(mockCapturedItems.has('away-auto-answer-message')).toBe(true),
     );
@@ -193,7 +193,7 @@ describe('Heavy sections A', () => {
   });
 
   it('AwaySection opens away presets entrypoint and persists related fields', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -205,12 +205,12 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('away-presets')).toBe(true),
     );
 
-    fireEvent.press(getByText('Away presets'));
+    await fireEvent.press(getByText('Away presets'));
 
     await mockCapturedItems
       .get('away-default-reason')
       .onValueChange('Lunch break');
-    fireEvent.press(getByText('Options'));
+    await fireEvent.press(getByText('Options'));
     await waitFor(() =>
       expect(mockCapturedItems.has('auto-away-reason')).toBe(true),
     );
@@ -230,7 +230,7 @@ describe('Heavy sections A', () => {
   });
 
   it('AwaySection opens auto-answer presets entrypoint and updates auto-answer fields', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -242,12 +242,12 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('away-auto-answer-presets')).toBe(false),
     );
 
-    fireEvent.press(getByText('Options'));
+    await fireEvent.press(getByText('Options'));
     await waitFor(() =>
       expect(mockCapturedItems.has('away-auto-answer-presets')).toBe(true),
     );
 
-    fireEvent.press(getByText('Auto-answer presets'));
+    await fireEvent.press(getByText('Auto-answer presets'));
 
     await mockCapturedItems
       .get('away-auto-answer-message')
@@ -268,7 +268,7 @@ describe('Heavy sections A', () => {
   });
 
   it('AwaySection manages away presets modal add/select/edit/remove flow', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -280,43 +280,49 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('away-presets')).toBe(true),
     );
 
-    fireEvent.press(getByText('Away presets'));
+    await fireEvent.press(getByText('Away presets'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add preset')).toBeTruthy(),
     );
-    fireEvent.changeText(getByPlaceholderText('Add preset'), 'Lunch break');
-    fireEvent.press(getByText('Add'));
-    await waitFor(() => {
+    await fireEvent.changeText(
+      getByPlaceholderText('Add preset'),
+      'Lunch break',
+    );
+    await fireEvent.press(getByText('Add'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayPresets', [
         'Lunch break',
       ]);
     });
 
-    fireEvent.press(getByText('Use'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Use'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith(
         'awaySelectedPreset',
         'Lunch break',
       );
     });
 
-    fireEvent.press(getByText('Edit'));
-    fireEvent.changeText(getByPlaceholderText('Add preset'), 'Lunch break 2');
-    fireEvent.press(getByText('Save'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Edit'));
+    await fireEvent.changeText(
+      getByPlaceholderText('Add preset'),
+      'Lunch break 2',
+    );
+    await fireEvent.press(getByText('Save'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayPresets', [
         'Lunch break 2',
       ]);
     });
 
-    fireEvent.press(getByText('Remove'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Remove'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayPresets', []);
     });
   });
 
   it('AwaySection manages auto-answer presets modal add/edit/remove flow', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <AwaySection
         colors={colors}
         styles={styles as any}
@@ -325,40 +331,46 @@ describe('Heavy sections A', () => {
       />,
     );
 
-    fireEvent.press(getByText('Options'));
+    await fireEvent.press(getByText('Options'));
     await waitFor(() =>
       expect(mockCapturedItems.has('away-auto-answer-presets')).toBe(true),
     );
 
-    fireEvent.press(getByText('Auto-answer presets'));
+    await fireEvent.press(getByText('Auto-answer presets'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add message')).toBeTruthy(),
     );
-    fireEvent.changeText(getByPlaceholderText('Add message'), 'AFK for 5m');
-    fireEvent.press(getByText('Add'));
-    await waitFor(() => {
+    await fireEvent.changeText(
+      getByPlaceholderText('Add message'),
+      'AFK for 5m',
+    );
+    await fireEvent.press(getByText('Add'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayAutoAnswerMessages', [
         'AFK for 5m',
       ]);
     });
 
-    fireEvent.press(getByText('Edit'));
-    fireEvent.changeText(getByPlaceholderText('Add message'), 'AFK for 10m');
-    fireEvent.press(getByText('Save'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Edit'));
+    await fireEvent.changeText(
+      getByPlaceholderText('Add message'),
+      'AFK for 10m',
+    );
+    await fireEvent.press(getByText('Save'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayAutoAnswerMessages', [
         'AFK for 10m',
       ]);
     });
 
-    fireEvent.press(getByText('Remove'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Remove'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('awayAutoAnswerMessages', []);
     });
   });
 
   it('ProtectionSection updates spam/protection settings and spam log action', async () => {
-    render(
+    await render(
       <ProtectionSection
         colors={colors}
         styles={styles as any}
@@ -379,7 +391,7 @@ describe('Heavy sections A', () => {
   });
 
   it('ProtectionSection covers keyword, spam mode, ircop, and ban reason modal flows', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <ProtectionSection
         colors={colors}
         styles={styles as any}
@@ -390,47 +402,50 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('spam-pm-keywords')).toBe(true),
     );
 
-    fireEvent.press(getByText('Spam keywords list'));
+    await fireEvent.press(getByText('Spam keywords list'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add keyword or wildcard')).toBeTruthy(),
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('Add keyword or wildcard'),
       'spam*',
     );
-    fireEvent.press(getByText('Add'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Add'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith(
         'spamPmKeywords',
         expect.arrayContaining(['spam*']),
       );
     });
 
-    fireEvent.press(getByText('Anti-spam on private messages'));
-    fireEvent.press(getByText('Always'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Anti-spam on private messages'));
+    await fireEvent.press(getByText('Always'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('spamPmMode', 'always');
     });
 
-    fireEvent.press(getByText('Close'));
-    fireEvent.press(getByText('Flood / DOS'));
-    fireEvent.press(getByText('IRCop auto action'));
-    fireEvent.press(getByText('GLINE'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Flood / DOS'));
+    await fireEvent.press(getByText('IRCop auto action'));
+    await fireEvent.press(getByText('GLINE'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('protIrcopAction', 'gline');
     });
 
-    fireEvent.press(getByText('Information about protections'));
+    await fireEvent.press(getByText('Information about protections'));
     expect(getByText('Protections')).toBeTruthy();
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
-    fireEvent.press(getByText('Predefined Kick/Ban Reasons'));
+    await fireEvent.press(getByText('Predefined Kick/Ban Reasons'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add new reason...')).toBeTruthy(),
     );
-    fireEvent.changeText(getByPlaceholderText('Add new reason...'), 'Flooding');
-    fireEvent.press(getByText('Add'));
-    await waitFor(() => {
+    await fireEvent.changeText(
+      getByPlaceholderText('Add new reason...'),
+      'Flooding',
+    );
+    await fireEvent.press(getByText('Add'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith(
         'predefinedKickReasons',
         expect.arrayContaining(['Flooding']),
@@ -439,7 +454,7 @@ describe('Heavy sections A', () => {
   });
 
   it('ProtectionSection handles spam-log delete confirm and flood/ban-type toggles', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <ProtectionSection
         colors={colors}
         styles={styles as any}
@@ -450,17 +465,17 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('spam-log-delete')).toBe(true),
     );
 
-    fireEvent.press(getByText('Delete SPAM.log'));
+    await fireEvent.press(getByText('Delete SPAM.log'));
     await waitFor(() =>
       expect(
         getByText('Are you sure you want to clear the spam log?'),
       ).toBeTruthy(),
     );
-    fireEvent.press(getByText('Delete'));
+    await fireEvent.press(getByText('Delete'));
     await waitFor(() => expect(mockClearSpamLog).toHaveBeenCalled());
     expect(getByText('SPAM.log')).toBeTruthy();
 
-    fireEvent.press(getByText('Flood / DOS'));
+    await fireEvent.press(getByText('Flood / DOS'));
     await waitFor(() =>
       expect(mockCapturedItems.has('prot-ctcp-flood')).toBe(true),
     );
@@ -508,9 +523,9 @@ describe('Heavy sections A', () => {
     expect(mockSetSetting).toHaveBeenCalledWith('showBanMaskPreview', false);
     expect(mockSetSetting).toHaveBeenCalledWith('confirmBeforeKickBan', false);
 
-    fireEvent.press(getByText('Default Ban Type'));
+    await fireEvent.press(getByText('Default Ban Type'));
     await waitFor(() => expect(getByText('10 - nick!*@*')).toBeTruthy());
-    fireEvent.press(getByText('10 - nick!*@*'));
+    await fireEvent.press(getByText('10 - nick!*@*'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('defaultBanType', 10),
     );
@@ -518,7 +533,7 @@ describe('Heavy sections A', () => {
 
   it('ProtectionSection edits/removes keywords and reasons, supports reset defaults', async () => {
     const { getByText, getAllByText, getByPlaceholderText, getByTestId } =
-      render(
+      await render(
         <ProtectionSection
           colors={colors}
           styles={styles as any}
@@ -529,60 +544,64 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('spam-pm-keywords')).toBe(true),
     );
 
-    fireEvent.press(getByText('Spam keywords list'));
+    await fireEvent.press(getByText('Spam keywords list'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add keyword or wildcard')).toBeTruthy(),
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('Add keyword or wildcard'),
       'bad*',
     );
-    fireEvent.press(getByText('Add'));
+    await fireEvent.press(getByText('Add'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'spamPmKeywords',
         expect.arrayContaining(['bad*']),
       ),
     );
-    fireEvent.press(getAllByText('Edit')[getAllByText('Edit').length - 1]);
-    fireEvent.press(getByText('Colors'));
+    await fireEvent.press(
+      getAllByText('Edit')[getAllByText('Edit').length - 1],
+    );
+    await fireEvent.press(getByText('Colors'));
     await waitFor(() => expect(getByTestId('mock-color-picker')).toBeTruthy());
-    fireEvent.press(getByTestId('mock-color-insert'));
-    fireEvent.press(getByText('Save'));
-    fireEvent.press(getAllByText('Remove')[getAllByText('Remove').length - 1]);
+    await fireEvent.press(getByTestId('mock-color-insert'));
+    await fireEvent.press(getByText('Save'));
+    await fireEvent.press(
+      getAllByText('Remove')[getAllByText('Remove').length - 1],
+    );
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('spamPmKeywords', [
         'xxx',
         'buy now',
       ]),
     );
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
-    fireEvent.press(getByText('Flood / DOS'));
-    fireEvent.press(getByText('Predefined Kick/Ban Reasons'));
+    await fireEvent.press(getByText('Flood / DOS'));
+    await fireEvent.press(getByText('Predefined Kick/Ban Reasons'));
     await waitFor(() =>
       expect(getByPlaceholderText('Add new reason...')).toBeTruthy(),
     );
-    fireEvent.press(getByText('Edit'));
-    fireEvent.changeText(
+    await fireEvent.press(getByText('Edit'));
+    await fireEvent.changeText(
       getByPlaceholderText('Add new reason...'),
       'Flood edited',
     );
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Save'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'predefinedKickReasons',
         expect.arrayContaining(['Flood edited']),
       ),
     );
-    fireEvent.press(getByText('Remove'));
+    await fireEvent.press(getByText('Remove'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'predefinedKickReasons',
         expect.not.arrayContaining(['Flood edited']),
       ),
     );
-    fireEvent.press(getByText('Reset to Defaults'));
+    await fireEvent.press(getByText('Reset to Defaults'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('predefinedKickReasons', [
         'Flood',
@@ -591,7 +610,7 @@ describe('Heavy sections A', () => {
   });
 
   it('WritingSection handles decoration and nick completion updates', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <WritingSection
         colors={colors}
         styles={styles as any}
@@ -607,7 +626,7 @@ describe('Heavy sections A', () => {
     expect(mockSetSetting).toHaveBeenCalledWith('decorEnabled', true);
     expect(mockSetSetting).toHaveBeenCalledWith('decorBold', true);
 
-    fireEvent.press(getByText('Nick Completion'));
+    await fireEvent.press(getByText('Nick Completion'));
     await waitFor(() =>
       expect(mockCapturedItems.has('nick-complete-enabled')).toBe(true),
     );
@@ -616,7 +635,7 @@ describe('Heavy sections A', () => {
   });
 
   it('WritingSection manages decoration and nick style modals', async () => {
-    const { getByText, getByPlaceholderText, getAllByText } = render(
+    const { getByText, getByPlaceholderText, getAllByText } = await render(
       <WritingSection
         colors={colors}
         styles={styles as any}
@@ -627,19 +646,22 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('decor-manage-styles')).toBe(true),
     );
 
-    fireEvent.press(getByText('Styles list'));
+    await fireEvent.press(getByText('Styles list'));
     await waitFor(() => expect(getByText('Add style')).toBeTruthy());
-    fireEvent.press(getByText('Add style'));
-    fireEvent.changeText(getByPlaceholderText('Use <text>'), '<text> style');
-    fireEvent.press(getByText('Save'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Add style'));
+    await fireEvent.changeText(
+      getByPlaceholderText('Use <text>'),
+      '<text> style',
+    );
+    await fireEvent.press(getByText('Save'));
+    await waitFor(async () => {
       expect(mockSetSetting).toHaveBeenCalledWith('decorStyles', [
         '<text> style',
       ]);
     });
-    fireEvent.press(getAllByText('Close')[0]);
+    await fireEvent.press(getAllByText('Close')[0]);
 
-    fireEvent.press(getByText('Nick Completion'));
+    await fireEvent.press(getByText('Nick Completion'));
     await waitFor(() =>
       expect(mockCapturedItems.has('nick-complete-styles')).toBe(true),
     );
@@ -648,7 +670,7 @@ describe('Heavy sections A', () => {
 
   it('WritingSection handles no-styles alerts and style select/clear flows', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert');
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <WritingSection
         colors={colors}
         styles={styles as any}
@@ -659,71 +681,71 @@ describe('Heavy sections A', () => {
       expect(mockCapturedItems.has('decor-text-style')).toBe(true),
     );
 
-    fireEvent.press(getByText('Decoration style'));
+    await fireEvent.press(getByText('Decoration style'));
     expect(alertSpy).toHaveBeenCalled();
 
-    fireEvent.press(getByText('Styles list'));
-    fireEvent.press(getByText('Add style'));
-    fireEvent.changeText(getByPlaceholderText('Use <text>'), '<text>!!!');
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Styles list'));
+    await fireEvent.press(getByText('Add style'));
+    await fireEvent.changeText(getByPlaceholderText('Use <text>'), '<text>!!!');
+    await fireEvent.press(getByText('Save'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('decorStyles', ['<text>!!!']),
     );
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
-    fireEvent.press(getByText('Decoration style'));
+    await fireEvent.press(getByText('Decoration style'));
     await waitFor(() => expect(getByText('Text!!!')).toBeTruthy());
-    fireEvent.press(getByText('Text!!!'));
+    await fireEvent.press(getByText('Text!!!'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'decorTextStyleId',
         '<text>!!!',
       ),
     );
-    fireEvent.press(getByText('Decoration style'));
-    fireEvent.press(getByText('Clear'));
+    await fireEvent.press(getByText('Decoration style'));
+    await fireEvent.press(getByText('Clear'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('decorTextStyleId', ''),
     );
   });
 
   it('WritingSection handles nick style add/select/edit/remove and editor color insert', async () => {
-    const { getByText, getByPlaceholderText, getByTestId } = render(
+    const { getByText, getByPlaceholderText, getByTestId } = await render(
       <WritingSection
         colors={colors}
         styles={styles as any}
         settingIcons={{}}
       />,
     );
-    fireEvent.press(getByText('Nick Completion'));
+    await fireEvent.press(getByText('Nick Completion'));
     await waitFor(() =>
       expect(mockCapturedItems.has('nick-complete-style')).toBe(true),
     );
 
-    fireEvent.press(getByText('Active style'));
+    await fireEvent.press(getByText('Active style'));
     expect(Alert.alert).toHaveBeenCalled();
 
-    fireEvent.press(getByText('Nick completion styles'));
-    fireEvent.press(getByText('Add style'));
+    await fireEvent.press(getByText('Nick completion styles'));
+    await fireEvent.press(getByText('Add style'));
     await waitFor(() =>
       expect(getByPlaceholderText('Use <nick>')).toBeTruthy(),
     );
-    fireEvent.changeText(getByPlaceholderText('Use <nick>'), '<nick>:');
-    fireEvent.press(getByText('Colors'));
+    await fireEvent.changeText(getByPlaceholderText('Use <nick>'), '<nick>:');
+    await fireEvent.press(getByText('Colors'));
     await waitFor(() => expect(getByTestId('mock-color-picker')).toBeTruthy());
-    fireEvent.press(getByTestId('mock-color-insert'));
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByTestId('mock-color-insert'));
+    await fireEvent.press(getByText('Save'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'nickCompleteStyles',
         expect.arrayContaining(['<nick>:\u000304']),
       ),
     );
-    fireEvent.press(getByText('Close'));
+    await fireEvent.press(getByText('Close'));
 
-    fireEvent.press(getByText('Active style'));
+    await fireEvent.press(getByText('Active style'));
     await waitFor(() => expect(getByText(/Nick:/)).toBeTruthy());
-    fireEvent.press(getByText(/Nick:/));
+    await fireEvent.press(getByText(/Nick:/));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'nickCompleteStyleId',
@@ -731,17 +753,17 @@ describe('Heavy sections A', () => {
       ),
     );
 
-    fireEvent.press(getByText('Nick completion styles'));
-    fireEvent.press(getByText('Edit'));
-    fireEvent.changeText(getByPlaceholderText('Use <nick>'), '<nick>->');
-    fireEvent.press(getByText('Save'));
+    await fireEvent.press(getByText('Nick completion styles'));
+    await fireEvent.press(getByText('Edit'));
+    await fireEvent.changeText(getByPlaceholderText('Use <nick>'), '<nick>->');
+    await fireEvent.press(getByText('Save'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith(
         'nickCompleteStyles',
         expect.arrayContaining(['<nick>->']),
       ),
     );
-    fireEvent.press(getByText('Remove'));
+    await fireEvent.press(getByText('Remove'));
     await waitFor(() =>
       expect(mockSetSetting).toHaveBeenCalledWith('nickCompleteStyles', []),
     );

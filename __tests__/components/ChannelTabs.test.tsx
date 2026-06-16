@@ -45,7 +45,7 @@ jest.mock('../../src/services/SettingsService', () => ({
 describe('ChannelTabs', () => {
   let settingChangeHandlers: Record<string, (value: boolean) => void>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     settingChangeHandlers = {};
     mockGetAlwaysEncrypt.mockResolvedValue(false);
@@ -83,7 +83,7 @@ describe('ChannelTabs', () => {
       },
     ] as any;
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="1"
@@ -94,8 +94,8 @@ describe('ChannelTabs', () => {
 
     await act(async () => {});
 
-    fireEvent.press(getByText('#general'));
-    fireEvent(getByText('alice'), 'longPress');
+    await fireEvent.press(getByText('#general'));
+    await fireEvent(getByText('alice'), 'longPress');
 
     expect(onTabPress).toHaveBeenCalledWith('1');
     expect(onTabLongPress).toHaveBeenCalledWith(tabs[1]);
@@ -116,7 +116,7 @@ describe('ChannelTabs', () => {
       },
     ] as any;
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="1"
@@ -143,7 +143,7 @@ describe('ChannelTabs', () => {
       { id: '2', name: '#b', type: 'channel', networkId: 'n1' },
     ] as any;
 
-    const { UNSAFE_getByType } = render(
+    const { UNSAFE_getByType } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="1"
@@ -155,7 +155,7 @@ describe('ChannelTabs', () => {
     await act(async () => {});
 
     const scroll = UNSAFE_getByType(ScrollView);
-    fireEvent.scroll(scroll, {
+    await fireEvent.scroll(scroll, {
       nativeEvent: { contentOffset: { x: 40, y: 0 } },
     });
 
@@ -202,7 +202,7 @@ describe('ChannelTabs', () => {
       },
     ] as any;
 
-    const { UNSAFE_getByType, getAllByText } = render(
+    const { UNSAFE_getByType, getAllByText } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="2"
@@ -221,7 +221,7 @@ describe('ChannelTabs', () => {
     expect(getAllByText('🔐')).toHaveLength(1);
 
     const scroll = UNSAFE_getByType(ScrollView);
-    fireEvent.scroll(scroll, {
+    await fireEvent.scroll(scroll, {
       nativeEvent: { contentOffset: { x: 0, y: 40 } },
     });
 
@@ -239,7 +239,7 @@ describe('ChannelTabs', () => {
       },
     ] as any;
 
-    const { queryByText } = render(
+    const { queryByText } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="1"
@@ -261,7 +261,7 @@ describe('ChannelTabs', () => {
       { id: '2', name: '#b', type: 'channel', networkId: 'n1' },
     ] as any;
 
-    const { UNSAFE_getByType } = render(
+    const { UNSAFE_getByType } = await render(
       <ChannelTabs
         tabs={tabs}
         activeTabId="1"
@@ -278,14 +278,14 @@ describe('ChannelTabs', () => {
       settingChangeHandlers.channelListScrollSwitchTabs?.(true);
       settingChangeHandlers.channelListScrollSwitchTabsInverse?.(false);
     });
-    fireEvent.scroll(scroll, {
+    await fireEvent.scroll(scroll, {
       nativeEvent: { contentOffset: { x: 50, y: 0 } },
     });
 
     await act(async () => {
       settingChangeHandlers.channelListScrollSwitchTabsInverse?.(true);
     });
-    fireEvent.scroll(scroll, {
+    await fireEvent.scroll(scroll, {
       nativeEvent: { contentOffset: { x: 0, y: 0 } },
     });
 

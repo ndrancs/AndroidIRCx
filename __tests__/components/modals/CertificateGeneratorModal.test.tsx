@@ -24,7 +24,7 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('CertificateGeneratorModal', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     mockFormatFingerprint.mockReturnValue('AA:BB:CC');
@@ -35,36 +35,37 @@ describe('CertificateGeneratorModal', () => {
   });
 
   it('validates required fields and years range', async () => {
-    const { getAllByText, getByDisplayValue, getByPlaceholderText } = render(
-      <CertificateGeneratorModal
-        visible
-        onClose={jest.fn()}
-        defaultName=""
-        defaultCommonName=""
-      />,
-    );
+    const { getAllByText, getByDisplayValue, getByPlaceholderText } =
+      await render(
+        <CertificateGeneratorModal
+          visible
+          onClose={jest.fn()}
+          defaultName=""
+          defaultCommonName=""
+        />,
+      );
     const generateButton = getAllByText('Generate Certificate').slice(-1)[0];
 
     await act(async () => {
-      fireEvent.press(generateButton);
+      await fireEvent.press(generateButton);
     });
     expect(Alert.alert).toHaveBeenCalledWith(
       'Error',
       'Certificate name is required',
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('e.g., My IRC Certificate'),
       'My Cert',
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('e.g., nick@irc.network'),
       'nick@test',
     );
-    fireEvent.changeText(getByDisplayValue('1'), '99');
+    await fireEvent.changeText(getByDisplayValue('1'), '99');
 
     await act(async () => {
-      fireEvent.press(generateButton);
+      await fireEvent.press(generateButton);
     });
 
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -88,7 +89,7 @@ describe('CertificateGeneratorModal', () => {
     mockGenerateCertificate.mockResolvedValue(cert);
 
     const onCertificateGenerated = jest.fn();
-    const { getAllByText, getByText, getByPlaceholderText } = render(
+    const { getAllByText, getByText, getByPlaceholderText } = await render(
       <CertificateGeneratorModal
         visible
         onClose={jest.fn()}
@@ -97,17 +98,17 @@ describe('CertificateGeneratorModal', () => {
     );
     const generateButton = getAllByText('Generate Certificate').slice(-1)[0];
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('e.g., My IRC Certificate'),
       'My Cert',
     );
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('e.g., nick@irc.network'),
       'nick@test',
     );
 
     await act(async () => {
-      fireEvent.press(generateButton);
+      await fireEvent.press(generateButton);
     });
 
     expect(mockGenerateCertificate).toHaveBeenCalledWith({
@@ -118,7 +119,7 @@ describe('CertificateGeneratorModal', () => {
     expect(onCertificateGenerated).toHaveBeenCalledWith(cert);
     expect(getByText('Certificate Generated Successfully!')).toBeTruthy();
 
-    fireEvent.press(getByText('📋 Copy Fingerprint'));
+    await fireEvent.press(getByText('📋 Copy Fingerprint'));
     expect(mockSetString).toHaveBeenCalledWith('AA:BB:CC');
   });
 });

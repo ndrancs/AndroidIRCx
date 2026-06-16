@@ -103,7 +103,7 @@ describe('MediaPreviewModal', () => {
     onSendComplete: jest.fn(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     Object.defineProperty(Platform, 'OS', {
       value: 'android',
@@ -131,25 +131,25 @@ describe('MediaPreviewModal', () => {
   });
 
   it('renders encryption indicator when enabled', async () => {
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Encrypted')).toBeTruthy();
     });
   });
 
   it('sends media and emits !enc-media tag with caption', async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <MediaPreviewModal {...baseProps} />,
     );
 
-    fireEvent.changeText(
+    await fireEvent.changeText(
       getByPlaceholderText('Add a caption...'),
       'caption test',
     );
-    fireEvent.press(getByText('Send'));
+    await fireEvent.press(getByText('Send'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockUpload.requestUploadToken).toHaveBeenCalledWith(
         'image',
         'image/jpeg',
@@ -174,16 +174,16 @@ describe('MediaPreviewModal', () => {
       error: 'Encrypt boom',
     });
 
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
-    fireEvent.press(getByText('Send'));
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await fireEvent.press(getByText('Send'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('Encrypt boom')).toBeTruthy();
     });
   });
 
-  it('returns null when mediaResult is null', () => {
-    const { queryByText } = render(
+  it('returns null when mediaResult is null', async () => {
+    const { queryByText } = await render(
       <MediaPreviewModal {...baseProps} mediaResult={null} />,
     );
     expect(queryByText('Preview Media')).toBeNull();
@@ -191,38 +191,38 @@ describe('MediaPreviewModal', () => {
 
   it('hides encryption indicator when disabled in settings', async () => {
     mockSettings.shouldShowEncryptionIndicator.mockResolvedValueOnce(false);
-    const { queryByText } = render(<MediaPreviewModal {...baseProps} />);
-    await waitFor(() => {
+    const { queryByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await waitFor(async () => {
       expect(queryByText('Encrypted')).toBeNull();
     });
   });
 
   it('hides encryption indicator when no key', async () => {
     mockEnc.hasEncryptionKey.mockResolvedValueOnce(false);
-    const { queryByText } = render(<MediaPreviewModal {...baseProps} />);
-    await waitFor(() => {
+    const { queryByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await waitFor(async () => {
       expect(queryByText('Encrypted')).toBeNull();
     });
   });
 
   it('shows validation error when send is pressed with missing uri', async () => {
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{ ...baseProps.mediaResult, uri: undefined } as any}
       />,
     );
-    fireEvent.press(getByText('Send'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Send'));
+    await waitFor(async () => {
       expect(getByText('No media selected')).toBeTruthy();
     });
   });
 
   it('shows file missing error when file cannot be found', async () => {
     mockRNFS.exists.mockResolvedValue(false);
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
-    fireEvent.press(getByText('Send'));
-    await waitFor(() => {
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await fireEvent.press(getByText('Send'));
+    await waitFor(async () => {
       expect(
         getByText('File does not exist. Please select the file again.'),
       ).toBeTruthy();
@@ -231,9 +231,9 @@ describe('MediaPreviewModal', () => {
 
   it('falls back to original uri when normalized path does not exist', async () => {
     mockRNFS.exists.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
-    fireEvent.press(getByText('Send'));
-    await waitFor(() => {
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await fireEvent.press(getByText('Send'));
+    await waitFor(async () => {
       expect(mockEnc.encryptMediaFile).toHaveBeenCalledWith(
         '/tmp/image.jpg',
         'net',
@@ -245,9 +245,9 @@ describe('MediaPreviewModal', () => {
 
   it('shows upload failed when upload status is not ready', async () => {
     mockUpload.uploadFile.mockResolvedValueOnce({ status: 'pending' });
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
-    fireEvent.press(getByText('Send'));
-    await waitFor(() => {
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await fireEvent.press(getByText('Send'));
+    await waitFor(async () => {
       expect(getByText('Upload failed')).toBeTruthy();
     });
   });
@@ -256,15 +256,15 @@ describe('MediaPreviewModal', () => {
     mockUpload.requestUploadToken.mockRejectedValueOnce(
       new Error('token down'),
     );
-    const { getByText } = render(<MediaPreviewModal {...baseProps} />);
-    fireEvent.press(getByText('Send'));
-    await waitFor(() => {
+    const { getByText } = await render(<MediaPreviewModal {...baseProps} />);
+    await fireEvent.press(getByText('Send'));
+    await waitFor(async () => {
       expect(getByText('token down')).toBeTruthy();
     });
   });
 
   it('renders video preview and handles preview error', async () => {
-    const { getByText, getByTestId } = render(
+    const { getByText, getByTestId } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{
@@ -274,14 +274,14 @@ describe('MediaPreviewModal', () => {
         }}
       />,
     );
-    fireEvent.press(getByTestId('video-mock'));
-    await waitFor(() => {
+    await fireEvent.press(getByTestId('video-mock'));
+    await waitFor(async () => {
       expect(getByText('Failed to load video preview')).toBeTruthy();
     });
   });
 
   it('renders audio preview and handles preview error', async () => {
-    const { getByText, getByTestId } = render(
+    const { getByText, getByTestId } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{
@@ -293,15 +293,15 @@ describe('MediaPreviewModal', () => {
     );
     expect(getByText('Audio File')).toBeTruthy();
     expect(() => getByTestId('video-mock')).toThrow();
-    fireEvent.press(getByText('Play'));
-    fireEvent.press(getByTestId('video-mock'));
-    await waitFor(() => {
+    await fireEvent.press(getByText('Play'));
+    await fireEvent.press(getByTestId('video-mock'));
+    await waitFor(async () => {
       expect(getByText('Audio error: video-error')).toBeTruthy();
     });
   });
 
-  it('renders generic file preview and file label fallback', () => {
-    const { getByText } = render(
+  it('renders generic file preview and file label fallback', async () => {
+    const { getByText } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{
@@ -316,18 +316,18 @@ describe('MediaPreviewModal', () => {
   });
 
   it('handles image preview error callback', async () => {
-    const { getByText, UNSAFE_getByType } = render(
+    const { getByText, UNSAFE_getByType } = await render(
       <MediaPreviewModal {...baseProps} />,
     );
     const image = UNSAFE_getByType(require('react-native').Image);
-    fireEvent(image, 'error', { nativeEvent: { error: 'bad image' } });
-    await waitFor(() => {
+    await fireEvent(image, 'error', { nativeEvent: { error: 'bad image' } });
+    await waitFor(async () => {
       expect(getByText('Failed to load image preview')).toBeTruthy();
     });
   });
 
-  it('renders size in bytes/kb/mb and extra metadata', () => {
-    const { getByText, rerender } = render(
+  it('renders size in bytes/kb/mb and extra metadata', async () => {
+    const { getByText, rerender } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{
@@ -343,7 +343,7 @@ describe('MediaPreviewModal', () => {
     expect(getByText('Duration: 2s')).toBeTruthy();
     expect(getByText('Dimensions: 100 × 200')).toBeTruthy();
 
-    rerender(
+    await rerender(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{ ...baseProps.mediaResult, size: 2048 }}
@@ -351,7 +351,7 @@ describe('MediaPreviewModal', () => {
     );
     expect(getByText('Size: 2 KB')).toBeTruthy();
 
-    rerender(
+    await rerender(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{ ...baseProps.mediaResult, size: 2 * 1024 * 1024 }}
@@ -364,32 +364,32 @@ describe('MediaPreviewModal', () => {
     mockUpload.requestUploadToken.mockRejectedValueOnce(
       new Error('temp error'),
     );
-    const { getByText, queryByText, rerender } = render(
+    const { getByText, queryByText, rerender } = await render(
       <MediaPreviewModal {...baseProps} />,
     );
-    fireEvent.press(getByText('Send'));
+    await fireEvent.press(getByText('Send'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(getByText('temp error')).toBeTruthy();
     });
 
-    rerender(<MediaPreviewModal {...baseProps} visible={false} />);
-    await waitFor(() => {
+    await rerender(<MediaPreviewModal {...baseProps} visible={false} />);
+    await waitFor(async () => {
       expect(queryByText('temp error')).toBeNull();
     });
   });
 
   it('covers ios file uri normalization branch in send flow', async () => {
     Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
-    const { getByText } = render(
+    const { getByText } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{ ...baseProps.mediaResult, uri: '/tmp/ios-image.jpg' }}
       />,
     );
-    fireEvent.press(getByText('Send'));
+    await fireEvent.press(getByText('Send'));
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockEnc.encryptMediaFile).toHaveBeenCalledWith(
         '/tmp/ios-image.jpg',
         'net',
@@ -399,8 +399,8 @@ describe('MediaPreviewModal', () => {
     });
   });
 
-  it('covers file:// preview uri branch', () => {
-    const { getByText } = render(
+  it('covers file:// preview uri branch', async () => {
+    const { getByText } = await render(
       <MediaPreviewModal
         {...baseProps}
         mediaResult={{ ...baseProps.mediaResult, uri: 'file:///tmp/image.jpg' }}

@@ -48,13 +48,13 @@ import { getDefaultRawCategoryVisibility } from '../../src/services/IRCService';
 describe('useRawSettings', () => {
   const mockSetShowEncryptionIndicators = jest.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockUIStore.rawCategoryVisibility = {};
   });
 
-  it('should return all setting functions', () => {
-    const { result } = renderHook(() =>
+  it('should return all setting functions', async () => {
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -66,7 +66,7 @@ describe('useRawSettings', () => {
   });
 
   it('should persist show raw commands setting', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -84,7 +84,7 @@ describe('useRawSettings', () => {
   });
 
   it('should not persist raw category visibility when raw commands are disabled', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -117,7 +117,7 @@ describe('useRawSettings', () => {
       server: true,
     };
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -143,7 +143,7 @@ describe('useRawSettings', () => {
   });
 
   it('should normalize and persist raw category visibility', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -163,7 +163,7 @@ describe('useRawSettings', () => {
   });
 
   it('should persist show encryption indicators setting', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),
@@ -181,7 +181,7 @@ describe('useRawSettings', () => {
   });
 
   it('should normalize partial visibility settings', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useRawSettings({
         setShowEncryptionIndicators: mockSetShowEncryptionIndicators,
       }),

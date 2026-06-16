@@ -258,7 +258,7 @@ function setupDefaultMocks() {
 // ─── Tests ─────────────────────────────────────────────
 
 describe('useConnectionHandler', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
     setupDefaultMocks();
@@ -268,7 +268,7 @@ describe('useConnectionHandler', () => {
     describe('network selection', () => {
       it('should use provided network directly', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -280,7 +280,7 @@ describe('useConnectionHandler', () => {
 
       it('should load networks when none provided', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -296,7 +296,7 @@ describe('useConnectionHandler', () => {
           .mockResolvedValueOnce([defaultNetwork]); // reload after creation
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -326,7 +326,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -343,7 +343,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -365,7 +365,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -387,7 +387,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([net1, net2]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -412,7 +412,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([net1, net2]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -425,7 +425,7 @@ describe('useConnectionHandler', () => {
     describe('identity profile', () => {
       it('should apply identity profile from network config', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -443,7 +443,7 @@ describe('useConnectionHandler', () => {
           identityProfileId: undefined,
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkNoProfile);
@@ -459,7 +459,7 @@ describe('useConnectionHandler', () => {
       it('should fallback to network identity when profile ID not found', async () => {
         mockIdentityProfilesService.list.mockResolvedValue([]); // no matching profile
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -481,7 +481,7 @@ describe('useConnectionHandler', () => {
         mockIdentityProfilesService.list.mockResolvedValue([profileWithSasl]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -504,7 +504,7 @@ describe('useConnectionHandler', () => {
         mockIdentityProfilesService.list.mockResolvedValue([profileWithCreds]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -522,7 +522,7 @@ describe('useConnectionHandler', () => {
     describe('identity overrides', () => {
       it('should apply nick override', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -541,7 +541,7 @@ describe('useConnectionHandler', () => {
 
       it('should apply altNick override', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -560,7 +560,7 @@ describe('useConnectionHandler', () => {
 
       it('should apply ident override', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -579,7 +579,7 @@ describe('useConnectionHandler', () => {
 
       it('should apply name override to realname', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -598,7 +598,7 @@ describe('useConnectionHandler', () => {
 
       it('should apply email override to realname', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -617,7 +617,7 @@ describe('useConnectionHandler', () => {
 
       it('should combine name and email in realname', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -638,7 +638,7 @@ describe('useConnectionHandler', () => {
     describe('server selection', () => {
       it('should use specified serverId', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork, 'srv-1');
@@ -666,7 +666,7 @@ describe('useConnectionHandler', () => {
         const params = createMockParams({
           autoConnectFavoriteServerRef: { current: true },
         });
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithFav);
@@ -692,7 +692,7 @@ describe('useConnectionHandler', () => {
           ],
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithDefault);
@@ -704,7 +704,7 @@ describe('useConnectionHandler', () => {
 
       it('should fallback to first server', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -730,7 +730,7 @@ describe('useConnectionHandler', () => {
           ],
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkNoServers);
@@ -752,7 +752,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.createDefaultNetwork.mockResolvedValue(undefined);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect();
@@ -768,7 +768,7 @@ describe('useConnectionHandler', () => {
       it('should show alert when network has no servers', async () => {
         const networkNoServers = { ...defaultNetwork, servers: [] };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkNoServers);
@@ -784,7 +784,7 @@ describe('useConnectionHandler', () => {
       it('should open networks list from no-network alert Configure button', async () => {
         const networkNoServers = { ...defaultNetwork, servers: [] };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkNoServers);
@@ -804,7 +804,7 @@ describe('useConnectionHandler', () => {
     describe('connection config', () => {
       it('should build correct connection config', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -824,7 +824,7 @@ describe('useConnectionHandler', () => {
           servers: [{ ...defaultNetwork.servers[0], password: 'serverpass' }],
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithPass);
@@ -844,7 +844,7 @@ describe('useConnectionHandler', () => {
           },
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithProxy);
@@ -874,7 +874,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -896,7 +896,7 @@ describe('useConnectionHandler', () => {
           clientKey: 'KEY_DATA',
         };
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithCert);
@@ -911,7 +911,7 @@ describe('useConnectionHandler', () => {
     describe('connection success', () => {
       it('should set connection state on success', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -924,7 +924,7 @@ describe('useConnectionHandler', () => {
 
       it('should set primaryNetworkId when not already set', async () => {
         const params = createMockParams({ primaryNetworkId: null });
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -935,7 +935,7 @@ describe('useConnectionHandler', () => {
 
       it('should NOT set primaryNetworkId when already set', async () => {
         const params = createMockParams({ primaryNetworkId: 'existing-net' });
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -946,7 +946,7 @@ describe('useConnectionHandler', () => {
 
       it('should call scriptingService.handleConnect', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -959,7 +959,7 @@ describe('useConnectionHandler', () => {
 
       it('should append server message with connection info', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -985,7 +985,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1008,7 +1008,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1030,7 +1030,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1048,7 +1048,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1066,7 +1066,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1090,7 +1090,7 @@ describe('useConnectionHandler', () => {
             ],
           },
         });
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1102,7 +1102,7 @@ describe('useConnectionHandler', () => {
 
       it('should use connectNetworkId when provided', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(
@@ -1120,7 +1120,7 @@ describe('useConnectionHandler', () => {
     describe('auto-reconnect', () => {
       it('should save connection state for auto-reconnect', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1143,7 +1143,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1162,7 +1162,7 @@ describe('useConnectionHandler', () => {
         };
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithAutoJoin);
@@ -1184,7 +1184,7 @@ describe('useConnectionHandler', () => {
         };
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(networkWithAutoJoin);
@@ -1209,7 +1209,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1226,7 +1226,7 @@ describe('useConnectionHandler', () => {
         mockAutoReconnectService.getConfig.mockReturnValue(null);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1254,7 +1254,7 @@ describe('useConnectionHandler', () => {
         });
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1271,7 +1271,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1290,7 +1290,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1307,7 +1307,7 @@ describe('useConnectionHandler', () => {
         mockConnectionManager.connect.mockRejectedValue(error);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1328,7 +1328,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1344,7 +1344,7 @@ describe('useConnectionHandler', () => {
         mockConnectionManager.connect.mockRejectedValue(new Error('fail'));
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1359,7 +1359,7 @@ describe('useConnectionHandler', () => {
         mockConnectionManager.connect.mockRejectedValue(new Error('fail'));
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1380,7 +1380,7 @@ describe('useConnectionHandler', () => {
         mockConnectionManager.connect.mockRejectedValue('string error');
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleConnect(defaultNetwork);
@@ -1402,7 +1402,7 @@ describe('useConnectionHandler', () => {
       on: jest.fn(() => jest.fn()),
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       setupDefaultMocks();
       mockActiveIRCService.getConnectionStatus.mockReturnValue(true);
@@ -1417,7 +1417,7 @@ describe('useConnectionHandler', () => {
     describe('disconnect from current server', () => {
       it('should disconnect from current server before connecting to new one', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1433,7 +1433,7 @@ describe('useConnectionHandler', () => {
 
       it('should NOT disconnect when -m (new window) switch is set', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1447,7 +1447,7 @@ describe('useConnectionHandler', () => {
 
       it('should NOT disconnect when -n (new window no connect) switch is set', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1465,7 +1465,7 @@ describe('useConnectionHandler', () => {
       it('should NOT disconnect when current service is not connected', async () => {
         mockActiveIRCService.getConnectionStatus.mockReturnValue(false);
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1498,7 +1498,7 @@ describe('useConnectionHandler', () => {
         ]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1514,7 +1514,7 @@ describe('useConnectionHandler', () => {
     describe('address-based connection', () => {
       it('should find existing network by server hostname', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1528,7 +1528,7 @@ describe('useConnectionHandler', () => {
 
       it('should find existing network by network name', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1544,7 +1544,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]); // no existing networks
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1558,7 +1558,7 @@ describe('useConnectionHandler', () => {
 
       it('should create new network entry for -m switch even if network exists', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1574,7 +1574,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1591,7 +1591,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1607,7 +1607,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1621,7 +1621,7 @@ describe('useConnectionHandler', () => {
 
       it('should update existing server config when server found', async () => {
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1642,7 +1642,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1666,7 +1666,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1685,7 +1685,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1706,7 +1706,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1734,7 +1734,7 @@ describe('useConnectionHandler', () => {
         });
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1767,7 +1767,7 @@ describe('useConnectionHandler', () => {
         });
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1804,7 +1804,7 @@ describe('useConnectionHandler', () => {
         });
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1827,7 +1827,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockResolvedValue([]);
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1847,7 +1847,7 @@ describe('useConnectionHandler', () => {
         );
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1868,7 +1868,7 @@ describe('useConnectionHandler', () => {
         mockSettingsService.loadNetworks.mockRejectedValue('string error');
 
         const params = createMockParams();
-        const { result } = renderHook(() => useConnectionHandler(params));
+        const { result } = await renderHook(() => useConnectionHandler(params));
 
         await act(async () => {
           await result.current.handleServerConnect(
@@ -1885,22 +1885,22 @@ describe('useConnectionHandler', () => {
   });
 
   describe('hook return values', () => {
-    it('should return handleConnect and handleServerConnect functions', () => {
+    it('should return handleConnect and handleServerConnect functions', async () => {
       const params = createMockParams();
-      const { result } = renderHook(() => useConnectionHandler(params));
+      const { result } = await renderHook(() => useConnectionHandler(params));
 
       expect(typeof result.current.handleConnect).toBe('function');
       expect(typeof result.current.handleServerConnect).toBe('function');
     });
 
-    it('should return stable handleConnect reference', () => {
+    it('should return stable handleConnect reference', async () => {
       const params = createMockParams();
-      const { result, rerender } = renderHook(() =>
+      const { result, rerender } = await renderHook(() =>
         useConnectionHandler(params),
       );
 
       const firstRef = result.current.handleConnect;
-      rerender();
+      await rerender();
       expect(result.current.handleConnect).toBe(firstRef);
     });
   });

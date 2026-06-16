@@ -24,23 +24,23 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 describe('useTypingCleanup', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    act(() => {
+    await act(() => {
       useMessageStore.getState().reset();
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
   });
 
-  it('should set up cleanup interval on mount', () => {
+  it('should set up cleanup interval on mount', async () => {
     const spy = jest.spyOn(useMessageStore.getState(), 'cleanupStaleTyping');
-    renderHook(() => useTypingCleanup());
+    await renderHook(() => useTypingCleanup());
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(2000);
     });
 
@@ -48,11 +48,11 @@ describe('useTypingCleanup', () => {
     spy.mockRestore();
   });
 
-  it('should call cleanup every 2 seconds', () => {
+  it('should call cleanup every 2 seconds', async () => {
     const spy = jest.spyOn(useMessageStore.getState(), 'cleanupStaleTyping');
-    renderHook(() => useTypingCleanup());
+    await renderHook(() => useTypingCleanup());
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(6000);
     });
 
@@ -60,14 +60,14 @@ describe('useTypingCleanup', () => {
     spy.mockRestore();
   });
 
-  it('should clear interval on unmount', () => {
+  it('should clear interval on unmount', async () => {
     const spy = jest.spyOn(useMessageStore.getState(), 'cleanupStaleTyping');
-    const { unmount } = renderHook(() => useTypingCleanup());
+    const { unmount } = await renderHook(() => useTypingCleanup());
 
-    unmount();
+    await unmount();
 
     const callsBefore = spy.mock.calls.length;
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(10000);
     });
 

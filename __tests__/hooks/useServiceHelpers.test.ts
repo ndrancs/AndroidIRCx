@@ -62,7 +62,7 @@ describe('useServiceHelpers', () => {
     tabSortAlphabetical: mockTabSortAlphabetical,
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Set default mock implementations
@@ -83,8 +83,8 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should return helper functions', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should return helper functions', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     expect(result.current).toHaveProperty('appendServerMessage');
     expect(result.current).toHaveProperty('getActiveIRCService');
@@ -96,7 +96,7 @@ describe('useServiceHelpers', () => {
     expect(result.current).toHaveProperty('getNetworkConfigForId');
   });
 
-  it('should append server message to existing server tab', () => {
+  it('should append server message to existing server tab', async () => {
     const mockTabs = [
       {
         id: 'server-test',
@@ -110,7 +110,7 @@ describe('useServiceHelpers', () => {
       tabs: mockTabs,
     });
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     result.current.appendServerMessage('test', 'Test message');
 
@@ -130,22 +130,22 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should not create a missing server tab when appending a server message', () => {
+  it('should not create a missing server tab when appending a server message', async () => {
     require('../../src/stores/tabStore').useTabStore.getState.mockReturnValue({
       tabs: [],
     });
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     result.current.appendServerMessage('test', 'Test message');
 
     expect(mockSetTabs).not.toHaveBeenCalled();
   });
 
-  it('should not append server message for invalid network ID', () => {
+  it('should not append server message for invalid network ID', async () => {
     const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     result.current.appendServerMessage('Not connected', 'Test message');
 
@@ -158,10 +158,10 @@ describe('useServiceHelpers', () => {
     mockConsoleWarn.mockRestore();
   });
 
-  it('should not append server message for empty network ID', () => {
+  it('should not append server message for empty network ID', async () => {
     const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     result.current.appendServerMessage('', 'Test message');
 
@@ -174,29 +174,29 @@ describe('useServiceHelpers', () => {
     mockConsoleWarn.mockRestore();
   });
 
-  it('should get active IRC service from singleton when no active connection', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should get active IRC service from singleton when no active connection', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveIRCService();
 
     expect(service).toBe(require('../../src/services/IRCService').ircService);
   });
 
-  it('should get active IRC service from connection manager when active connection exists', () => {
+  it('should get active IRC service from connection manager when active connection exists', async () => {
     const mockActiveConnection = { ircService: { mockService: true } };
     require('../../src/services/ConnectionManager').connectionManager.getActiveConnection.mockReturnValue(
       mockActiveConnection,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveIRCService();
 
     expect(service).toBe(mockActiveConnection.ircService);
   });
 
-  it('should get active user management service from singleton when no active connection', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should get active user management service from singleton when no active connection', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveUserManagementService();
 
@@ -205,7 +205,7 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should get active user management service from connection manager when active connection exists', () => {
+  it('should get active user management service from connection manager when active connection exists', async () => {
     const mockActiveConnection = {
       userManagementService: { mockService: true },
     };
@@ -213,15 +213,15 @@ describe('useServiceHelpers', () => {
       mockActiveConnection,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveUserManagementService();
 
     expect(service).toBe(mockActiveConnection.userManagementService);
   });
 
-  it('should get active command service from singleton when no active connection', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should get active command service from singleton when no active connection', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveCommandService();
 
@@ -230,21 +230,21 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should get active command service from connection manager when active connection exists', () => {
+  it('should get active command service from connection manager when active connection exists', async () => {
     const mockActiveConnection = { commandService: { mockService: true } };
     require('../../src/services/ConnectionManager').connectionManager.getActiveConnection.mockReturnValue(
       mockActiveConnection,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveCommandService();
 
     expect(service).toBe(mockActiveConnection.commandService);
   });
 
-  it('should get active connection quality service from singleton when no active connection', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should get active connection quality service from singleton when no active connection', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveConnectionQualityService();
 
@@ -254,7 +254,7 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should get active connection quality service from connection manager when active connection exists', () => {
+  it('should get active connection quality service from connection manager when active connection exists', async () => {
     const mockActiveConnection = {
       connectionQualityService: { mockService: true },
     };
@@ -262,15 +262,15 @@ describe('useServiceHelpers', () => {
       mockActiveConnection,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveConnectionQualityService();
 
     expect(service).toBe(mockActiveConnection.connectionQualityService);
   });
 
-  it('should get active channel management service from singleton when no active connection', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should get active channel management service from singleton when no active connection', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveChannelManagementService();
 
@@ -280,7 +280,7 @@ describe('useServiceHelpers', () => {
     );
   });
 
-  it('should get active channel management service from connection manager when active connection exists', () => {
+  it('should get active channel management service from connection manager when active connection exists', async () => {
     const mockActiveConnection = {
       channelManagementService: { mockService: true },
     };
@@ -288,23 +288,23 @@ describe('useServiceHelpers', () => {
       mockActiveConnection,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const service = result.current.getActiveChannelManagementService();
 
     expect(service).toBe(mockActiveConnection.channelManagementService);
   });
 
-  it('should normalize network ID by removing suffix numbers in parentheses', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should normalize network ID by removing suffix numbers in parentheses', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const normalized = result.current.normalizeNetworkId('network (123)');
 
     expect(normalized).toBe('network');
   });
 
-  it('should not change network ID if no suffix numbers in parentheses', () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+  it('should not change network ID if no suffix numbers in parentheses', async () => {
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const normalized = result.current.normalizeNetworkId('network');
 
@@ -320,7 +320,7 @@ describe('useServiceHelpers', () => {
       mockNetworks,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const config = await result.current.getNetworkConfigForId('test1');
 
@@ -333,7 +333,7 @@ describe('useServiceHelpers', () => {
       mockNetworks,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const config = await result.current.getNetworkConfigForId('nonexistent');
 
@@ -346,7 +346,7 @@ describe('useServiceHelpers', () => {
       mockNetworks,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const config = await result.current.getNetworkConfigForId('test (123)');
 
@@ -354,14 +354,14 @@ describe('useServiceHelpers', () => {
   });
 
   it('should handle empty network ID in getNetworkConfigForId', async () => {
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     const config = await result.current.getNetworkConfigForId('');
 
     expect(config).toBeNull();
   });
 
-  it('should sort tabs when appending server message', () => {
+  it('should sort tabs when appending server message', async () => {
     const mockTabs = [
       {
         id: 'server-test',
@@ -389,7 +389,7 @@ describe('useServiceHelpers', () => {
       mockSortedTabs,
     );
 
-    const { result } = renderHook(() => useServiceHelpers(defaultProps));
+    const { result } = await renderHook(() => useServiceHelpers(defaultProps));
 
     result.current.appendServerMessage('test', 'Test message');
 

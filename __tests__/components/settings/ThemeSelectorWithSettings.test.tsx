@@ -34,7 +34,7 @@ const themes = [
 ] as any;
 
 describe('ThemeSelectorWithSettings', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockSetTheme.mockResolvedValue(undefined);
     mockUseThemeWithSettings.mockReturnValue({
@@ -48,7 +48,7 @@ describe('ThemeSelectorWithSettings', () => {
 
   it('applies simple theme change when no recommended settings exist', async () => {
     const onThemeChange = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ThemeSelectorWithSettings
         themes={themes}
         onThemeChange={onThemeChange}
@@ -56,7 +56,7 @@ describe('ThemeSelectorWithSettings', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByText('Light'));
+      await fireEvent.press(getByText('Light'));
     });
 
     expect(mockSetTheme).toHaveBeenCalledWith('light', false);
@@ -65,14 +65,14 @@ describe('ThemeSelectorWithSettings', () => {
 
   it('supports Theme Only path for theme with recommended settings', async () => {
     const onThemeChange = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ThemeSelectorWithSettings
         themes={themes}
         onThemeChange={onThemeChange}
       />,
     );
 
-    fireEvent.press(getByText('Oceanic'));
+    await fireEvent.press(getByText('Oceanic'));
     const firstAlertArgs = (Alert.alert as jest.Mock).mock.calls[0];
     const themeOnlyAction = firstAlertArgs[2][0];
 
@@ -86,14 +86,14 @@ describe('ThemeSelectorWithSettings', () => {
 
   it('supports Apply All path and success notification', async () => {
     const onThemeChange = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <ThemeSelectorWithSettings
         themes={themes}
         onThemeChange={onThemeChange}
       />,
     );
 
-    fireEvent.press(getByText('Oceanic'));
+    await fireEvent.press(getByText('Oceanic'));
     const firstAlertArgs = (Alert.alert as jest.Mock).mock.calls[0];
     const applyAllAction = firstAlertArgs[2][1];
 
@@ -115,9 +115,11 @@ describe('ThemeSelectorWithSettings', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const { getByText } = render(<ThemeSelectorWithSettings themes={themes} />);
+    const { getByText } = await render(
+      <ThemeSelectorWithSettings themes={themes} />,
+    );
 
-    fireEvent.press(getByText('Oceanic'));
+    await fireEvent.press(getByText('Oceanic'));
     const firstAlertArgs = (Alert.alert as jest.Mock).mock.calls[0];
     const applyAllAction = firstAlertArgs[2][1];
 
@@ -132,8 +134,10 @@ describe('ThemeSelectorWithSettings', () => {
     consoleSpy.mockRestore();
   });
 
-  it('renders current-theme recommended-settings info box', () => {
-    const { getByText } = render(<ThemeSelectorWithSettings themes={themes} />);
+  it('renders current-theme recommended-settings info box', async () => {
+    const { getByText } = await render(
+      <ThemeSelectorWithSettings themes={themes} />,
+    );
     expect(
       getByText('Current theme has recommended settings that can be applied.'),
     ).toBeTruthy();

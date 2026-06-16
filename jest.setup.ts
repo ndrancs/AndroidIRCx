@@ -96,6 +96,23 @@ jest.mock('react-native-bootsplash', () => ({
   setMinimumBackgroundDuration: jest.fn(),
 }));
 
+jest.mock('react-native/Libraries/AppState/AppState', () => {
+  const AppState = {
+    currentState: 'active',
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+    removeEventListener: jest.fn(),
+  };
+  return { __esModule: true, default: AppState };
+});
+
+jest.mock('react-native/Libraries/Alert/Alert', () => {
+  const Alert = {
+    alert: jest.fn(),
+    prompt: jest.fn(),
+  };
+  return { __esModule: true, default: Alert };
+});
+
 // Prevent RN Animated native driver state from leaking across tests.
 jest.mock('react-native/src/private/animated/NativeAnimatedHelper');
 
@@ -745,7 +762,12 @@ jest.mock('@react-native-documents/picker', () => ({
   __esModule: true,
   pick: jest.fn().mockResolvedValue([]),
   pickDirectory: jest.fn().mockResolvedValue(null),
-  isErrorWithCode: jest.fn(() => false),
+  // Tests that simulate picker errors set `code` on the rejection. Treat any
+  // truthy `.code` as an error-with-code so cancellation branches run.
+  isErrorWithCode: jest.fn(
+    (error: unknown) =>
+      !!(error && typeof error === 'object' && 'code' in (error as any)),
+  ),
   errorCodes: {
     OPERATION_CANCELED: 'OPERATION_CANCELED',
     IN_PROGRESS: 'ASYNC_OP_IN_PROGRESS',

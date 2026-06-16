@@ -39,25 +39,25 @@ jest.mock('../../src/services/ThemeService', () => ({
 }));
 
 describe('useTheme', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     themeChangeCallback = null;
   });
 
-  it('should return current theme', () => {
-    const { result } = renderHook(() => useTheme());
+  it('should return current theme', async () => {
+    const { result } = await renderHook(() => useTheme());
     expect(result.current.theme).toEqual(darkTheme);
   });
 
-  it('should return theme colors', () => {
-    const { result } = renderHook(() => useTheme());
+  it('should return theme colors', async () => {
+    const { result } = await renderHook(() => useTheme());
     expect(result.current.colors).toEqual(darkTheme.colors);
   });
 
-  it('should update theme when theme changes', () => {
-    const { result } = renderHook(() => useTheme());
+  it('should update theme when theme changes', async () => {
+    const { result } = await renderHook(() => useTheme());
 
-    act(() => {
+    await act(() => {
       themeChangeCallback?.(lightTheme);
     });
 
@@ -65,11 +65,11 @@ describe('useTheme', () => {
     expect(result.current.colors).toEqual(lightTheme.colors);
   });
 
-  it('should unsubscribe from theme changes on unmount', () => {
-    const { unmount } = renderHook(() => useTheme());
+  it('should unsubscribe from theme changes on unmount', async () => {
+    const { unmount } = await renderHook(() => useTheme());
 
     expect(themeChangeCallback).toBeTruthy();
-    unmount();
+    await unmount();
     // After unmount, the unsubscribe should have been called
   });
 });

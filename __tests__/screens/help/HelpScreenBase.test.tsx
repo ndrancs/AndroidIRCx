@@ -35,8 +35,8 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('HelpScreenBase', () => {
-  it('renders nothing when base screen is not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when base screen is not visible', async () => {
+    const { queryByText } = await render(
       <HelpScreenBase visible={false} onClose={jest.fn()} title="Help">
         <HelpParagraph>Hidden body</HelpParagraph>
       </HelpScreenBase>,
@@ -45,8 +45,8 @@ describe('HelpScreenBase', () => {
     expect(queryByText('Help')).toBeNull();
   });
 
-  it('renders base layout and content when visible', () => {
-    const { getByText } = render(
+  it('renders base layout and content when visible', async () => {
+    const { getByText } = await render(
       <HelpScreenBase visible onClose={jest.fn()} title="Help">
         <HelpSection title="Section title">
           <HelpSubsection title="Subsection title">
@@ -73,15 +73,15 @@ describe('HelpScreenBase', () => {
     expect(getByText('Success text')).toBeTruthy();
   });
 
-  it('calls onClose when base close button is pressed', () => {
+  it('calls onClose when base close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = await render(
       <HelpScreenBase visible onClose={onClose} title="Help">
         <HelpParagraph>Body</HelpParagraph>
       </HelpScreenBase>,
     );
 
-    fireEvent.press(getByLabelText('Close help screen'));
+    await fireEvent.press(getByLabelText('Close help screen'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

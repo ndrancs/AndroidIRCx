@@ -78,8 +78,8 @@ describe('SettingItem', () => {
     chevron: {},
   };
 
-  it('renders switch variant', () => {
-    const { getByText } = render(
+  it('renders switch variant', async () => {
+    const { getByText } = await render(
       <SettingItem
         item={{ id: 's1', type: 'switch', title: 'x', value: true }}
         colors={colors}
@@ -89,8 +89,8 @@ describe('SettingItem', () => {
     expect(getByText('Switch:s1')).toBeTruthy();
   });
 
-  it('renders button variant', () => {
-    const { getByText } = render(
+  it('renders button variant', async () => {
+    const { getByText } = await render(
       <SettingItem
         item={{ id: 'b1', type: 'button', title: 'x' }}
         colors={colors}
@@ -100,8 +100,8 @@ describe('SettingItem', () => {
     expect(getByText('Button:b1')).toBeTruthy();
   });
 
-  it('renders input variant', () => {
-    const { getByText } = render(
+  it('renders input variant', async () => {
+    const { getByText } = await render(
       <SettingItem
         item={{ id: 'i1', type: 'input', title: 'x', value: '' }}
         colors={colors}
@@ -111,8 +111,8 @@ describe('SettingItem', () => {
     expect(getByText('Input:i1')).toBeTruthy();
   });
 
-  it('renders submenu variant', () => {
-    const { getByText } = render(
+  it('renders submenu variant', async () => {
+    const { getByText } = await render(
       <SettingItem
         item={{ id: 'm1', type: 'submenu', title: 'x' }}
         colors={colors}
@@ -122,8 +122,8 @@ describe('SettingItem', () => {
     expect(getByText('Submenu:m1')).toBeTruthy();
   });
 
-  it('renders custom variant via renderCustom callback', () => {
-    const { getByText } = render(
+  it('renders custom variant via renderCustom callback', async () => {
+    const { getByText } = await render(
       <SettingItem
         item={{ id: 'c1', type: 'custom', title: 'x' } as any}
         colors={colors}
@@ -137,10 +137,10 @@ describe('SettingItem', () => {
     expect(getByText('Custom:c1')).toBeTruthy();
   });
 
-  it('forwards switch value changes to item and parent callbacks', () => {
+  it('forwards switch value changes to item and parent callbacks', async () => {
     const itemOnValueChange = jest.fn();
     const parentOnValueChange = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingItem
         item={{
           id: 's2',
@@ -155,16 +155,16 @@ describe('SettingItem', () => {
       />,
     );
 
-    fireEvent.press(getByTestId('switch-s2'));
+    await fireEvent.press(getByTestId('switch-s2'));
 
     expect(itemOnValueChange).toHaveBeenCalledWith(false);
     expect(parentOnValueChange).toHaveBeenCalledWith('s2', false);
   });
 
-  it('forwards button presses to item and parent callbacks', () => {
+  it('forwards button presses to item and parent callbacks', async () => {
     const itemOnPress = jest.fn();
     const parentOnPress = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingItem
         item={{ id: 'b2', type: 'button', title: 'x', onPress: itemOnPress }}
         colors={colors}
@@ -173,16 +173,16 @@ describe('SettingItem', () => {
       />,
     );
 
-    fireEvent.press(getByTestId('button-b2'));
+    await fireEvent.press(getByTestId('button-b2'));
 
     expect(itemOnPress).toHaveBeenCalledTimes(1);
     expect(parentOnPress).toHaveBeenCalledWith('b2');
   });
 
-  it('forwards input value changes to item and parent callbacks', () => {
+  it('forwards input value changes to item and parent callbacks', async () => {
     const itemOnValueChange = jest.fn();
     const parentOnValueChange = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingItem
         item={{
           id: 'i2',
@@ -197,18 +197,18 @@ describe('SettingItem', () => {
       />,
     );
 
-    fireEvent.press(getByTestId('input-i2'));
+    await fireEvent.press(getByTestId('input-i2'));
 
     expect(itemOnValueChange).toHaveBeenCalledWith('updated');
     expect(parentOnValueChange).toHaveBeenCalledWith('i2', 'updated');
   });
 
-  it('opens submenus even if the item callback throws', () => {
+  it('opens submenus even if the item callback throws', async () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(jest.fn());
     const parentOnPress = jest.fn();
-    const { getByTestId } = render(
+    const { getByTestId } = await render(
       <SettingItem
         item={{
           id: 'm2',
@@ -224,7 +224,7 @@ describe('SettingItem', () => {
       />,
     );
 
-    fireEvent.press(getByTestId('submenu-m2'));
+    await fireEvent.press(getByTestId('submenu-m2'));
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error in item.onPress:',

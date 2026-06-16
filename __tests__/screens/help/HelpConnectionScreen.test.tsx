@@ -25,16 +25,16 @@ jest.mock('../../../src/i18n/transifex', () => ({
 }));
 
 describe('HelpConnectionScreen', () => {
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
+  it('renders nothing when not visible', async () => {
+    const { queryByText } = await render(
       <HelpConnectionScreen visible={false} onClose={jest.fn()} />,
     );
 
     expect(queryByText('IRC Connection Guide')).toBeNull();
   });
 
-  it('renders connection guide content when visible', () => {
-    const { getByText } = render(
+  it('renders connection guide content when visible', async () => {
+    const { getByText } = await render(
       <HelpConnectionScreen visible onClose={jest.fn()} />,
     );
 
@@ -48,13 +48,13 @@ describe('HelpConnectionScreen', () => {
     expect(getByText('Need More Help?')).toBeTruthy();
   });
 
-  it('calls onClose when close button is pressed', () => {
+  it('calls onClose when close button is pressed', async () => {
     const onClose = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = await render(
       <HelpConnectionScreen visible onClose={onClose} />,
     );
 
-    fireEvent.press(getByLabelText('Close help screen'));
+    await fireEvent.press(getByLabelText('Close help screen'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

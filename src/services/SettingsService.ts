@@ -678,11 +678,13 @@ class SettingsService {
   // Generic settings methods
   async getSetting<T>(key: string, defaultValue: T): Promise<T> {
     try {
-      // Use StorageCache for in-memory caching and faster access
+      // Use StorageCache for in-memory caching and faster access.
+      // Settings change in-process via setSetting (which refreshes the cache),
+      // so a long TTL is safe and avoids redundant AsyncStorage reads.
       const data = await storageCache.getItem<T>(
         `${STORAGE_KEY_SETTINGS}:${key}`,
         {
-          ttl: 10 * 60 * 1000, // Cache for 10 minutes
+          ttl: 24 * 60 * 60 * 1000, // Cache for 24h
         },
       );
       if (data !== null) {

@@ -35,10 +35,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 describe('useStoreSetters', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     mockStorage.clear();
     // Reset all stores
-    act(() => {
+    await act(() => {
       useConnectionStore.getState().reset();
       useTabStore.getState().reset();
       useUIStore.getState().reset();
@@ -47,68 +47,68 @@ describe('useStoreSetters', () => {
   });
 
   describe('connection store setters', () => {
-    it('should set active tab id', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set active tab id', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setActiveTabId('tab-123');
       });
 
       expect(useTabStore.getState().activeTabId).toBe('tab-123');
     });
 
-    it('should set isConnected', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set isConnected', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setIsConnected(true);
       });
 
       expect(useConnectionStore.getState().isConnected).toBe(true);
     });
 
-    it('should set networkName', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set networkName', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setNetworkName('Freenode');
       });
 
       expect(useConnectionStore.getState().networkName).toBe('Freenode');
     });
 
-    it('should set primaryNetworkId', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set primaryNetworkId', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setPrimaryNetworkId('net-1');
       });
 
       expect(useConnectionStore.getState().primaryNetworkId).toBe('net-1');
     });
 
-    it('should set activeConnectionId', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set activeConnectionId', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setActiveConnectionId('conn-1');
       });
 
       expect(useConnectionStore.getState().activeConnectionId).toBe('conn-1');
     });
 
-    it('should set ping', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set ping', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setPing(42);
       });
 
       expect(useConnectionStore.getState().ping).toBe(42);
     });
 
-    it('should set tabs with array', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set tabs with array', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const tabs: ChannelTab[] = [
         {
           id: 'tab1',
@@ -128,15 +128,15 @@ describe('useStoreSetters', () => {
         },
       ];
 
-      act(() => {
+      await act(() => {
         result.current.setTabs(tabs);
       });
 
       expect(useTabStore.getState().tabs).toHaveLength(2);
     });
 
-    it('should set tabs with function updater', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set tabs with function updater', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const initialTabs: ChannelTab[] = [
         {
           id: 'tab1',
@@ -148,11 +148,11 @@ describe('useStoreSetters', () => {
         },
       ];
 
-      act(() => {
+      await act(() => {
         result.current.setTabs(initialTabs);
       });
 
-      act(() => {
+      await act(() => {
         result.current.setTabs(prev => [
           ...prev,
           {
@@ -169,8 +169,8 @@ describe('useStoreSetters', () => {
       expect(useTabStore.getState().tabs).toHaveLength(2);
     });
 
-    it('should not update tabs if reference is same', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should not update tabs if reference is same', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const tabs: ChannelTab[] = [
         {
           id: 'tab1',
@@ -182,13 +182,13 @@ describe('useStoreSetters', () => {
         },
       ];
 
-      act(() => {
+      await act(() => {
         result.current.setTabs(tabs);
       });
 
       const currentTabs = useTabStore.getState().tabs;
 
-      act(() => {
+      await act(() => {
         result.current.setTabs(currentTabs);
       });
 
@@ -198,20 +198,20 @@ describe('useStoreSetters', () => {
   });
 
   describe('UI store setters - first run', () => {
-    it('should set showFirstRunSetup', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showFirstRunSetup', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowFirstRunSetup(true);
       });
 
       expect(useUIStore.getState().showFirstRunSetup).toBe(true);
     });
 
-    it('should set isCheckingFirstRun', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set isCheckingFirstRun', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setIsCheckingFirstRun(false);
       });
 
@@ -220,18 +220,18 @@ describe('useStoreSetters', () => {
   });
 
   describe('UI store setters - message display', () => {
-    it('should set showRawCommands', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showRawCommands', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowRawCommands(false);
       });
 
       expect(useUIStore.getState().showRawCommands).toBe(false);
     });
 
-    it('should set rawCategoryVisibility', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set rawCategoryVisibility', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const visibility: Record<RawMessageCategory, boolean> = {
         connection: true,
         channel: false,
@@ -241,57 +241,57 @@ describe('useStoreSetters', () => {
         other: false,
       };
 
-      act(() => {
+      await act(() => {
         result.current.setRawCategoryVisibility(visibility);
       });
 
       expect(useUIStore.getState().rawCategoryVisibility).toEqual(visibility);
     });
 
-    it('should set showTypingIndicators', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showTypingIndicators', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowTypingIndicators(false);
       });
 
       expect(useUIStore.getState().showTypingIndicators).toBe(false);
     });
 
-    it('should set hideJoinMessages', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set hideJoinMessages', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setHideJoinMessages(true);
       });
 
       expect(useUIStore.getState().hideJoinMessages).toBe(true);
     });
 
-    it('should set hidePartMessages', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set hidePartMessages', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setHidePartMessages(true);
       });
 
       expect(useUIStore.getState().hidePartMessages).toBe(true);
     });
 
-    it('should set hideQuitMessages', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set hideQuitMessages', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setHideQuitMessages(true);
       });
 
       expect(useUIStore.getState().hideQuitMessages).toBe(true);
     });
 
-    it('should set hideIrcServiceListenerMessages', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set hideIrcServiceListenerMessages', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setHideIrcServiceListenerMessages(false);
       });
 
@@ -300,11 +300,11 @@ describe('useStoreSetters', () => {
   });
 
   describe('message store setters', () => {
-    it('should set typing user', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set typing user', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const status = { status: 'active' as const, timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         result.current.setTypingUser('net1', '#channel', 'nick1', status);
       });
 
@@ -312,11 +312,11 @@ describe('useStoreSetters', () => {
       expect(typingUsers.has('net1')).toBe(true);
     });
 
-    it('should remove typing user', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should remove typing user', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const status = { status: 'active' as const, timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         result.current.setTypingUser('net1', '#channel', 'nick1', status);
         result.current.removeTypingUser('net1', '#channel', 'nick1');
       });
@@ -324,11 +324,11 @@ describe('useStoreSetters', () => {
       expect(useMessageStore.getState().typingUsers.has('net1')).toBe(false);
     });
 
-    it('should clear typing for target', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should clear typing for target', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const status = { status: 'active' as const, timestamp: Date.now() };
 
-      act(() => {
+      await act(() => {
         result.current.setTypingUser('net1', '#channel', 'nick1', status);
         result.current.clearTypingForTarget('net1', '#channel');
       });
@@ -336,14 +336,14 @@ describe('useStoreSetters', () => {
       expect(useMessageStore.getState().typingUsers.has('net1')).toBe(false);
     });
 
-    it('should cleanup stale typing', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should cleanup stale typing', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
       const oldStatus = {
         status: 'active' as const,
         timestamp: Date.now() - 20000,
       };
 
-      act(() => {
+      await act(() => {
         result.current.setTypingUser('net1', '#channel', 'nick1', oldStatus);
         result.current.cleanupStaleTyping();
       });
@@ -353,90 +353,90 @@ describe('useStoreSetters', () => {
   });
 
   describe('app lock setters', () => {
-    it('should set appLockEnabled', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLockEnabled', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLockEnabled(true);
       });
 
       expect(useUIStore.getState().appLockEnabled).toBe(true);
     });
 
-    it('should set appLockUseBiometric', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLockUseBiometric', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLockUseBiometric(true);
       });
 
       expect(useUIStore.getState().appLockUseBiometric).toBe(true);
     });
 
-    it('should set appLockUsePin', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLockUsePin', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLockUsePin(true);
       });
 
       expect(useUIStore.getState().appLockUsePin).toBe(true);
     });
 
-    it('should set appLockOnLaunch', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLockOnLaunch', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLockOnLaunch(false);
       });
 
       expect(useUIStore.getState().appLockOnLaunch).toBe(false);
     });
 
-    it('should set appLockOnBackground', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLockOnBackground', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLockOnBackground(false);
       });
 
       expect(useUIStore.getState().appLockOnBackground).toBe(false);
     });
 
-    it('should set appLocked', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appLocked', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppLocked(true);
       });
 
       expect(useUIStore.getState().appLocked).toBe(true);
     });
 
-    it('should set appUnlockModalVisible', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appUnlockModalVisible', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppUnlockModalVisible(true);
       });
 
       expect(useUIStore.getState().appUnlockModalVisible).toBe(true);
     });
 
-    it('should set appPinEntry', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appPinEntry', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppPinEntry('1234');
       });
 
       expect(useUIStore.getState().appPinEntry).toBe('1234');
     });
 
-    it('should set appPinError', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set appPinError', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAppPinError('Invalid PIN');
       });
 
@@ -445,30 +445,30 @@ describe('useStoreSetters', () => {
   });
 
   describe('banner/ad setters', () => {
-    it('should set bannerVisible', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set bannerVisible', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setBannerVisible(true);
       });
 
       expect(useUIStore.getState().bannerVisible).toBe(true);
     });
 
-    it('should set scriptingTimeMs', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set scriptingTimeMs', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setScriptingTimeMs(5000);
       });
 
       expect(useUIStore.getState().scriptingTimeMs).toBe(5000);
     });
 
-    it('should set adFreeTimeMs', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set adFreeTimeMs', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setAdFreeTimeMs(10000);
       });
 
@@ -477,60 +477,60 @@ describe('useStoreSetters', () => {
   });
 
   describe('modal setters', () => {
-    it('should set channelName', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set channelName', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setChannelName('#general');
       });
 
       expect(useUIStore.getState().channelName).toBe('#general');
     });
 
-    it('should set channelNoteValue', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set channelNoteValue', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setChannelNoteValue('This is a note');
       });
 
       expect(useUIStore.getState().channelNoteValue).toBe('This is a note');
     });
 
-    it('should set renameValue', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set renameValue', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setRenameValue('New Name');
       });
 
       expect(useUIStore.getState().renameValue).toBe('New Name');
     });
 
-    it('should set dccSendPath', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set dccSendPath', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setDccSendPath('/path/to/file.txt');
       });
 
       expect(useUIStore.getState().dccSendPath).toBe('/path/to/file.txt');
     });
 
-    it('should set showOptionsMenu', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showOptionsMenu', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowOptionsMenu(true);
       });
 
       expect(useUIStore.getState().showOptionsMenu).toBe(true);
     });
 
-    it('should set showSettings', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showSettings', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowSettings(true);
       });
 
@@ -539,60 +539,60 @@ describe('useStoreSetters', () => {
   });
 
   describe('help screen setters', () => {
-    it('should set showHelpConnection', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpConnection', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpConnection(true);
       });
 
       expect(useUIStore.getState().showHelpConnection).toBe(true);
     });
 
-    it('should set showHelpCommands', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpCommands', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpCommands(true);
       });
 
       expect(useUIStore.getState().showHelpCommands).toBe(true);
     });
 
-    it('should set showHelpEncryption', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpEncryption', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpEncryption(true);
       });
 
       expect(useUIStore.getState().showHelpEncryption).toBe(true);
     });
 
-    it('should set showHelpMedia', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpMedia', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpMedia(true);
       });
 
       expect(useUIStore.getState().showHelpMedia).toBe(true);
     });
 
-    it('should set showHelpChannelManagement', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpChannelManagement', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpChannelManagement(true);
       });
 
       expect(useUIStore.getState().showHelpChannelManagement).toBe(true);
     });
 
-    it('should set showHelpTroubleshooting', () => {
-      const { result } = renderHook(() => useStoreSetters());
+    it('should set showHelpTroubleshooting', async () => {
+      const { result } = await renderHook(() => useStoreSetters());
 
-      act(() => {
+      await act(() => {
         result.current.setShowHelpTroubleshooting(true);
       });
 
@@ -601,11 +601,11 @@ describe('useStoreSetters', () => {
   });
 
   describe('setter stability', () => {
-    it('should return stable references across re-renders', () => {
-      const { result, rerender } = renderHook(() => useStoreSetters());
+    it('should return stable references across re-renders', async () => {
+      const { result, rerender } = await renderHook(() => useStoreSetters());
 
       const firstRenderSetters = result.current;
-      rerender();
+      await rerender();
       const secondRenderSetters = result.current;
 
       // All setters should be the same reference (wrapped in useCallback with empty deps)

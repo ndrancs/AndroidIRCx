@@ -175,7 +175,7 @@ const baseProps = {
 };
 
 describe('AppLayout', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     mockUseTheme.mockReturnValue({
@@ -206,8 +206,8 @@ describe('AppLayout', () => {
     mockCanShowPersonalizedAds.mockReturnValue(true);
   });
 
-  it('renders core layout pieces and top tabs', () => {
-    render(<AppLayout {...baseProps} />);
+  it('renders core layout pieces and top tabs', async () => {
+    await render(<AppLayout {...baseProps} />);
 
     expect(mockHeaderBar).toHaveBeenCalledTimes(1);
     expect(
@@ -220,7 +220,7 @@ describe('AppLayout', () => {
     expect(mockBannerAd).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps JS keyboard avoidance enabled in Android portrait', () => {
+  it('keeps JS keyboard avoidance enabled in Android portrait', async () => {
     const originalOS = Platform.OS;
     Object.defineProperty(Platform, 'OS', {
       value: 'android',
@@ -228,7 +228,9 @@ describe('AppLayout', () => {
     });
 
     try {
-      render(<AppLayout {...baseProps} keyboardBehaviorAndroid="height" />);
+      await render(
+        <AppLayout {...baseProps} keyboardBehaviorAndroid="height" />,
+      );
 
       expect(mockKeyboardAvoidingView).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -270,7 +272,7 @@ describe('AppLayout', () => {
     });
 
     try {
-      render(<AppLayout {...baseProps} />);
+      await render(<AppLayout {...baseProps} />);
 
       expect(addListenerSpy).toHaveBeenCalledWith(
         'keyboardDidHide',
@@ -307,7 +309,7 @@ describe('AppLayout', () => {
   });
 
   it('toggles message search from header action', async () => {
-    render(<AppLayout {...baseProps} />);
+    await render(<AppLayout {...baseProps} />);
 
     const headerProps = mockHeaderBar.mock.calls[0][0];
 
@@ -320,7 +322,7 @@ describe('AppLayout', () => {
     expect(latestMessageAreaProps.searchVisible).toBe(true);
   });
 
-  it('exposes query encryption toggle and prefill clear callbacks', () => {
+  it('exposes query encryption toggle and prefill clear callbacks', async () => {
     const props = {
       ...baseProps,
       activeTabId: 'query:1',
@@ -333,7 +335,7 @@ describe('AppLayout', () => {
       },
     };
 
-    render(<AppLayout {...props} />);
+    await render(<AppLayout {...props} />);
 
     const headerProps = mockHeaderBar.mock.calls[0][0];
     const inputProps = mockMessageInput.mock.calls[0][0];
@@ -346,8 +348,8 @@ describe('AppLayout', () => {
     expect(uiStoreState.setPrefillMessage).toHaveBeenCalledWith(null);
   });
 
-  it('passes selected network when disconnected', () => {
-    render(
+  it('passes selected network when disconnected', async () => {
+    await render(
       <AppLayout
         {...baseProps}
         isConnected={false}
@@ -359,8 +361,8 @@ describe('AppLayout', () => {
     expect(headerProps.networkName).toBe('My Saved Network');
   });
 
-  it('renders left/right side tabs based on tab position and side visibility', () => {
-    render(
+  it('renders left/right side tabs based on tab position and side visibility', async () => {
+    await render(
       <AppLayout
         {...baseProps}
         layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'left' }}
@@ -372,7 +374,7 @@ describe('AppLayout', () => {
     ).toBe(true);
 
     jest.clearAllMocks();
-    render(
+    await render(
       <AppLayout
         {...baseProps}
         layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'right' }}
@@ -384,7 +386,7 @@ describe('AppLayout', () => {
     ).toBe(true);
 
     jest.clearAllMocks();
-    render(
+    await render(
       <AppLayout
         {...baseProps}
         layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'left' }}
@@ -396,8 +398,8 @@ describe('AppLayout', () => {
     ).toBe(false);
   });
 
-  it('renders bottom tabs and hides typing indicator when disabled', () => {
-    render(
+  it('renders bottom tabs and hides typing indicator when disabled', async () => {
+    await render(
       <AppLayout
         {...baseProps}
         layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'bottom' }}
@@ -411,7 +413,7 @@ describe('AppLayout', () => {
     expect(mockTypingIndicator).not.toHaveBeenCalled();
   });
 
-  it('keeps stacked nicklist layout on narrow portrait screens', () => {
+  it('keeps stacked nicklist layout on narrow portrait screens', async () => {
     const effectiveConfig = getEffectiveLayoutConfig(
       {
         ...baseProps.layoutConfig,
@@ -426,7 +428,7 @@ describe('AppLayout', () => {
     expect(effectiveConfig.userListSizePx).toBe(180);
   });
 
-  it('moves stacked nicklist to a clamped side panel in landscape/tablet layouts', () => {
+  it('moves stacked nicklist to a clamped side panel in landscape/tablet layouts', async () => {
     const effectiveConfig = getEffectiveLayoutConfig(
       {
         ...baseProps.layoutConfig,
@@ -441,7 +443,7 @@ describe('AppLayout', () => {
     expect(effectiveConfig.userListSizePx).toBe(270);
   });
 
-  it('preserves saved layout when adaptive layout is disabled', () => {
+  it('preserves saved layout when adaptive layout is disabled', async () => {
     const savedConfig = {
       ...baseProps.layoutConfig,
       userListPosition: 'bottom' as const,
@@ -459,9 +461,9 @@ describe('AppLayout', () => {
     expect(effectiveConfig.userListSizePx).toBe(420);
   });
 
-  it('renders user-list tongue and toggles list on press', () => {
+  it('renders user-list tongue and toggles list on press', async () => {
     const handleToggleUserList = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = await render(
       <AppLayout
         {...baseProps}
         handleToggleUserList={handleToggleUserList}
@@ -476,13 +478,13 @@ describe('AppLayout', () => {
     );
 
     const tongue = getByLabelText('Toggle user list');
-    fireEvent.press(tongue);
+    await fireEvent.press(tongue);
     expect(handleToggleUserList).toHaveBeenCalled();
   });
 
-  it('passes non-personalized ad request option when personalization disabled', () => {
+  it('passes non-personalized ad request option when personalization disabled', async () => {
     mockCanShowPersonalizedAds.mockReturnValue(false);
-    render(<AppLayout {...baseProps} />);
+    await render(<AppLayout {...baseProps} />);
 
     expect(mockBannerAd).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -494,7 +496,7 @@ describe('AppLayout', () => {
   });
 
   it('reacts to settings change listeners for swipe and banner position', async () => {
-    render(<AppLayout {...baseProps} />);
+    await render(<AppLayout {...baseProps} />);
 
     await act(async () => {
       settingListeners.get('swipeBehavior')?.('show-panels');
@@ -529,7 +531,7 @@ describe('AppLayout', () => {
       return Promise.resolve(fallback);
     });
 
-    render(
+    await render(
       <AppLayout
         {...baseProps}
         handleTabPress={handleTabPress}
@@ -568,7 +570,7 @@ describe('AppLayout', () => {
     panSpy.mockRestore();
   });
 
-  it('handles tongue pan responder branches for all user-list positions', () => {
+  it('handles tongue pan responder branches for all user-list positions', async () => {
     const capturedConfigs: any[] = [];
     const panSpy = jest
       .spyOn(PanResponder, 'create')
@@ -582,8 +584,11 @@ describe('AppLayout', () => {
       selector({ setShowUserList }),
     );
 
-    const runFor = (pos: 'left' | 'right' | 'top' | 'bottom', gesture: any) => {
-      render(
+    const runFor = async (
+      pos: 'left' | 'right' | 'top' | 'bottom',
+      gesture: any,
+    ) => {
+      await render(
         <AppLayout
           {...baseProps}
           layoutConfig={{ ...baseProps.layoutConfig, userListPosition: pos }}
@@ -604,21 +609,21 @@ describe('AppLayout', () => {
       tongueConfig.onPanResponderRelease({}, gesture);
     };
 
-    runFor('left', { dx: 30, dy: 0 });
-    runFor('right', { dx: -30, dy: 0 });
-    runFor('top', { dx: 0, dy: 30 });
-    runFor('bottom', { dx: 0, dy: -30 });
+    await runFor('left', { dx: 30, dy: 0 });
+    await runFor('right', { dx: -30, dy: 0 });
+    await runFor('top', { dx: 0, dy: 30 });
+    await runFor('bottom', { dx: 0, dy: -30 });
 
     expect(setShowUserList).toHaveBeenCalled();
     panSpy.mockRestore();
   });
 
-  it('invokes header connect callback and banner load error handler', () => {
+  it('invokes header connect callback and banner load error handler', async () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
     const handleConnect = jest.fn();
-    render(<AppLayout {...baseProps} handleConnect={handleConnect} />);
+    await render(<AppLayout {...baseProps} handleConnect={handleConnect} />);
 
     const headerProps = mockHeaderBar.mock.calls[0][0];
     headerProps.onConnectPress();

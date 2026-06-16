@@ -41,7 +41,7 @@ const mockSettingsService = jest.requireMock<any>(
 ).settingsService;
 
 describe('useDccConfig', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockStorage.clear();
   });
@@ -49,9 +49,9 @@ describe('useDccConfig', () => {
   it('should load and apply DCC port range from settings', async () => {
     mockSettingsService.getSetting.mockResolvedValue({ min: 5000, max: 6000 });
 
-    renderHook(() => useDccConfig());
+    await renderHook(() => useDccConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettingsService.getSetting).toHaveBeenCalledWith(
         'dccPortRange',
         { min: 5000, max: 6000 },
@@ -66,9 +66,9 @@ describe('useDccConfig', () => {
       max: 20000,
     });
 
-    renderHook(() => useDccConfig());
+    await renderHook(() => useDccConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockDccFileService.setPortRange).toHaveBeenCalledWith(
         10000,
         20000,
@@ -79,9 +79,9 @@ describe('useDccConfig', () => {
   it('should not set port range when config is invalid (no min)', async () => {
     mockSettingsService.getSetting.mockResolvedValue({ min: 0, max: 6000 });
 
-    renderHook(() => useDccConfig());
+    await renderHook(() => useDccConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettingsService.getSetting).toHaveBeenCalled();
     });
 
@@ -91,9 +91,9 @@ describe('useDccConfig', () => {
   it('should not set port range when config is null', async () => {
     mockSettingsService.getSetting.mockResolvedValue(null);
 
-    renderHook(() => useDccConfig());
+    await renderHook(() => useDccConfig());
 
-    await waitFor(() => {
+    await waitFor(async () => {
       expect(mockSettingsService.getSetting).toHaveBeenCalled();
     });
 

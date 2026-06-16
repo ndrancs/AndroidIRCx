@@ -75,7 +75,7 @@ jest.mock('../../src/stores/uiStore', () => ({
 import { useAppLock } from '../../src/hooks/useAppLock';
 
 describe('useAppLock', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     (settingsService.getSetting as jest.Mock).mockImplementation(
@@ -109,13 +109,16 @@ describe('useAppLock', () => {
     mockStore.appLockOnLaunch = true;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers();
     cleanup();
+    // Restore module-level spies (e.g. AppState.addEventListener) so the
+    // jest.setup.ts default mock is in place for the next test's spyOn call.
+    jest.restoreAllMocks();
   });
 
-  it('should return attemptBiometricUnlock and handleAppPinUnlock functions', () => {
-    const { result } = renderHook(() => useAppLock());
+  it('should return attemptBiometricUnlock and handleAppPinUnlock functions', async () => {
+    const { result } = await renderHook(() => useAppLock());
 
     expect(result.current.attemptBiometricUnlock).toBeDefined();
     expect(result.current.handleAppPinUnlock).toBeDefined();
@@ -124,7 +127,7 @@ describe('useAppLock', () => {
   });
 
   it('should load app lock settings on mount', async () => {
-    renderHook(() => useAppLock());
+    await renderHook(() => useAppLock());
 
     // Wait for async useEffect
     await act(async () => {
@@ -154,7 +157,7 @@ describe('useAppLock', () => {
     mockStore.appPinEntry = '1234';
     (secureStorageService.getSecret as jest.Mock).mockResolvedValue('1234');
 
-    const { result } = renderHook(() => useAppLock());
+    const { result } = await renderHook(() => useAppLock());
 
     await act(async () => {
       await result.current.handleAppPinUnlock();
@@ -172,7 +175,7 @@ describe('useAppLock', () => {
     mockStore.appPinEntry = 'wrong';
     (secureStorageService.getSecret as jest.Mock).mockResolvedValue('1234');
 
-    const { result } = renderHook(() => useAppLock());
+    const { result } = await renderHook(() => useAppLock());
 
     await act(async () => {
       await result.current.handleAppPinUnlock();
@@ -185,7 +188,7 @@ describe('useAppLock', () => {
     mockStore.appPinEntry = '1234';
     (secureStorageService.getSecret as jest.Mock).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useAppLock());
+    const { result } = await renderHook(() => useAppLock());
 
     await act(async () => {
       await result.current.handleAppPinUnlock();
@@ -197,7 +200,7 @@ describe('useAppLock', () => {
   it('should show PIN modal when biometric is not enabled', async () => {
     mockStore.appLockUseBiometric = false;
 
-    const { result } = renderHook(() => useAppLock());
+    const { result } = await renderHook(() => useAppLock());
 
     let unlockResult;
     await act(async () => {
@@ -212,7 +215,7 @@ describe('useAppLock', () => {
     mockStore.appLockUseBiometric = true;
     (biometricAuthService.isAvailable as jest.Mock).mockReturnValue(false);
 
-    const { result } = renderHook(() => useAppLock());
+    const { result } = await renderHook(() => useAppLock());
 
     let unlockResult;
     await act(async () => {
@@ -226,7 +229,7 @@ describe('useAppLock', () => {
   });
 
   it('should subscribe to setting changes', async () => {
-    renderHook(() => useAppLock());
+    await renderHook(() => useAppLock());
 
     // Wait for useEffect to run
     await act(async () => {
@@ -267,28 +270,31 @@ describe('useAppLock', () => {
 
   describe('Biometric Edge Cases', () => {
     it('should prevent multiple simultaneous biometric attempts', async () => {
+      // Use real timers so the deferred biometric authenticate promise can
+      // resolve naturally — fake timers + React 19 act don't interleave the
+      // simultaneous-call promise chain reliably.
+      jest.useRealTimers();
       mockStore.appLockUseBiometric = true;
       (biometricAuthService.isAvailable as jest.Mock).mockReturnValue(true);
       (biometricAuthService.authenticate as jest.Mock).mockImplementation(
         () =>
           new Promise(resolve =>
-            setTimeout(() => resolve({ success: true }), 100),
+            setTimeout(() => resolve({ success: true }), 10),
           ),
       );
 
-      const { result } = renderHook(() => useAppLock());
+      const { result } = await renderHook(() => useAppLock());
 
-      // Start first attempt
       let secondResult: boolean | undefined;
 
       await act(async () => {
-        // Fire both attempts simultaneously
         const promise1 = result.current.attemptBiometricUnlock();
+        // Yield once so the first call passes its in-progress check and
+        // sets the flag before the second call starts.
+        await Promise.resolve();
         const promise2 = result.current.attemptBiometricUnlock().then(r => {
           secondResult = r;
         });
-
-        jest.advanceTimersByTime(100);
         await Promise.all([promise1, promise2]);
       });
 
@@ -303,7 +309,7 @@ describe('useAppLock', () => {
         biometricAuthService.hasEnrolledBiometrics as jest.Mock
       ).mockResolvedValue(false);
 
-      const { result } = renderHook(() => useAppLock());
+      const { result } = await renderHook(() => useAppLock());
 
       await act(async () => {
         await result.current.attemptBiometricUnlock();
@@ -334,7 +340,7 @@ describe('useAppLock', () => {
           return { remove: jest.fn() };
         });
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
 
       await act(async () => {
         await Promise.resolve();
@@ -362,7 +368,7 @@ describe('useAppLock', () => {
           return { remove: jest.fn() };
         });
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
 
       await act(async () => {
         await Promise.resolve();
@@ -392,7 +398,7 @@ describe('useAppLock', () => {
           return { remove: jest.fn() };
         });
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
 
       await act(async () => {
         await Promise.resolve();
@@ -437,7 +443,7 @@ describe('useAppLock', () => {
             return { remove: jest.fn() };
           });
 
-        renderHook(() => useAppLock());
+        await renderHook(() => useAppLock());
 
         await act(async () => {
           await Promise.resolve();
@@ -481,13 +487,13 @@ describe('useAppLock', () => {
         .spyOn(AppState, 'addEventListener')
         .mockReturnValue({ remove: mockRemove });
 
-      const { unmount } = renderHook(() => useAppLock());
+      const { unmount } = await renderHook(() => useAppLock());
 
       await act(async () => {
         await Promise.resolve();
       });
 
-      unmount();
+      await unmount();
 
       expect(mockRemove).toHaveBeenCalled();
     });
@@ -509,7 +515,7 @@ describe('useAppLock', () => {
           return { remove: jest.fn() };
         });
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
       await act(async () => {
         await Promise.resolve();
       });
@@ -554,7 +560,7 @@ describe('useAppLock', () => {
         biometricAuthService.hasEnrolledBiometrics as jest.Mock
       ).mockResolvedValue(false);
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
       await act(async () => {
         await Promise.resolve();
         await Promise.resolve();
@@ -585,7 +591,7 @@ describe('useAppLock', () => {
       );
       (secureStorageService.getSecret as jest.Mock).mockResolvedValue('1234');
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
       await act(async () => {
         await Promise.resolve();
       });
@@ -605,7 +611,7 @@ describe('useAppLock', () => {
         },
       );
 
-      renderHook(() => useAppLock());
+      await renderHook(() => useAppLock());
       await act(async () => {
         await Promise.resolve();
       });
@@ -652,7 +658,7 @@ describe('useAppLock', () => {
         .mockResolvedValueOnce({ success: true });
       (biometricAuthService.enableLock as jest.Mock).mockResolvedValue(true);
 
-      const { result } = renderHook(() => useAppLock());
+      const { result } = await renderHook(() => useAppLock());
 
       let unlockResult: boolean | undefined;
       await act(async () => {
@@ -680,7 +686,7 @@ describe('useAppLock', () => {
         .mockResolvedValueOnce({ success: false })
         .mockResolvedValueOnce({ success: false, errorKey: 'Other failure' });
 
-      const { result } = renderHook(() => useAppLock());
+      const { result } = await renderHook(() => useAppLock());
 
       await act(async () => {
         await result.current.attemptBiometricUnlock();
