@@ -41,8 +41,7 @@ build your own IRC experience from real production code.
 Every release APK and AAB is scanned with **VirusTotal** before publishing. Only builds matching the
 published SHA-256 checksum are official releases.
 
-- **SHA-256 checksum file:
-  ** [app-release.apk.sha256](https://androidircx.com/uploads/app-release.apk.sha256)
+- **SHA-256 checksum file:** [app-release.apk.sha256](https://androidircx.com/uploads/app-release.apk.sha256)
 - **VirusTotal scanning policy:** Every release build is scanned on VirusTotal before publishing.
 
 **Verify your download:**
@@ -73,8 +72,8 @@ moderation panels. People learned scripting, built addons, automated bots, and m
 
 **AndroidIRCX is built for that same crowd, but open source and for today's platforms.**
 
-This is a full-featured, production IRC client - but it's also a **learning platform** and a \*
-\*framework\*\* you can study, fork, and build on top of:
+This is a full-featured, production IRC client - but it's also a **learning platform** and a
+**framework** you can study, fork, and build on top of:
 
 - **Learn TCP sockets** -- see how raw IRC protocol works over `react-native-tcp-socket`, TLS
   handshakes, proxy tunneling, SOCKS5/Tor
@@ -188,8 +187,8 @@ reply, react, channel-context, rename
 
 ### Internationalization
 
-- 9 languages: English, French, German, Italian, Portuguese, Romanian, Russian, Serbian (Latin +
-  Cyrillic), Spanish
+- 10 languages: English, French, German, Indonesian, Italian, Portuguese, Romanian, Russian,
+  Serbian (Latin + Cyrillic), Spanish
 - Transifex Native integration
 
 ---
@@ -198,18 +197,18 @@ reply, react, channel-context, rename
 
 |                   |                                                   |
 | ----------------- | ------------------------------------------------- |
-| **Framework**     | React Native 0.85.3, React 19.2.3                 |
-| **Language**      | TypeScript 5.9.3                                  |
-| **State**         | Zustand 5.0.13                                    |
+| **Framework**     | React Native 0.86.0, React 19.2.7                 |
+| **Language**      | TypeScript 6.0.3                                  |
+| **State**         | Zustand 5.0.14                                    |
 | **Networking**    | react-native-tcp-socket (raw TCP/TLS)             |
 | **Encryption**    | libsodium, node-forge, @noble/curves              |
 | **Storage**       | AsyncStorage + Keychain (react-native-keychain)   |
 | **UI/Lists**      | FlashList, Reanimated, react-native-vector-icons  |
-| **Testing**       | Jest 29.7, Testing Library                        |
+| **Testing**       | Jest 30.4, Testing Library                        |
 | **CI/CD**         | GitHub Actions, Docker                            |
 | **Notifications** | @notifee/react-native                             |
 | **Media**         | vision-camera, react-native-video, audio-recorder |
-| **i18n**          | Transifex Native (9 languages)                    |
+| **i18n**          | Transifex Native (10 languages)                   |
 | **Analytics**     | Firebase Crashlytics, Firebase App Check          |
 
 ---
@@ -288,7 +287,7 @@ AndroidIRCX/
 +-- .github/workflows/  CI/CD workflows
 +-- Dockerfile          Docker-based release builds
 +-- App.tsx             Main component
-+-- package.json        v1.8.10, GPL-3.0-or-later
++-- package.json        v1.9.33, GPL-3.0-or-later
 ```
 
 ---
@@ -297,7 +296,7 @@ AndroidIRCX/
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js >= 24
 - Yarn
 - Android SDK / Android Studio
 - React Native CLI
@@ -339,7 +338,7 @@ yarn tx:merge-sr      # Merge missing Serbian keys
 # All tests with coverage
 yarn test --coverage
 
-# IRC protocol tests only (685+ tests)
+# IRC protocol tests only (938+ tests)
 npx jest --testPathPatterns="IRCService" --no-coverage
 
 # Specific service
@@ -460,15 +459,16 @@ GitHub Actions runs the Jest suite with coverage, uploaded to Codecov.
 
 ### Release Builds (Docker)
 
-Automated Docker-based builds on push to master:
+A `Dockerfile` is provided for reproducible release builds:
 
 ```
 Dockerfile -> reactnativecommunity/react-native-android
            -> yarn install
            -> prepare-secrets.sh (inject signing keys)
            -> assembleRelease + bundleRelease (armeabi-v7a, arm64-v8a, x86, x86_64)
-           -> upload artifacts
 ```
+
+The same pipeline can also be driven locally on Windows via `scripts/build.ps1`.
 
 ---
 
