@@ -1,5 +1,0 @@
-What's new in 1.9.12:
-- Updated dependencies
-- Updated security policy for the current supported secure release
-- Improved settings input test coverage
-- Hardened history cleanup, JOIN host parsing, screenshot protection, and Privacy Relay expiry checks

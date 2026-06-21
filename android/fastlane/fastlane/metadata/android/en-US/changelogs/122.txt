@@ -1,6 +1,0 @@
-What's new in 1.9.19:
-- Updated dependencies
-- Improved connection timer management to prevent stale timeout callbacks
-- Fixed channel user list clear order - events now emit before data is cleared
-- Made auto-reconnect flood-delay timer properly cancelable
-- General stability improvements

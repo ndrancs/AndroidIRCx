@@ -1,8 +1,0 @@
-What's new in v1.9.20:
-- Stability fixes based on recent crash reports
-- Fixed Android video playback crash caused by Media3 conflicts
-- Reduced memory use in media download/upload and DCC file flows
-- Safer API error handling for oversized/invalid responses
-- Improved channel tab/list stability on the new RN architecture
-- Safer notification/broadcast handling on newer Android versions
-- Reduced sensitive logging around media and Privacy Relay

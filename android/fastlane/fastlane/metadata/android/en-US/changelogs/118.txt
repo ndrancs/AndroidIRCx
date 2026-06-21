@@ -1,5 +1,0 @@
-What's new in 1.9.15:
-- Updated dependencies, including protobuf security patches
-- Reduced stacked React Native modal presentations that could trigger ANRs
-- Hardened message modal scrolling and Play Integrity request nonce generation
-- Improved Crashlytics error sanitization and release documentation

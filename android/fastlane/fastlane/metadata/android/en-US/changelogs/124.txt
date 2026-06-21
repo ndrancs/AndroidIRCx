@@ -1,7 +1,0 @@
-What's new in v1.9.21:
-- Stability fixes based on recent crash reports
-- Prevented crashes when MP3/audio files are shared in channels
-- Audio previews now load only after pressing Play
-- Safer handling for invalid or unsupported audio links
-- Improved encrypted media and preview screens on MIUI/HyperOS devices
-- Updated tests for audio media playback safety

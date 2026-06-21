@@ -1,6 +1,0 @@
-What's new in v1.9.25:
-- Added Google Play Age Signals support for age-verification compliance
-- Added safe startup checks for applicable regions and supervised accounts
-- Fixed native library packaging for x86 and x86_64 startup stability
-- Hardened startup crash reporting around Android class-loading diagnostics
-- Improved handling of denied, pending, unknown, and unavailable age signals

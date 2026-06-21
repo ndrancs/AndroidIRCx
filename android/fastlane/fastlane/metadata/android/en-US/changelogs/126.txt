@@ -1,7 +1,0 @@
-What's new in v1.9.22:
-- Full IRCv3 diagnostics screen (Settings > Connection & Network) with capability grid, ISUPPORT, feature matrix, and refresh.
-- IRCv3 reply support: visual indicator on replied messages, Reply button in selection bar sends with +draft/reply tag.
-- WebSocket/WebIRC, message tags, CHATHISTORY navigation, read markers, metadata.
-- Secure WebIRC password storage.
-- Disabled FCM auto-init (crash fix).
-- Stability improvements.
