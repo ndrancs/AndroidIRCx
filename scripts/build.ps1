@@ -64,11 +64,18 @@ adb start-server | Out-Null
 # Remove local android artifacts
 Remove-Item -Recurse -Force .\app\build, .\app\.cxx -ErrorAction SilentlyContinue
 
+# Clean BEFORE codegen so codegen-generated files don't race the per-module clean
+# tasks (Windows DefaultDeleter errors with "New files were found" otherwise).
+.\gradlew.bat clean :app:externalNativeBuildCleanRelease --no-configuration-cache --stacktrace
+if ($LASTEXITCODE -ne 0) { throw "Gradle clean failed (exit $LASTEXITCODE)" }
+
 # Codegen
 .\gradlew.bat :app:generateCodegenArtifactsFromSchema
+if ($LASTEXITCODE -ne 0) { throw "Codegen failed (exit $LASTEXITCODE)" }
 
-# IMPORTANT — ONE LINE gradlew
-.\gradlew.bat clean :app:externalNativeBuildCleanRelease assembleRelease bundleRelease -P"reactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64" --no-configuration-cache --stacktrace
+# Build
+.\gradlew.bat assembleRelease bundleRelease -P"reactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64" --no-configuration-cache --stacktrace
+if ($LASTEXITCODE -ne 0) { throw "Release build failed (exit $LASTEXITCODE)" }
 
 $verifyScript = Join-Path $projectRoot "scripts\verify-android-native-libs.ps1"
 $releaseArtifacts = @(
