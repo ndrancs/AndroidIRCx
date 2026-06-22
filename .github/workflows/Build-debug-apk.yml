@@ -34,7 +34,13 @@ jobs:
 
       - name: Install Node modules
         run: |
-          npm ci --prefer-offline --no-audit --progress=false
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            echo "Lockfile found — using npm ci"
+            npm ci --prefer-offline --no-audit --progress=false
+          else
+            echo "No lockfile found — using npm install"
+            npm install --prefer-offline --no-audit --progress=false
+          fi
 
       - name: Build debug APK
         working-directory: android
