@@ -17,6 +17,7 @@ import notifee, {
   EventType,
 } from '@notifee/react-native';
 import { tx } from '../i18n/transifex';
+import { highlightService } from './HighlightService';
 
 /** Android notification channel IDs for category-based grouping */
 export const NOTIFICATION_CHANNELS = {
@@ -66,8 +67,7 @@ class NotificationService {
     networkPreferences: new Map(),
   };
   private callActionListener:
-    | ((action: CallNotificationAction) => void | Promise<void>)
-    | null = null;
+    ((action: CallNotificationAction) => void | Promise<void>) | null = null;
 
   /**
    * Check if notification permission is granted
@@ -814,6 +814,9 @@ class NotificationService {
     }
 
     if (prefs.notifyOnMentions) {
+      if (highlightService.isHighlighted(message.text)) {
+        return true;
+      }
       // Check if message mentions current nick (escape special regex chars)
       try {
         const escapedNick = currentNick.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
